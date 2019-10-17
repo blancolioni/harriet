@@ -1,0 +1,25 @@
+with Commodities;
+with Factions;
+with Knowledge;
+with Managed;
+with Money;
+with Quantities;
+with Updated;
+with Worlds;
+
+package Colonies is
+
+record Colony : Knowable, Managed, Updated, Has_Stock is
+   key Faction;
+   key Original_Faction : Faction;
+   unique key World;
+   Loyalty     : Long_Float;
+   Happiness   : Long_Float;
+   Population  : Quantity_Type;
+   Wealth      : Money_Type;
+   Tax_Rate    : Long_Float;
+   Tax_Evasion : Long_Float;
+   Economy     : Long_Float;
+end Colony;
+
+end Colonies;

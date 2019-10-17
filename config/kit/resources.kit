@@ -1,0 +1,19 @@
+with Commodities;
+
+package Resources is 
+
+record Resource : Commodity, Has_Name is
+   Is_Raw_Resource : Boolean;
+end Resource;
+
+record Resource_Sphere is
+   Resource;
+   Centre_X    : Long_Float;
+   Centre_Y    : Long_Float;
+   Centre_Z    : Long_Float;
+   Strength    : Long_Float;
+   Radius      : Long_Float;
+   Attenuation : Long_Float;
+end Resource_Sphere;
+
+end Resources;

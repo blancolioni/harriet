@@ -1,0 +1,41 @@
+with Calendar;
+with Names;
+with Knowledge;
+
+package Star_Systems is
+
+   record Star_System : Has_Name, Knowable is
+       X             : Long_Float;
+       Y             : Long_Float;
+       Z             : Long_Float;
+       Claimed       : Boolean;
+   end Star_System;
+   
+   record Star_System_Object : Has_Name, Knowable is
+      key Star_System;
+      key Primary : Star_System_Object;
+      Mass                 : Long_Float;
+      Radius               : Long_Float;
+      Density              : Long_Float;
+      Semimajor_Axis       : Long_Float;
+      Epoch                : Time;
+      Period               : Long_Float;
+      Eccentricity         : Long_Float;
+      Rotation_Period      : Long_Float;
+      Tilt                 : Long_Float;
+      Surface_Acceleration : Long_Float;
+      Surface_Gravity      : Long_Float;
+      Escape_Velocity      : Long_Float;
+      Surface_Temperature  : Long_Float;
+      Min_Molecular_Weight : Long_Float;
+      RMS_Velocity         : Long_Float;
+      Resonant_Period      : Boolean;
+   end Star_System_Object;
+   
+   record Star_Gate is
+      key From : Star_System;
+      To       : Star_System;
+      unique key Star_Gate with From, To;
+   end Star_Gate;
+   
+end Star_Systems;

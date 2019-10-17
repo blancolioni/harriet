@@ -1,0 +1,46 @@
+with Colonies;
+with Construction;
+with Localisation;
+with Money;
+with Quantities;
+with Resources;
+with Technology;
+with Updated;
+with Worlds;
+
+package Facilities is
+
+   record Facility : Technological, Localised, Constructed is
+      Operating_Cost : Money_Type;
+      Employees      : Quantity_Type;
+      Power          : Natural;
+      Mining         : Natural;
+      Industry       : Natural;
+      Research       : Natural;
+   end Facility;
+   
+   record Facility_Input is
+      key Facility;
+	  key Commodity;
+	  Quantity : Quantity_Type;
+   end Facility_Input;
+   
+   record Facility_Output is
+      key Facility;
+	  key Commodity;
+	  Quantity : Quantity_Type;
+   end Facility_Output;
+   
+   record Installation : Managed, Updated is
+      key World;
+      key Colony;
+      Facility;
+      Efficiency : Long_Float;
+      Commodity;
+      Resource;
+      Technology;
+      key World_Facility with World, Facility;
+      key Colony_Facility with Colony, Facility;
+   end Installation;
+
+end Facilities;

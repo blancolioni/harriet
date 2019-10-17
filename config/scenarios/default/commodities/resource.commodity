@@ -1,0 +1,9 @@
+names = { iron coal light-metals gases hydrocarbon semiconductors radioactives rare-earths crystals 
+          transuranium neutronium trilithium corbomite }
+
+spheres = {
+   count = 100
+   radius = { 100 100 10 }
+   strength = { 10 100 }
+   attenuation = { 1.5 3.5 }
+}

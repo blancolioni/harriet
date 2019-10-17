@@ -1,0 +1,23 @@
+# Object file
+*.o
+
+# Ada Library Information
+*.ali
+
+# build files
+build/bin/*
+build/obj/*
+
+# generated files
+src/kit/*
+src/driver/harriet-options.ad[bs]
+src/driver/harriet-paths.ad[bs]
+harriet.gpr
+local.options
+
+# database files
+harriet.marlowe
+harriet-init.marlowe
+
+# log files
+log/*.log

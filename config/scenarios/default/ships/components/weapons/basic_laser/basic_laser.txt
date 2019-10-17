@@ -1,0 +1,13 @@
+class = energy_weapon
+colour = { 7 41 162 }
+density = 20
+nominal_max_output = 1
+nominal_charge = 100
+nominal_half_range = 1000
+nominal_power = 1
+output_size_power = 0.8
+input_size_power = 0.75
+charge_size_power = 0.9
+shape = cylinder
+explode = 0.01
+layout = { 1 1 3}

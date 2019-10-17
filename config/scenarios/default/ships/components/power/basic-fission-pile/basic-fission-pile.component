@@ -1,0 +1,47 @@
+class = power
+bounding-box = { -2 2 -2 2 -2 2 }
+shape = sphere
+mass = 12400
+attachments = {
+   left = { -2 0 0 }
+   right = { 2 0 0 }
+   bottom = { 0 -2 0 }
+   top = { 0 2 0 }
+   back = { 0 0 -2 }
+   front = { 0 0 2 }
+}
+
+colour = { 0 255 0 }
+
+acceleration_limit = {
+   linear = 30
+   angular = 5
+}
+temperature_limit = {
+   normal = 3000
+   failure = 3500
+}
+
+heat = {
+   operating = 2000
+}
+
+parts = {
+   radioactives = 25
+   steel = 10
+   basic-electronics = 10
+}
+
+start = {
+   power = 100
+   time = 3600
+}
+
+throttle = {
+  min = 0.4
+  max = 1.2
+}
+
+generate = {
+  power = 1000
+}

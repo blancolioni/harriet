@@ -1,0 +1,32 @@
+bounding-box = { -5 5 -5 5 -5 5 }
+shape = rectangular_prism
+mass = 16200
+attachments = {
+   left = { -5 0 0 }
+   right = { 5 0 0 }
+   bottom = { 0 -5 0 }
+   top = { 0 5 0 }
+   back = { 0 0 -5 }
+   front = { 0 0 5 }
+}
+parts = {
+   light-metals = 100
+   plastics = 100
+   basic-electronics = 10
+}
+
+idle-power = 1
+start-energy = 100
+max-power = 1
+
+cargo = { volume = 800 }
+color = { 184 162 151 }
+acceleration-limit = {
+   linear = 30
+   angular = 10
+}
+temperature-limit = {
+   normal = 500
+   failure = 800
+}
+explosion = 0

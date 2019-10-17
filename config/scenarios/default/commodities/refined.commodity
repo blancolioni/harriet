@@ -1,0 +1,32 @@
+steel = {
+   parts = {
+	   iron = 2
+	   coal = 1
+	}
+}
+
+refined-crystals = {
+   parts = { crystals = 2 }
+}
+
+industrial-chemicals = {
+   parts = {
+     hydrocarbon = 1
+     semiconductors = 1
+     rare-earths = 1
+	 }
+}
+
+plastics = {
+  parts = {
+    hydrocarbon = 2
+	}
+}
+
+lh2 = {
+   density = 70.8
+}
+
+lox = {
+   density = 1141
+}

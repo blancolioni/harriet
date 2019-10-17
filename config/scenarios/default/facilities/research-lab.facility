@@ -1,0 +1,7 @@
+research = 1
+power = 1
+operating-cost = 25
+employees = 1000
+build = {
+   construction-materials = 100
+}

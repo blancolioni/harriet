@@ -1,0 +1,8 @@
+terrain = {
+   mountain = 5
+   plain = 5
+   volcanic = 5
+}
+
+default-terrain = ice
+habitability = 25

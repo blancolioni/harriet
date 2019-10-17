@@ -1,0 +1,9 @@
+generator = yes
+operating-cost = 5
+employees = 1000
+inputs = { coal = 30 }
+outputs = { power = 10 }
+
+build = {
+   construction-materials = 100
+}

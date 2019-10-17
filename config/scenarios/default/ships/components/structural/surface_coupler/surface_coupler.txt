@@ -1,0 +1,19 @@
+bounding_cube = { -0.5 0.5 -0.5 0.5 -0.1 0.1 }
+shape = rectangular_prism
+mass = 67
+attachments = {
+   { 0 0 -0.1 }
+   { 0 0 0.1 }
+}
+
+surface_attachment = yes
+
+color = { 0 0 0 }
+max_acceleration = {
+   linear = 300
+   angular = 20
+}
+max_temperature = {
+   normal = 400
+   failure = 600
+}

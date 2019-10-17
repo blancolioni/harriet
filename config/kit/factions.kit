@@ -1,0 +1,19 @@
+with Colors;
+with Knowledge;
+with Managed;
+with Money;
+with Names;
+with Star_Systems;
+with Users;
+with Worlds;
+
+package Factions is
+
+   record Faction : Has_Name, Has_Adjective, Has_Plural_Name, Has_Color, Has_Knowledge, Managed is
+      key User;
+      key Capital_System : Star_System;
+      key Capital_World  : World;
+      Cash : Money_Type;
+   end Faction;
+
+end Factions;

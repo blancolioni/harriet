@@ -1,0 +1,28 @@
+cash = 10M
+capital = yes
+
+ships = {
+   scout = 2
+   transport = 10
+   defender = 10
+}
+
+installations = {
+   hub = {
+      manager = hub-manager
+      cash = 100M
+      stock = {
+         consumer-goods = 10000
+         industrial-goods = 100000
+         resource = 1000000
+      }
+    }
+}
+
+init-script = {
+   "load-galaxy-view"
+   "load-star-system-view --name=$CAPITAL_SYSTEM"
+   "load-world-view --world-name=$CAPITAL_WORLD"
+   "show-market $CAPITAL_WORLD"
+   "show-orbit $CAPITAL_WORLD"
+}

@@ -1,0 +1,8 @@
+power = 1
+operating-cost = 15
+employees = 1000
+inputs = { water = 100 }
+outputs = { lox = 100 lh2 = 200 }
+build = {
+   construction-materials = 100
+}

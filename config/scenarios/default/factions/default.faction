@@ -1,0 +1,21 @@
+cash = 10K
+
+home-colony = {
+   population = ~1M
+   wealth = ~1M
+   tax-rate = 10%
+   economy = 10%
+   
+   facilities = {
+      mine = 10
+      industry = 10
+      research-lab = 2
+      coal-power = 5
+   }
+   
+   ships = { scout defender trader }
+}
+
+init-script = {
+   "load-galaxy-view"
+}

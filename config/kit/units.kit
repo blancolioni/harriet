@@ -1,0 +1,14 @@
+with Construction;
+with Technology;
+
+package Units is
+
+type Unit_Operation is (Land, Sea, Air, Orbit);
+
+record Unit : Localised, Technological, Constructed, Supplied is
+   Operation     : Unit_Operation;
+   Organisation  : Natural;
+   Maximum_Speed : Float;
+end Unit;
+
+end Units;

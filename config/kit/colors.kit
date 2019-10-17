@@ -1,0 +1,25 @@
+package Colors is
+
+record Has_Color is
+   Red    : Long_Float;
+   Green  : Long_Float;
+   Blue   : Long_Float;
+end Has_Color;
+
+record Palette is
+   unique key Tag : String (28);
+end Palette;
+
+record Palette_Entry is
+   key Palette;
+   Index : Natural;
+   Red   : Natural;
+   Green : Natural;
+   Blue  : Natural;
+end Palette_Entry;
+
+record Has_Palette is
+   Palette;
+end Has_Palette;
+
+end Colors;

@@ -1,0 +1,11 @@
+class = drive
+colour = { 180 180 180 }
+density = 120
+nominal_max_output = 4
+output_size_power = 0.5
+input_size_power = 0.4
+throttle_step = 0.1
+size_throttle_factor = 0.99
+energy_from_fuel = yes
+shape = conical_frustum
+layout = { 1 1 1 }

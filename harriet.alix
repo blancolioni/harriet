@@ -1,0 +1,35 @@
+project_name = Harriet
+source_dir = src
+source_dir = src/colonies
+source_dir = src/commands
+source_dir = src/commodities
+source_dir = src/configure
+source_dir = src/driver
+source_dir = src/factions
+source_dir = src/facilities
+source_dir = src/installations
+source_dir = src/kit
+source_dir = src/library
+source_dir = src/managers
+source_dir = src/sessions
+source_dir = src/ships
+source_dir = src/stars
+source_dir = src/systems
+source_dir = src/ui
+source_dir = src/ui/aws
+source_dir = src/ui/models
+source_dir = src/units
+source_dir = src/updates
+source_dir = src/voronoi
+source_dir = src/worlds
+depend = { project = Tropos version = any }
+depend = { project = Wlib version = any }
+depend = { project = marlowe version = any }
+depend = { project = kit version = any }
+depend = { project = aws external = yes }
+language = Ada
+language = C
+main_unit = harriet-driver
+exec_name = harriet
+config_dir = config
+path_unit = { unit = Harriet.Paths path = src/driver/harriet-paths.ads }

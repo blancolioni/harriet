@@ -1,0 +1,30 @@
+synthetic-materials = {
+    parts = {
+	   gases = 1
+	   hydrocarbon = 1
+	   industrial-chemicals = 1
+	   plastics = 1
+    }
+}
+
+basic-electronics = {
+   parts = {
+	   plastics = 1
+	   light-metals = 1
+	   semiconductors = 1
+	   }
+}
+
+electronics = {
+	parts = {
+	   refined-crystals = 1
+	   synthetic-materials = 1
+	   }
+}
+
+construction-materials = {
+	parts = {
+		steel = 2
+		plastics = 1
+		}
+}

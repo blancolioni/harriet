@@ -1,0 +1,42 @@
+bounding-box = { -1.5 1.5 -1.5 1.5 -5 1 }
+shape = conical_frustum
+mass = 4000
+attachments = {
+   { 0 0 1 }
+}
+
+color = { 189 145 116 }
+acceleration_limit = {
+   linear = 30
+   angular = 5
+}
+temperature_limit = {
+   normal = 1200
+   failure = 1500
+}
+
+parts = {
+   light-metals = 25
+   steel = 50
+   basic-electronics = 10
+}
+
+thrust = {
+   minimum = 0
+   maximum = 6M
+}
+
+Ve = 44K
+
+heat = 1000
+throttled = yes
+
+start = {
+   power = 1000
+   time = 5
+}
+
+fuel = lh2 max_fuel_burn = 80
+oxidiser = lox max_oxidiser_burn = 228
+propellent = water
+propellent-fuel = yes

@@ -1,0 +1,12 @@
+terrain = {
+   mountain = 5
+   plain = 5
+   volcanic = 5
+   forest = 5
+   jungle = 5
+   swamp = 10
+   marsh = 10
+}
+
+default-terrain = water
+habitability = 75

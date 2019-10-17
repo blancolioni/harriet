@@ -1,0 +1,7 @@
+default-manager = ship-trade
+components = {
+  basic-chemical-drive = 2
+  basic-cryo-tank = 4
+  basic-fission-pile
+  basic-hold
+}

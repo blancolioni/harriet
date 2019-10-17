@@ -1,0 +1,26 @@
+bounding-box = { -2 2 -2 2 -5 5 }
+shape = cylinder
+mass = 16K
+tank = yes
+attachments = {
+   down = { 0 0 -5 }
+   up = { 0 0 5 }
+}
+cargo = { volume = 150 liquid = yes }
+
+parts = {
+   light-metals = 80
+   plastics = 20
+   basic-electronics = 2
+}
+
+color = { 229 165 136 }
+acceleration_limit = {
+   linear = 45
+   angular = 7
+}
+temperature_limit = {
+   normal = 500
+   failure = 800
+}
+heat = 20

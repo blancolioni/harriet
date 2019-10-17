@@ -1,0 +1,31 @@
+with Localisation;
+with Quantities;
+with Technology;
+
+package Commodities is
+
+record Commodity : Localised is
+   Mass : Long_Float;
+   Density : Long_Float;
+end Commodity;
+
+record Has_Stock;
+
+record Stock_Item is
+   key Has_Stock;
+   Commodity;
+   Quantity : Quantity_Type;
+   unique key Stock_Item with Has_Stock, Commodity;
+end Stock_Item;
+
+record Manufactured : Commodity, Technological is
+end Manufactured;
+
+record Input_Commodity is
+   key Manufactured;
+   key Commodity;
+   Quantity : Quantity_Type;
+   unique key Input_Commodity with Manufactured, Commodity;
+end Input_Commodity;
+
+end Commodities;
