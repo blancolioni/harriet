@@ -195,14 +195,22 @@ package body Harriet.Updates.Tasks is
 
                declare
                   use type Ada.Calendar.Time;
+                  Current_Day : constant String :=
+                    Harriet.Calendar.Image (Harriet.Calendar.Clock);
                begin
+
                   Harriet.Calendar.Advance
                     (Advance * (Ada.Calendar.Clock - Previous_Tick));
-               end;
 
-               Previous_Tick := Ada.Calendar.Clock;
-               Broadcast_Task.Broadcast
-                 (Harriet.UI.Signal_Clock_Tick);
+                  Previous_Tick := Ada.Calendar.Clock;
+
+                  if Harriet.Calendar.Image (Harriet.Calendar.Clock)
+                    /= Current_Day
+                  then
+                     Broadcast_Task.Broadcast
+                       (Harriet.UI.Signal_Clock_Tick);
+                  end if;
+               end;
 
                declare
                   List  : Update_Lists.List;
