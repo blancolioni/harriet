@@ -1,7 +1,9 @@
 with Harriet.Quantities;
 
-with Harriet.Factions;
+with Harriet.Constants;
 with Harriet.Solar_System;
+
+with Harriet.Factions;
 with Harriet.Star_Systems;
 
 with Harriet.UI.Models.Data_Source;
@@ -86,6 +88,50 @@ package body Harriet.UI.Models.Star_System is
          Label => "g",
          Col_Type => Values.Real_Type);
       Model.Add_Column
+        (Id       => "surfaceTemperature",
+         Label    =>
+           "Suface Temp ("
+         & Character'Val (16#C2#)
+         & Character'Val (16#B0#)
+         & "C)",
+         Col_Type => Values.Real_Type);
+      Model.Add_Column
+        (Id       => "minTemperature",
+         Label    =>
+           "Min ("
+         & Character'Val (16#C2#)
+         & Character'Val (16#B0#)
+         & "C)",
+         Col_Type => Values.Real_Type);
+      Model.Add_Column
+        (Id       => "maxTemperature",
+         Label    =>
+           "Max ("
+         & Character'Val (16#C2#)
+         & Character'Val (16#B0#)
+         & "C)",
+         Col_Type => Values.Real_Type);
+      Model.Add_Column
+        (Id       => "nightLowTemperature",
+         Label    =>
+           "Nightly low ("
+         & Character'Val (16#C2#)
+         & Character'Val (16#B0#)
+         & "C)",
+         Col_Type => Values.Real_Type);
+      Model.Add_Column
+        (Id       => "dayHighTemperature",
+         Label    =>
+           "Daily high ("
+         & Character'Val (16#C2#)
+         & Character'Val (16#B0#)
+         & "C)",
+         Col_Type => Values.Real_Type);
+      Model.Add_Column
+        (Id       => "surfacePressure",
+         Label    => "Surface Pressure (atm)",
+        Col_Type => Values.Real_Type);
+      Model.Add_Column
         (Id       => "category",
          Label    => "Category",
          Col_Type => Values.Text_Type);
@@ -106,6 +152,8 @@ package body Harriet.UI.Models.Star_System is
          procedure Add_Row
            (World : Harriet.Db.World.World_Type)
          is
+            use Harriet.Constants, Harriet.Solar_System;
+            use Harriet.Db;
             function T (S : String) return Values.Model_Value_Type
                         renames Values.Text_Value;
             function R (X : Real) return Values.Model_Value_Type
@@ -124,6 +172,14 @@ package body Harriet.UI.Models.Star_System is
                R (World.Semimajor_Axis / Harriet.Solar_System.Earth_Orbit),
                R (World.Radius / Harriet.Solar_System.Earth_Radius),
                R (World.Surface_Gravity),
+               R (World.Surface_Temperature - Freezing_Point_Of_Water),
+               R (World.Minimum_Temperature - Freezing_Point_Of_Water),
+               R (World.Maximum_Temperature - Freezing_Point_Of_Water),
+               R (World.Night_Temperature_Low - Freezing_Point_Of_Water),
+               R (World.Daytime_Temperature_High - Freezing_Point_Of_Water),
+               (if World.Category in Jovian | Sub_Jovian
+                then R (0.0)
+                else R (World.Surface_Pressure / Earth_Surface_Pressure)),
                T (Harriet.Db.World_Category'Image (World.Category)),
                Q ((if Colony.Has_Element
                  then Colony.Population else Quantities.Zero))));
