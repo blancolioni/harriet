@@ -4,6 +4,7 @@ with Harriet.UI.Models.Galaxy;
 with Harriet.UI.Models.Shell;
 with Harriet.UI.Models.Star_System;
 with Harriet.UI.Models.Worlds;
+with Harriet.UI.Models.World_Ships;
 
 package body Harriet.UI.Models.Loader is
 
@@ -45,6 +46,8 @@ package body Harriet.UI.Models.Loader is
               Harriet.UI.Models.Star_System.Star_System_Model);
          Add ("world",
               Harriet.UI.Models.Worlds.World_Model);
+         Add ("world-ships",
+              Harriet.UI.Models.World_Ships.World_Ship_Model);
       end if;
    end Check_Map;
 
