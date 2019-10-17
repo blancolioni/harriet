@@ -166,6 +166,10 @@ private
       Message    : Harriet.Json.Json_Value'Class)
       return Harriet.Json.Json_Value'Class;
 
+   overriding procedure Send_Message
+     (Session : Root_Harriet_Session;
+      Message : Harriet.Json.Json_Value'Class);
+
    overriding function Execute_Command
      (Session : in out Root_Harriet_Session;
       Client  : Harriet.UI.Client_Id;

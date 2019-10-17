@@ -2,6 +2,8 @@ with Ada.Unchecked_Deallocation;
 
 with WL.String_Maps;
 
+with Harriet.Db.User;
+
 package body Harriet.UI.Sessions is
 
    type State_Access is access all State_Interface'Class;
@@ -13,7 +15,8 @@ package body Harriet.UI.Sessions is
    package State_Maps is
      new WL.String_Maps (State_Access);
 
-   States : State_Maps.Map;
+   States      : State_Maps.Map;
+   User_States : State_Maps.Map;
 
    ---------------
    -- Broadcast --
@@ -51,6 +54,19 @@ package body Harriet.UI.Sessions is
       Free (State);
    end Close_Session;
 
+   -------------
+   -- Element --
+   -------------
+
+   function Element
+     (User : Harriet.Db.User_Reference)
+      return access constant State_Interface'Class
+   is
+   begin
+      return User_States.Element
+        (Harriet.Db.User.Get (User).Login);
+   end Element;
+
    ------------
    -- Exists --
    ------------
@@ -68,8 +84,11 @@ package body Harriet.UI.Sessions is
      (Id    : String;
       State : State_Interface'Class)
    is
+      New_State : constant State_Access :=
+        new State_Interface'Class'(State);
    begin
-      States.Insert (Id, new State_Interface'Class'(State));
+      States.Insert (Id, New_State);
+      User_States.Insert (State.User_Name, New_State);
    end New_Session;
 
    ---------------

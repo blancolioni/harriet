@@ -84,9 +84,12 @@ package body Harriet.Colonies.Updates is
         .Set_Population (New_Pop)
         .Set_Wealth (Colony.Wealth - Revenue)
         .Done;
+
       Harriet.Db.Faction.Update_Faction (Colony.Faction)
         .Set_Cash (Cash)
         .Done;
+
+      Harriet.Factions.Synchronise (Colony.Faction);
 
       Harriet.Updates.Events.Update_With_Delay
         (Harriet.Calendar.Days (1), Update);

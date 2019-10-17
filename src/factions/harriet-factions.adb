@@ -1,3 +1,5 @@
+with Harriet.UI;
+
 with Harriet.Db.Faction;
 with Harriet.Db.World;
 
@@ -126,5 +128,16 @@ package body Harriet.Factions is
    begin
       return Harriet.Db.Faction.Get (Faction).Name;
    end Name;
+
+   -----------------
+   -- Synchronise --
+   -----------------
+
+   procedure Synchronise (Faction : Harriet.Db.Faction_Reference) is
+   begin
+      Harriet.UI.Send_Message
+        (Harriet.UI.New_Message (Faction)
+         .Cash_Changed);
+   end Synchronise;
 
 end Harriet.Factions;

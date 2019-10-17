@@ -46,6 +46,8 @@ package Harriet.Factions is
      (Faction : Harriet.Db.Faction_Reference)
       return Harriet.Db.Star_System_Reference;
 
+   procedure Synchronise (Faction : Harriet.Db.Faction_Reference);
+
 private
 
    type Faction_Type is tagged

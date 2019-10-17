@@ -1,6 +1,10 @@
 with Ada.Containers.Indefinite_Holders;
 
+with Harriet.Money;
+
 with Harriet.UI.Sessions;
+
+with Harriet.Db.Faction;
 
 package body Harriet.UI is
 
@@ -16,7 +20,6 @@ package body Harriet.UI is
    procedure Broadcast (Signal : Harriet.Signals.Signal_Type) is
    begin
       Current_UI.Broadcast (Signal);
-      Harriet.UI.Sessions.Broadcast (Signal);
    end Broadcast;
 
    ---------------
@@ -45,5 +48,26 @@ package body Harriet.UI is
    begin
       Holder := UI_Holders.To_Holder (UI);
    end On_UI_Started;
+
+   ------------------
+   -- Send_Message --
+   ------------------
+
+   procedure Send_Message
+     (Message : Faction_Message)
+   is
+      M : Json.Json_Object;
+      F : constant Harriet.Db.Faction.Faction_Type :=
+        Harriet.Db.Faction.Get (Message.Faction);
+   begin
+      if (for some Flag of Message.Flags => Flag) then
+         M.Set_Property ("type", "update-faction");
+         if Message.Flags (Cash_Changed) then
+            M.Set_Property ("cash", Float (Harriet.Money.To_Real (F.Cash)));
+         end if;
+         Harriet.UI.Sessions.Element (F.User)
+           .Send_Message (M);
+      end if;
+   end Send_Message;
 
 end Harriet.UI;

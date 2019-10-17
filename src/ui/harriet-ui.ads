@@ -1,6 +1,8 @@
 with Harriet.Json;
 with Harriet.Signals;
 
+with Harriet.Db;
+
 package Harriet.UI is
 
    Signal_Clock_Tick : constant Harriet.Signals.Signal_Type :=
@@ -90,6 +92,11 @@ package Harriet.UI is
       return Harriet.Json.Json_Value'Class
       is abstract;
 
+   procedure Send_Message
+     (State   : State_Interface;
+      Message : Harriet.Json.Json_Value'Class)
+   is abstract;
+
    function Execute_Command
      (State   : in out State_Interface;
       Client  : Client_Id;
@@ -130,10 +137,45 @@ package Harriet.UI is
 
    procedure Broadcast (Signal : Harriet.Signals.Signal_Type);
 
+   type Faction_Message is tagged private;
+
+   function New_Message
+     (Faction : Harriet.Db.Faction_Reference)
+      return Faction_Message;
+
+   function Cash_Changed
+     (Message : Faction_Message)
+      return Faction_Message;
+
+   procedure Send_Message
+     (Message : Faction_Message);
+
    procedure Close_All;
 
 private
 
    procedure On_UI_Started (UI : UI_Interface'Class);
+
+   type Message_Flags is (Cash_Changed);
+   type Message_Flag_Array is array (Message_Flags) of Boolean;
+
+   type Faction_Message is tagged
+      record
+         Faction : Harriet.Db.Faction_Reference;
+         Flags   : Message_Flag_Array := (others => False);
+      end record;
+
+   function New_Message
+     (Faction : Harriet.Db.Faction_Reference)
+      return Faction_Message
+   is (Faction_Message'
+         (Faction => Faction,
+          Flags   => <>));
+
+   function Cash_Changed
+     (Message : Faction_Message)
+      return Faction_Message
+   is ((Message with delta
+         Flags => (Message.Flags with delta Cash_Changed => True)));
 
 end Harriet.UI;

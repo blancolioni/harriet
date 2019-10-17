@@ -607,6 +607,18 @@ package body Harriet.Sessions is
       Session.Data.Set_Model (Client, Model);
    end Replace_Model;
 
+   ------------------
+   -- Send_Message --
+   ------------------
+
+   overriding procedure Send_Message
+     (Session : Root_Harriet_Session;
+      Message : Harriet.Json.Json_Value'Class)
+   is
+   begin
+      Session.Connection.Element.Send_Message (Message);
+   end Send_Message;
+
    -----------------
    -- Send_Signal --
    -----------------
