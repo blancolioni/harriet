@@ -4,6 +4,9 @@ export const LOGOUT = "LOGOUT";
 export const SET_CLIENT = "SET_CLIENT";
 export const SPLIT = "SPLIT";
 
+export const UPDATE_FACTION = "UPDATE_FACTION";
+export const SET_CASH = "SET_CASH";
+
 export const UPDATE_TIME = "UPDATE_TIME";
 export const SET_SPEED = "SET_SPEED";
 

@@ -1,6 +1,7 @@
 import * as actions from '../actions/websocket';
 import { setTime } from '../actions/status';
 import { logout } from '../actions/login';
+import { updateFaction } from '../actions/faction';
 
 import { WS_CONNECT, WS_DISCONNECT, WS_DISCONNECTED } from '../actionTypes';
 
@@ -34,6 +35,12 @@ const socketMiddleware = () => {
         store.dispatch(setTime({
           time: payload.currentTime,
           timeImage: payload.currentTimeImage,
+        }));
+        break;
+
+      case 'update-faction':
+        store.dispatch(updateFaction({
+          faction: payload.faction,
         }));
         break;
 

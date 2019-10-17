@@ -38,9 +38,15 @@ class Toolbar extends React.Component {
             <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
                 <a className="navbar-brand" href="#">{this.props.user}</a>
                 <div className="collapse navbar-collapse" id="navbarNavAltMarkup">
-                    <span>
-                        {this.props.status.timeImage}
-                    </span>
+                    <ul className="navbar-nav">
+                        <li className="nav-item">
+                            {this.props.status.timeImage}
+                        </li>
+                        <li className="nav-item">
+                            <i className="fas fa-coins"></i>
+                            {this.props.faction.cash}
+                        </li>
+                    </ul>
                 </div>
                 <div className="btn-group">
                     {[0,1,2].map(speed => {
@@ -66,6 +72,7 @@ function mapStateToProps(state) {
     return {
       status: state.status,
       user: state.login.faction,
+      faction: state.faction,
     };
   }
 
