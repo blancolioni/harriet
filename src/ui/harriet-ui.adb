@@ -10,6 +10,16 @@ package body Harriet.UI is
    Holder : UI_Holders.Holder;
 
    ---------------
+   -- Broadcast --
+   ---------------
+
+   procedure Broadcast (Signal : Harriet.Signals.Signal_Type) is
+   begin
+      Current_UI.Broadcast (Signal);
+      Harriet.UI.Sessions.Broadcast (Signal);
+   end Broadcast;
+
+   ---------------
    -- Close_All --
    ---------------
 

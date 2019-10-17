@@ -21,7 +21,8 @@ const socketMiddleware = () => {
     store.dispatch(actions.wsConnected(event.target.url));
   };
 
-  const onClose = store => () => {
+  const onClose = store => event => {
+    console.log ('onClose', event)
     store.dispatch(actions.wsDisconnected());
     store.dispatch(logout());
   };
@@ -40,7 +41,7 @@ const socketMiddleware = () => {
 
       case 'update-faction':
         store.dispatch(updateFaction({
-          faction: payload.faction,
+          cash: payload.cash,
         }));
         break;
 
@@ -62,6 +63,7 @@ const socketMiddleware = () => {
         }
 
         // connect to the remote host
+        console.log('wsconnect', action);
         socket = new WebSocket(webSocketUrl + 'socket');
 
         // websocket handlers

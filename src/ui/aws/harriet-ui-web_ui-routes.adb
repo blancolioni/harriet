@@ -325,8 +325,7 @@ package body Harriet.UI.Web_UI.Routes is
    ---------------------------
 
    function Handle_Socket_Message
-     (Connection : Connection_Interface'Class;
-      Message    : String)
+     (Message    : String)
       return String
    is
       Json : constant Harriet.Json.Json_Value'Class :=
@@ -334,8 +333,7 @@ package body Harriet.UI.Web_UI.Routes is
       Result_Json : constant Harriet.Json.Json_Value'Class :=
         Sessions.Reference (Json.Get_Property ("id"))
           .Handle_Message
-          (Connection => Connection,
-           Message    => Json);
+          (Message    => Json);
    begin
       return Result_Json.Serialize;
    end Handle_Socket_Message;

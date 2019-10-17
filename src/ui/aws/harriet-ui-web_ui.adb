@@ -1,18 +1,36 @@
+with Ada.Containers.Ordered_Maps;
+with Ada.Strings.Unbounded;
+
 with AWS.Net.WebSocket.Registry.Control;
 with AWS.Server;
 with AWS.Status;
 
 with Harriet.Calendar;
 
+with Harriet.UI.Sessions;
 with Harriet.UI.Web_UI.Handlers;
 with Harriet.UI.Web_UI.Logging;
 with Harriet.UI.Web_UI.Routes;
 
 package body Harriet.UI.Web_UI is
 
+   type Active_Socket_Record is
+      record
+         Recipient  : AWS.Net.WebSocket.Registry.Recipient;
+         Session_Id : Ada.Strings.Unbounded.Unbounded_String;
+         Connecting : Boolean;
+      end record;
+
+   package Active_Socket_Maps is
+     new Ada.Containers.Ordered_Maps
+       (Key_Type     => AWS.Net.WebSocket.UID,
+        Element_Type => Active_Socket_Record,
+        "<"          => AWS.Net.WebSocket."<");
+
+   Active_Sockets : Active_Socket_Maps.Map;
+
    type Socket_Type is
      new AWS.Net.WebSocket.Object
-     and Harriet.UI.Connection_Interface
    with null record;
 
    overriding procedure On_Close
@@ -31,14 +49,20 @@ package body Harriet.UI.Web_UI is
      (Socket  : in out Socket_Type;
       Message : String);
 
-   overriding procedure Send_Message
-     (Socket     : in out Socket_Type;
-      Message    : Harriet.Json.Json_Value'Class);
-
    function Create
      (Socket  : AWS.Net.Socket_Access;
       Request : AWS.Status.Data)
       return AWS.Net.WebSocket.Object'Class;
+
+   type Socket_Connection is
+     new Connection_Interface with
+      record
+         Recipient : AWS.Net.WebSocket.Registry.Recipient;
+      end record;
+
+   overriding procedure Send_Message
+     (Connection : Socket_Connection;
+      Message    : Harriet.Json.Json_Value'Class);
 
    type Web_UI_Type is
      new UI_Interface
@@ -243,11 +267,37 @@ package body Harriet.UI.Web_UI is
      (Socket  : in out Socket_Type;
       Message : String)
    is
-      Response : constant String :=
-        Routes.Handle_Socket_Message
-          (Socket, Message);
+      UID : constant AWS.Net.WebSocket.UID :=
+        Socket.Get_UID;
    begin
-      Socket.Send (Message => Response);
+      pragma Assert (Active_Sockets.Contains (UID));
+
+      if Active_Sockets (UID).Connecting then
+         declare
+            Id : constant String :=
+              Json.Deserialize (Message).Get_Property ("id").Image;
+         begin
+            if Harriet.UI.Sessions.Exists (Id) then
+               Active_Sockets (UID).Session_Id :=
+                 Ada.Strings.Unbounded.To_Unbounded_String (Id);
+               Active_Sockets (UID).Connecting := False;
+               Harriet.UI.Sessions.Reference (Id).Set_Connection
+                 (Socket_Connection'
+                    (Recipient => Active_Sockets (UID).Recipient));
+               Socket.Send (Json.Serialize (Json.String_Value ("ok")));
+            else
+               Socket.Close ("invalid");
+               Active_Sockets.Delete (UID);
+            end if;
+         end;
+      else
+         declare
+            Response : constant String :=
+              Routes.Handle_Socket_Message (Message);
+         begin
+            Socket.Send (Message => Response);
+         end;
+      end if;
    end On_Message;
 
    -------------
@@ -258,8 +308,19 @@ package body Harriet.UI.Web_UI is
      (Socket  : in out Socket_Type;
       Message : String)
    is
+      pragma Unreferenced (Message);
+      UID : constant AWS.Net.WebSocket.UID :=
+        Socket.Get_UID;
    begin
-      null;
+      pragma Assert (not Active_Sockets.Contains (UID));
+      Active_Sockets.Insert
+        (UID,
+         Active_Socket_Record'
+           (Recipient  =>
+                AWS.Net.WebSocket.Registry.Create (UID),
+            Session_Id => <>,
+            Connecting => True));
+
    end On_Open;
 
    --------------------
@@ -281,12 +342,12 @@ package body Harriet.UI.Web_UI is
    ------------------
 
    overriding procedure Send_Message
-     (Socket     : in out Socket_Type;
+     (Connection     : Socket_Connection;
       Message    : Harriet.Json.Json_Value'Class)
    is
    begin
-      Socket.Send
-        (Message => Message.Serialize);
+      AWS.Net.WebSocket.Registry.Send
+        (Connection.Recipient, Message.Serialize);
    end Send_Message;
 
    -----------------

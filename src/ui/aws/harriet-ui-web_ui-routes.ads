@@ -54,8 +54,7 @@ package Harriet.UI.Web_UI.Routes is
       return AWS.Response.Data;
 
    function Handle_Socket_Message
-     (Connection : Connection_Interface'Class;
-      Message    : String)
+     (Message    : String)
       return String;
 
 private

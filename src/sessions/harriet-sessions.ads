@@ -112,12 +112,13 @@ private
      new Ada.Finalization.Controlled
      and Harriet.UI.State_Interface with
       record
-         User            : Harriet.Db.User_Reference :=
+         User             : Harriet.Db.User_Reference :=
            Harriet.Db.Null_User_Reference;
-         Default_Context : Harriet.Contexts.Context_Type;
-         Connection      : Connection_Holders.Holder;
-         Dispatcher      : Harriet.Signals.Signal_Dispatcher;
-         Data            : Session_Data_Access;
+         Default_Context  : Harriet.Contexts.Context_Type;
+         Connection       : Connection_Holders.Holder;
+         Dispatcher       : Harriet.Signals.Signal_Dispatcher;
+         On_Clock_Tick_Id : Harriet.Signals.Handler_Id;
+         Data             : Session_Data_Access;
       end record;
 
    overriding procedure Initialize (Session : in out Root_Harriet_Session);
@@ -156,9 +157,12 @@ private
      (Session   : in out Root_Harriet_Session;
       Client    : Harriet.UI.Client_Id);
 
+   overriding procedure Set_Connection
+     (Session    : in out Root_Harriet_Session;
+      Connection : Harriet.UI.Connection_Interface'Class);
+
    overriding function Handle_Message
      (Session    : in out Root_Harriet_Session;
-      Connection : Harriet.UI.Connection_Interface'Class;
       Message    : Harriet.Json.Json_Value'Class)
       return Harriet.Json.Json_Value'Class;
 

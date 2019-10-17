@@ -21,3 +21,4 @@ harriet-init.marlowe
 
 # log files
 log/*.log
+test.txt

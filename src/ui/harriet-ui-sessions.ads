@@ -18,4 +18,7 @@ private package Harriet.UI.Sessions is
       return access State_Interface'Class
      with Pre => Exists (Id);
 
+   procedure Broadcast
+     (Signal : Harriet.Signals.Signal_Type);
+
 end Harriet.UI.Sessions;

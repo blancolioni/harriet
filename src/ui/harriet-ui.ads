@@ -12,7 +12,7 @@ package Harriet.UI is
      and Harriet.Signals.Signal_Data_Interface;
 
    procedure Send_Message
-     (Connection : in out Connection_Interface;
+     (Connection : Connection_Interface;
       Message    : Harriet.Json.Json_Value'Class)
    is abstract;
 
@@ -79,9 +79,13 @@ package Harriet.UI is
       Client : Client_Id)
    is abstract;
 
+   procedure Set_Connection
+     (State      : in out State_Interface;
+      Connection : Connection_Interface'Class)
+   is abstract;
+
    function Handle_Message
      (State      : in out State_Interface;
-      Connection : Connection_Interface'Class;
       Message    : Harriet.Json.Json_Value'Class)
       return Harriet.Json.Json_Value'Class
       is abstract;
@@ -123,6 +127,8 @@ package Harriet.UI is
       Name  : String)
       return String
    is (State.Environment_Value (Name).Image);
+
+   procedure Broadcast (Signal : Harriet.Signals.Signal_Type);
 
    procedure Close_All;
 

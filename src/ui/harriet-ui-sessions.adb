@@ -15,6 +15,19 @@ package body Harriet.UI.Sessions is
 
    States : State_Maps.Map;
 
+   ---------------
+   -- Broadcast --
+   ---------------
+
+   procedure Broadcast
+     (Signal : Harriet.Signals.Signal_Type)
+   is
+   begin
+      for State of States loop
+         State.Send_Signal (Signal);
+      end loop;
+   end Broadcast;
+
    ------------------------
    -- Close_All_Sessions --
    ------------------------

@@ -8,6 +8,7 @@ with Harriet.Configure;
 
 with Harriet.Calendar;
 with Harriet.Commands.Writers;
+with Harriet.Money;
 
 with Harriet.File_System.Root;
 
@@ -44,6 +45,10 @@ package body Harriet.Sessions is
      (Name : String;
       Get  : Status_Get_Function;
       Set  : Status_Set_Procedure);
+
+   procedure On_Clock_Tick
+     (Object : Harriet.Signals.Signaler'Class;
+      Data   : Harriet.Signals.Signal_Data_Interface'Class);
 
    function Default_Dashboard return Harriet.Json.Json_Value'Class;
 
@@ -448,19 +453,12 @@ package body Harriet.Sessions is
 
    overriding function Handle_Message
      (Session    : in out Root_Harriet_Session;
-      Connection : Harriet.UI.Connection_Interface'Class;
       Message    : Harriet.Json.Json_Value'Class)
       return Harriet.Json.Json_Value'Class
    is
       pragma Unreferenced (Message);
    begin
-      if Session.Connection.Is_Empty then
-         Session.Connection :=
-           Connection_Holders.To_Holder (Connection);
-      end if;
-
       return Session.Status_Message;
-
    end Handle_Message;
 
    overriding procedure Initialize (Session : in out Root_Harriet_Session)
@@ -549,6 +547,12 @@ package body Harriet.Sessions is
                  ("HOME", Harriet.Json.String_Value (Home));
                Session.Data.Set_Environment_Value
                  ("DASHBOARD", Default_Dashboard);
+               Session.On_Clock_Tick_Id :=
+                 Session.Add_Handler
+                   (Signal     => Harriet.UI.Signal_Clock_Tick,
+                    Handler    => On_Clock_Tick'Access,
+                    Data       =>
+                      Harriet.Signals.Null_Signal_Data'(null record));
             else
                Session.User := Harriet.Db.Null_User_Reference;
             end if;
@@ -561,18 +565,17 @@ package body Harriet.Sessions is
    -- On_Clock_Tick --
    -------------------
 
---     procedure On_Clock_Tick
---       (Object : Harriet.Signals.Signaler'Class;
---        Data   : Harriet.Signals.Signal_Data_Interface'Class)
---     is
---        Session    : Root_Harriet_Session'Class renames
---          Root_Harriet_Session'Class (Object);
---        Connection : Harriet.UI.Connection_Interface'Class renames
---          Harriet.UI.Connection_Interface'Class (Data);
---     begin
---        Connection.Send_Message
---          (Session.Status_Message);
---     end On_Clock_Tick;
+   procedure On_Clock_Tick
+     (Object : Harriet.Signals.Signaler'Class;
+      Data   : Harriet.Signals.Signal_Data_Interface'Class)
+   is
+      pragma Unreferenced (Data);
+      Session    : Root_Harriet_Session'Class renames
+        Root_Harriet_Session'Class (Object);
+   begin
+      Session.Connection.Element.Send_Message
+        (Session.Status_Message);
+   end On_Clock_Tick;
 
    --------------------
    -- Remove_Handler --
@@ -616,6 +619,18 @@ package body Harriet.Sessions is
       Session.Dispatcher.Call_Handlers (Session, Signal);
    end Send_Signal;
 
+   --------------------
+   -- Set_Connection --
+   --------------------
+
+   overriding procedure Set_Connection
+     (Session    : in out Root_Harriet_Session;
+      Connection : Harriet.UI.Connection_Interface'Class)
+   is
+   begin
+      Session.Connection := Connection_Holders.To_Holder (Connection);
+   end Set_Connection;
+
    ----------------------
    -- Set_Status_Value --
    ----------------------
@@ -650,11 +665,17 @@ package body Harriet.Sessions is
      (Session : Root_Harriet_Session'Class)
       return Json.Json_Object
    is
-      pragma Unreferenced (Session);
       Now : constant Harriet.Calendar.Time := Harriet.Calendar.Clock;
    begin
       return Message : Json.Json_Object do
-         Message.Set_Property ("type", "update-state");
+         Message.Set_Property ("type", "update-faction");
+         Message.Set_Property
+           ("cash",
+            Float
+              (Harriet.Money.To_Real
+                   (Harriet.Db.Faction.First_By_User
+                        (Session.User)
+                    .Cash)));
          Message.Set_Property
            ("currentTime",
             Float (Harriet.Calendar.To_Real (Now)));

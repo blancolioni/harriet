@@ -24,7 +24,7 @@ package body Harriet.Updates.Tasks is
             accept Broadcast (Signal : Harriet.Signals.Signal_Type) do
                Signal_Holder.Replace_Element (Signal);
             end Broadcast;
-            Harriet.UI.Current_UI.Broadcast (Signal_Holder.Element);
+            Harriet.UI.Broadcast (Signal_Holder.Element);
          or
             accept Stop;
             exit;
