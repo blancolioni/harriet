@@ -16,20 +16,17 @@ const socketMiddleware = () => {
 
   const onOpen = store => (event) => {
     const id = store.getState().login.id;
-    console.log('websocket open', id, event.target.url);
     socket.send(JSON.stringify({id}));
     store.dispatch(actions.wsConnected(event.target.url));
   };
 
   const onClose = store => event => {
-    console.log ('onClose', event)
     store.dispatch(actions.wsDisconnected());
     store.dispatch(logout());
   };
 
   const onMessage = store => (event) => {
     const payload = JSON.parse(event.data);
-    console.log('receiving server message', payload, store.getState());
 
     switch (payload.type) {
       case 'update-state':
@@ -63,7 +60,6 @@ const socketMiddleware = () => {
         }
 
         // connect to the remote host
-        console.log('wsconnect', action);
         socket = new WebSocket(webSocketUrl + 'socket');
 
         // websocket handlers
@@ -78,11 +74,9 @@ const socketMiddleware = () => {
           socket.close();
         }
         socket = null;
-        console.log('websocket closed');
         break;
 
       case WS_DISCONNECTED:
-        console.log('websocket disconnected');
         break;
 
       // case 'NEW_MESSAGE':
@@ -91,7 +85,6 @@ const socketMiddleware = () => {
       //   break;
 
       default:
-        console.log('the next action:', action);
         return next(action);
     }
   };
