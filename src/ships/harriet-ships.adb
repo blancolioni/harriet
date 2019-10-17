@@ -93,17 +93,18 @@ package body Harriet.Ships is
             Ada.Text_IO.Put_Line
               (S.Name & " in orbit above "
                & Harriet.Worlds.Name (S.World)
-               & ": altitude "
-               & Harriet.Real_Images.Approximate_Image
-                 ((S.Orbit - Harriet.Worlds.Radius (S.World)) / 1_000.0)
-               & "km inclination "
+               & ": alt"
+               & Natural'Image
+                 (Natural
+                      ((S.Orbit - Harriet.Worlds.Radius (S.World)) / 1_000.0))
+               & "km incl "
                & Harriet.Real_Images.Approximate_Image
                  (S.Inclination)
-               & " deg period "
+               & " deg prd "
                & Harriet.Real_Images.Approximate_Image
                  (Harriet.Orbits.Period
                       (Harriet.Worlds.Mass (S.World), S.Orbit) / 60.0)
-               & "m deg longitude "
+               & "m posn "
                & Harriet.Real_Images.Approximate_Image
                  (S.Current_Longitude)
                & " E");
