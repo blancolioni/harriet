@@ -1159,6 +1159,16 @@ package body Harriet.Configure.Star_Systems is
                Pressure : constant Real := World.Surface_Pressure;
                Category : World_Category;
                Habitability : Unit_Real := 0.0;
+               Temp_Ice     : constant :=
+                 Harriet.Constants.Freezing_Point_Of_Water;
+               Temp_Nice    : constant :=
+                 Harriet.Constants.Freezing_Point_Of_Water + 15.0;
+               Temp_Hot     : constant :=
+                 Harriet.Constants.Freezing_Point_Of_Water + 25.0;
+               Temp_Too_Hot : constant :=
+                 Harriet.Constants.Freezing_Point_Of_Water + 45.0;
+               Temperature  : constant Real := World.Surface_Temperature;
+
             begin
                if World.Gas_Giant then
                   Category := Jovian;
@@ -1174,9 +1184,21 @@ package body Harriet.Configure.Star_Systems is
                      Category := Water;
                   elsif World.Ice_Coverage >= 0.95 then
                      Category := Iceball;
-                  elsif World.Water_Coverage >= 0.05 then
-                     Habitability := 1.0;
+                  elsif World.Water_Coverage >= 0.05
+                    and then Temperature in Temp_Ice .. Temp_Too_Hot
+                  then
                      Category := Temperate;
+                     if Temperature < Temp_Nice then
+                        Habitability := 0.4
+                          + 0.6 * (Temperature - Temp_Ice)
+                          / (Temp_Nice - Temp_Ice);
+                     elsif Temperature > Temp_Hot then
+                        Habitability := 0.4
+                          + 0.6 * (Temp_Too_Hot - Temperature)
+                          / (Temp_Too_Hot - Temp_Hot);
+                     else
+                        Habitability := 1.0;
+                     end if;
                   elsif World.Maximum_Temperature
                     >= World.Water_Boiling_Point
                   then
