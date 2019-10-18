@@ -1,38 +1,57 @@
 import React from 'react';
 import { connect } from 'react-redux'
-import { login } from '../redux/actions/login';
+import { login } from '../redux/login/login';
 
 import { userService } from '../_services';
 
 const allowEmptyPassword = true;
 
-class LoginPage extends React.Component {
-    constructor(props) {
+interface LoginState {
+    username : string
+    password : string
+    submitted : boolean
+    loading : boolean
+    error : string
+    errorMessage : string
+}
+
+interface LoginProps {
+    login: (id : string, username : string, factionname : string) => void
+}
+
+const initialState : LoginState = {
+    username: '',
+    password: '',
+    submitted: false,
+    loading: false,
+    error: '',
+    errorMessage: '',
+}
+
+class LoginPage extends React.Component<LoginProps,LoginState> {
+    constructor(props : LoginProps) {
         super(props);
 
         userService.logout();
 
-        this.state = {
-            username: '',
-            password: '',
-            submitted: false,
-            loading: false,
-            error: ''
-        };
+        this.state = initialState;
 
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
     }
 
-    handleChange(e) {
+    handleChange(e : React.ChangeEvent<HTMLInputElement>) {
         const { name, value } = e.target;
-        this.setState({ [name]: value });
+        this.setState(state => {
+           return { ...state,
+                     [name]: value 
+                  }
+           });
     }
 
-    handleSubmit(e) {
+    handleSubmit(e : React.FormEvent<HTMLFormElement>) {
         e.preventDefault();
 
-        this.setState({ submitted: true });
         const { username, password } = this.state;
 
         // stop here if form is invalid
@@ -40,11 +59,12 @@ class LoginPage extends React.Component {
             return;
         }
 
-        this.setState({ loading: true });
+        this.setState({ submitted: true, loading: true });
+                     
         userService.login(username, password)
             .then(
-                user => {
-                    this.props.login(user);
+                resp => {
+                    this.props.login(resp.id, resp.user, resp.faction);
                 },
                 error => {
                     console.log(error);

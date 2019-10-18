@@ -1,6 +1,6 @@
 import * as actions from '../actions/websocket';
 import { setTime } from '../actions/status';
-import { logout } from '../actions/login';
+import { logout } from '../login/login.tsx';
 import { updateFaction } from '../actions/faction';
 
 import { WS_CONNECT, WS_DISCONNECT, WS_DISCONNECTED } from '../actionTypes';
