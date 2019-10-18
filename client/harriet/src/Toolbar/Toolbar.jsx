@@ -1,7 +1,7 @@
 import React from 'react';
 import { userService } from '../_services';
 import { connect } from 'react-redux'
-import { logout } from '../redux/actions/login';
+import { wsDisconnect } from '../redux/actions/websocket';
 import { setSpeed } from '../redux/actions/status';
 
 import '../Concorde.css';
@@ -20,7 +20,7 @@ function SpeedButton(props) {
 class Toolbar extends React.Component {
 
     handleLogout = () => {
-        this.props.logout({});
+        this.props.wsDisconnect({});
     }
 
     changeSpeed = newSpeed => {
@@ -78,5 +78,5 @@ function mapStateToProps(state) {
 
 export default connect(
     mapStateToProps,
-    { logout, setSpeed }
+    { wsDisconnect, setSpeed }
 )(Toolbar)
