@@ -37,6 +37,7 @@ package body Harriet.UI.Sessions is
 
    procedure Close_All_Sessions is
    begin
+      User_States.Clear;
       for State of States loop
          Free (State);
       end loop;
@@ -50,6 +51,7 @@ package body Harriet.UI.Sessions is
    procedure Close_Session (Id : String) is
       State : State_Access := States.Element (Id);
    begin
+      User_States.Delete (State.User_Name);
       States.Delete (Id);
       Free (State);
    end Close_Session;
