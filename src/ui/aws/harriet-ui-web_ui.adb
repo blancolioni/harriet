@@ -241,9 +241,16 @@ package body Harriet.UI.Web_UI is
      (Socket  : in out Socket_Type;
       Message : String)
    is
-      pragma Unreferenced (Socket);
+      pragma Unreferenced (Message);
+      UID : constant AWS.Net.WebSocket.UID :=
+        Socket.Get_UID;
    begin
-      null;
+      pragma Assert (Active_Sockets.Contains (UID));
+
+      Harriet.UI.Sessions.Close_Session
+        (Ada.Strings.Unbounded.To_String
+           (Active_Sockets.Element (UID).Session_Id));
+      Active_Sockets.Delete (UID);
    end On_Close;
 
    --------------
@@ -254,9 +261,15 @@ package body Harriet.UI.Web_UI is
      (Socket  : in out Socket_Type;
       Message : String)
    is
-      pragma Unreferenced (Socket);
+      pragma Unreferenced (Message);
+      UID : constant AWS.Net.WebSocket.UID :=
+        Socket.Get_UID;
    begin
-      null;
+      pragma Assert (Active_Sockets.Contains (UID));
+      Harriet.UI.Sessions.Close_Session
+        (Ada.Strings.Unbounded.To_String
+           (Active_Sockets.Element (UID).Session_Id));
+      Active_Sockets.Delete (UID);
    end On_Error;
 
    ----------------
