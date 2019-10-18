@@ -8,6 +8,8 @@ export const SET_CASH = "SET_CASH";
 export const UPDATE_TIME = "UPDATE_TIME";
 export const SET_SPEED = "SET_SPEED";
 
+export const RESET = "RESET";
+
 export const WS_CONNECT = "WS_CONNECT";
 export const WS_CONNECTING = "WS_CONNECTING";
 export const WS_CONNECTED = "WS_CONNECTED";
