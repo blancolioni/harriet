@@ -1,7 +1,6 @@
 with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Text_IO;
 
-with Harriet.Calendar;
 with Harriet.Elementary_Functions;
 with Harriet.Quantities;
 with Harriet.Random;
@@ -112,13 +111,34 @@ package body Harriet.Ships is
       end if;
    end Create_Ship;
 
+   ----------------------
+   -- Current_Latitude --
+   ----------------------
+
+   function Current_Latitude
+     (Ship : Ship_Type'Class)
+      return Real
+   is
+      use type Harriet.Calendar.Time;
+      Latitude, Longitude : Real;
+   begin
+      Harriet.Orbits.Calculate_Position
+        (Large_Mass => Harriet.Worlds.Mass (Ship.World),
+         Orbit      => Ship.Orbit,
+         Elapsed    =>
+           Harriet.Calendar.Clock - Ship.Epoch,
+         Latitude   => Latitude,
+         Longitude  => Longitude);
+      return Latitude;
+   end Current_Latitude;
+
    -----------------------
    -- Current_Longitude --
    -----------------------
 
    function Current_Longitude
      (Ship : Ship_Type'Class)
-      return Non_Negative_Real
+      return Real
    is
       use Harriet.Calendar;
       Orbit       : constant Non_Negative_Real := Ship.Orbit;
@@ -138,6 +158,10 @@ package body Harriet.Ships is
       if Longitude >= 360.0 then
          Longitude := Longitude - 360.0;
       end if;
+      if Longitude >= 180.0 then
+         Longitude := -(360.0 - Longitude);
+      end if;
+
       return Longitude;
    end Current_Longitude;
 

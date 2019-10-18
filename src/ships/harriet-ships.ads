@@ -1,3 +1,5 @@
+with Harriet.Calendar;
+
 with Harriet.Db.Ship;
 
 package Harriet.Ships is
@@ -29,9 +31,17 @@ package Harriet.Ships is
      (Ship : Ship_Type'Class)
       return Real;
 
+   function Epoch
+     (Ship : Ship_Type'Class)
+      return Harriet.Calendar.Time;
+
    function Current_Longitude
      (Ship : Ship_Type'Class)
-      return Non_Negative_Real;
+      return Real;
+
+   function Current_Latitude
+     (Ship : Ship_Type'Class)
+      return Real;
 
    function Dry_Mass
      (Ship : Ship_Type'Class)
@@ -113,5 +123,10 @@ private
      (Ship : Ship_Type'Class)
       return Real
    is (Harriet.Db.Ship.Get (Ship.Reference).Inclination);
+
+   function Epoch
+     (Ship : Ship_Type'Class)
+      return Harriet.Calendar.Time
+   is (Harriet.Db.Ship.Get (Ship.Reference).Epoch);
 
 end Harriet.Ships;
