@@ -78,6 +78,18 @@ package body Harriet.UI.Sessions is
       return States.Contains (Id);
    end Exists;
 
+   ---------------
+   -- Is_Active --
+   ---------------
+
+   function Is_Active
+     (User : Harriet.Db.User_Reference)
+      return Boolean
+   is
+   begin
+      return User_States.Contains (Harriet.Db.User.Get (User).Login);
+   end Is_Active;
+
    -----------------
    -- New_Session --
    -----------------

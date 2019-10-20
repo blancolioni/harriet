@@ -60,13 +60,15 @@ package body Harriet.UI is
       F : constant Harriet.Db.Faction.Faction_Type :=
         Harriet.Db.Faction.Get (Message.Faction);
    begin
-      if (for some Flag of Message.Flags => Flag) then
-         M.Set_Property ("type", "update-faction");
-         if Message.Flags (Cash_Changed) then
-            M.Set_Property ("cash", Float (Harriet.Money.To_Real (F.Cash)));
+      if Harriet.UI.Sessions.Is_Active (F.User) then
+         if (for some Flag of Message.Flags => Flag) then
+            M.Set_Property ("type", "update-faction");
+            if Message.Flags (Cash_Changed) then
+               M.Set_Property ("cash", Float (Harriet.Money.To_Real (F.Cash)));
+            end if;
+            Harriet.UI.Sessions.Element (F.User)
+              .Send_Message (M);
          end if;
-         Harriet.UI.Sessions.Element (F.User)
-           .Send_Message (M);
       end if;
    end Send_Message;
 
