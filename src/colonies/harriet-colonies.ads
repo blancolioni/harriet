@@ -1,3 +1,5 @@
+with Harriet.Quantities;
+
 with Harriet.Db;
 
 package Harriet.Colonies is
@@ -7,6 +9,10 @@ package Harriet.Colonies is
    function Get
      (Reference : Harriet.Db.Colony_Reference)
       return Colony_Handle;
+
+   function Population
+     (Handle : Colony_Handle)
+      return Harriet.Quantities.Quantity_Type;
 
 private
 

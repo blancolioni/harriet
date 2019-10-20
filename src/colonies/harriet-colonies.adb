@@ -1,3 +1,5 @@
+with Harriet.Db.Colony;
+
 package body Harriet.Colonies is
 
    ---------
@@ -10,5 +12,17 @@ package body Harriet.Colonies is
       return Colony_Handle'
         (Reference => Reference);
    end Get;
+
+   ----------------
+   -- Population --
+   ----------------
+
+   function Population
+     (Handle : Colony_Handle)
+      return Harriet.Quantities.Quantity_Type
+   is
+   begin
+      return Harriet.Db.Colony.Get (Handle.Reference).Population;
+   end Population;
 
 end Harriet.Colonies;
