@@ -48,6 +48,10 @@ package body Harriet.Configure.Commodities is
       Configure_Non_Resources
         (Tropos.Reader.Read_Config
            (Scenario_File
+                (Scenario_Name, "commodities", "water.commodity")));
+      Configure_Non_Resources
+        (Tropos.Reader.Read_Config
+           (Scenario_File
                 (Scenario_Name, "commodities", "power.commodity")));
       Configure_Non_Resources
         (Tropos.Reader.Read_Config
