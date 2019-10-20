@@ -236,10 +236,7 @@ package body Harriet.Colonies.Updates is
             Facility  : constant Harriet.Db.Facility.Facility_Type :=
                           Harriet.Db.Facility.Get
                             (Installation.Facility);
-            Power     : constant Natural :=
-                          (if Facility.Generator
-                           then 0
-                           else Facility.Power);
+            Power     : constant Natural := Facility.Power;
          begin
             Installations.Append
               (Installation_Record'
@@ -251,9 +248,7 @@ package body Harriet.Colonies.Updates is
             Total_Pop := Total_Pop + Employees;
             Total_Power := Total_Power + Power;
             Efficiency := Efficiency * 0.99;
-            if Facility.Generator then
-               Available_Power := Available_Power + Facility.Power;
-            end if;
+            Available_Power := Available_Power + Facility.Generate;
          end;
       end loop;
 
