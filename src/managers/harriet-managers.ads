@@ -7,6 +7,15 @@ with Harriet.Db.Managed;
 
 package Harriet.Managers is
 
+   type Priority_Type is range 1 .. 20;
+
+   Top_Priority        : constant Priority_Type := 1;
+   Emergency_Priority  : constant Priority_Type := 3;
+   High_Priority       : constant Priority_Type := 6;
+   Medium_Prority      : constant Priority_Type := 10;
+   Low_Priority        : constant Priority_Type := 15;
+   Lowest_Priority     : constant Priority_Type := Priority_Type'Last;
+
    type Root_Manager_Type is abstract tagged private;
 
    function Identifier
