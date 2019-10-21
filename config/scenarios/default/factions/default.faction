@@ -8,11 +8,15 @@ home-colony = {
    
    facilities = {
       mine = 10
+	  strip-mine = 1
       industry = 10
       research-lab = 2
       coal-power = 5
    }
    
+   stock = {
+      coal = 100
+	  }
    ships = { scout defender trader }
 }
 
