@@ -57,6 +57,7 @@ package Worlds is
 	  Resource;
 	  Concentration : Long_Float;
 	  Available     : Quantity_Type;
+	  unique key Deposit with World, Resource;
    end Deposit;
    
 end Worlds;
