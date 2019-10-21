@@ -153,7 +153,7 @@ package body Harriet.Ships is
       Orbit_Count : constant Non_Negative_Real := Real (Elapsed) / Period;
       Partial     : constant Unit_Real :=
                       Orbit_Count - Real'Truncation (Orbit_Count);
-      Longitude   : Non_Negative_Real := Partial * 360.0;
+      Longitude   : Real := Partial * 360.0;
    begin
       if Longitude >= 360.0 then
          Longitude := Longitude - 360.0;
