@@ -7,6 +7,7 @@ with Harriet.Quantities;
 with Harriet.Real_Images;
 
 with Harriet.Colonies;
+with Harriet.Commodities;
 with Harriet.Installations;
 with Harriet.Factions;
 with Harriet.Worlds;
@@ -14,6 +15,7 @@ with Harriet.Worlds;
 with Harriet.Db.Colony;
 with Harriet.Db.Expense;
 with Harriet.Db.Facility;
+with Harriet.Db.Facility_Input;
 with Harriet.Db.Faction;
 with Harriet.Db.Installation;
 with Harriet.Db.Revenue;
@@ -89,7 +91,8 @@ package body Harriet.Colonies.Updates is
         Harriet.Db.Faction.Get (Colony.Faction);
       World   : constant Harriet.Db.World_Reference :=
         Colony.World;
-
+      Stock   : constant Harriet.Db.Has_Stock_Reference :=
+        Colony.Get_Has_Stock_Reference;
       Pop     : constant Harriet.Quantities.Quantity_Type :=
         Colony.Population;
       Cash    : constant Harriet.Money.Money_Type :=
@@ -106,12 +109,24 @@ package body Harriet.Colonies.Updates is
       package Installation_Vectors is
         new Ada.Containers.Vectors (Positive, Installation_Record);
 
+      type Generator_Record is
+         record
+            Installation : Harriet.Db.Installation_Reference;
+            Max_Power    : Natural;
+            Consumption  : Harriet.Commodities.Stock_Type;
+         end record;
+
+      package Generator_Vectors is
+        new Ada.Containers.Vectors (Positive, Generator_Record);
+
       Installations   : Installation_Vectors.Vector;
+      Generators      : Generator_Vectors.Vector;
       Efficiency      : Unit_Real := Colony.Loyalty;
       Total_Cost      : Money_Type := Zero;
       Total_Pop       : Quantity_Type := Zero;
       Total_Power     : Natural := 0;
       Available_Power : Natural := 0;
+      Generated_Power : Natural := 0;
 
    begin
       for Installation of Harriet.Db.Installation.Select_By_World (World) loop
@@ -139,7 +154,69 @@ package body Harriet.Colonies.Updates is
             Total_Pop := Total_Pop + Employees;
             Total_Power := Total_Power + Power;
             Efficiency := Efficiency * 0.99;
-            Available_Power := Available_Power + Facility.Generate;
+
+            if Facility.Generate > 0 then
+               declare
+                  Max : Natural := Facility.Generate;
+               begin
+                  for Input of
+                    Harriet.Db.Facility_Input.Select_By_Facility
+                      (Installation.Facility)
+                  loop
+                     declare
+                        Required      : constant Quantity_Type :=
+                          Input.Quantity;
+                        Available     : constant Quantity_Type :=
+                          Harriet.Commodities.Current_Quantity
+                            (Stock, Input.Commodity);
+                        Consumed      : constant Quantity_Type :=
+                          Min (Required, Available);
+                        Effectiveness : constant Unit_Real :=
+                          To_Real (Consumed) / To_Real (Required);
+                        New_Max       : constant Natural :=
+                          Natural (Real (Facility.Generate) * Effectiveness);
+                     begin
+                        Max := Natural'Min (Max, New_Max);
+                     end;
+                  end loop;
+
+                  if Max > 0 then
+                     Available_Power := Available_Power + Max;
+                     declare
+                        Rec : Generator_Record :=
+                          Generator_Record'
+                            (Installation =>
+                               Installation.Get_Installation_Reference,
+                             Max_Power    => Max,
+                             Consumption  => <>);
+                     begin
+                        for Input of
+                          Harriet.Db.Facility_Input.Select_By_Facility
+                            (Installation.Facility)
+                        loop
+                           declare
+                              Required      : constant Quantity_Type :=
+                                Input.Quantity;
+                              Available     : constant Quantity_Type :=
+                                Harriet.Commodities.Current_Quantity
+                                  (Stock, Input.Commodity);
+                              Consumed      : constant Quantity_Type :=
+                                Scale (Required,
+                                       Real (Max) / Real (Facility.Generate));
+                           begin
+                              Harriet.Commodities.Remove_Stock
+                                (Stock, Input.Commodity,
+                                 Min (Available, Consumed));
+                              Harriet.Commodities.Add_Stock
+                                (Rec.Consumption, Input.Commodity,
+                                 Min (Available, Consumed));
+                           end;
+                        end loop;
+                        Generators.Append (Rec);
+                     end;
+                  end if;
+               end;
+            end if;
          end;
       end loop;
 
@@ -196,6 +273,43 @@ package body Harriet.Colonies.Updates is
          & "; available power:" & Available_Power'Image
          & "; efficiency:"
          & Natural'Image (Natural (Efficiency * 100.0)) & "%");
+
+      Generated_Power := Natural'Min (Total_Power, Available_Power);
+
+      for Generator of Generators loop
+         exit when Generated_Power = 0;
+         declare
+            This_Generator : constant Natural :=
+              Natural'Min (Generated_Power, Generator.Max_Power);
+            Scale          : constant Unit_Real :=
+              Real (This_Generator)
+              / Real (Generator.Max_Power);
+
+            procedure Consume_Input
+              (Commodity : Harriet.Commodities.Commodity_Reference;
+               Quantity  : Quantity_Type);
+
+            -------------------
+            -- Consume_Input --
+            -------------------
+
+            procedure Consume_Input
+              (Commodity : Harriet.Commodities.Commodity_Reference;
+               Quantity  : Quantity_Type)
+            is
+            begin
+               Harriet.Commodities.Remove_Stock
+                 (Stock, Commodity,
+                  Min (Harriet.Commodities.Current_Quantity (Stock, Commodity),
+                    Harriet.Quantities.Scale (Quantity, Scale)));
+            end Consume_Input;
+
+         begin
+            Harriet.Commodities.Scan
+              (Generator.Consumption, Consume_Input'Access);
+         end;
+
+      end loop;
 
       for Rec of Installations loop
          Harriet.Db.Installation.Update_Installation (Rec.Installation)
