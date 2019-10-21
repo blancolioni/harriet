@@ -47,6 +47,7 @@ package body Harriet.Configure.Facilities is
              Harriet.Quantities.To_Quantity (Config.Get ("employees")),
            Power          => Config.Get ("power", 0),
            Generate       => Config.Get ("generate", 0),
+           Strip_Mining   => Config.Get ("strip-mine", 0),
            Mining         => Config.Get ("mine", 0),
            Industry       => Config.Get ("industry", 0),
            Research       => Config.Get ("research", 0));
