@@ -63,6 +63,7 @@ package body Harriet.Configure.Resources is
       Generator : Random_Deposit_Generator)
    is
       use Harriet.Elementary_Functions;
+      Gen : Random_Deposit_Generator := Generator;
       Initial_Concentration : constant Unit_Real :=
         (0.5 + Harriet.Random.Unit_Random / 2.0)
         ** (World.Radius
@@ -74,25 +75,30 @@ package body Harriet.Configure.Resources is
       while Concentration > Initial_Concentration / 20.0 loop
          declare
             Pick   : Non_Negative_Real :=
-              Harriet.Random.Unit_Random * Generator.Total_Strength;
+              Harriet.Random.Unit_Random * Gen.Total_Strength;
             Choice : Positive := 1;
          begin
-            while Pick > Generator.Resources (Choice).Strength loop
-               Pick := Pick - Generator.Resources (Choice).Strength;
+            while Pick > Gen.Resources (Choice).Strength loop
+               Pick := Pick - Gen.Resources (Choice).Strength;
                Choice := Choice + 1;
             end loop;
 
             Harriet.Db.Deposit.Create
               (World         => World.Get_World_Reference,
-               Resource      => Generator.Resources (Choice).Reference,
+               Resource      => Gen.Resources (Choice).Reference,
                Concentration =>
                  Harriet.Random.About (Concentration, Concentration / 10.0),
                Available     =>
                  Harriet.Quantities.To_Quantity
                    (Harriet.Random.About
                         ((2.0e5
-                         + Generator.Resources (Choice).Strength * 1.0E6),
+                         + Gen.Resources (Choice).Strength * 1.0E6),
                          1.0e5)));
+            Gen.Total_Strength :=
+              Gen.Total_Strength - Gen.Resources (Choice).Strength;
+            exit when Gen.Resources.Is_Empty;
+            Gen.Resources (Choice) := Gen.Resources.Last_Element;
+            Gen.Resources.Delete_Last;
             Concentration := Concentration
               * (Harriet.Random.Unit_Random / 4.0 + 0.25);
          end;
