@@ -31,16 +31,15 @@ package body Harriet.Worlds.Updates is
       List : Mined_Lists.List;
 
    begin
-      Mined := Quantities.Zero;
-      for Deposit of Harriet.Db.Deposit.Select_By_World (World) loop
-         if Resource = Null_Resource_Reference
-           or else Deposit.Resource = Resource
-         then
+
+      if Resource = Null_Resource_Reference then
+         Mined := Quantities.Zero;
+         for Deposit of Harriet.Db.Deposit.Select_By_World (World) loop
             declare
                This_Mined : constant Quantity_Type :=
-                              Scale (Deposit.Available,
-                                     Effectiveness * Deposit.Concentration
-                                     * 1.0e-4);
+                 Scale (Deposit.Available,
+                        Effectiveness * Deposit.Concentration
+                        * 5.0e-5);
             begin
                List.Append
                  (Mined_Record'
@@ -50,8 +49,28 @@ package body Harriet.Worlds.Updates is
                      Mined         => This_Mined));
                Mined := Mined + This_Mined;
             end;
-         end if;
-      end loop;
+         end loop;
+      else
+         Mined := Quantities.Zero;
+         for Deposit of Harriet.Db.Deposit.Select_By_Deposit
+           (World, Resource)
+         loop
+            declare
+               This_Mined : constant Quantity_Type :=
+                 Scale (Deposit.Available,
+                        Effectiveness * Deposit.Concentration
+                        * 1.0e-4);
+            begin
+               List.Append
+                 (Mined_Record'
+                    (Deposit       => Deposit.Get_Deposit_Reference,
+                     Concentration => Deposit.Concentration,
+                     Available     => Deposit.Available,
+                     Mined         => This_Mined));
+               Mined := Mined + This_Mined;
+            end;
+         end loop;
+      end if;
 
       for Rec of List loop
          declare
