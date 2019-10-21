@@ -3,6 +3,8 @@ with Ada.Text_IO;
 
 with WL.String_Sets;
 
+with Harriet.Configure.Commodities;
+
 with Harriet.Calendar;
 with Harriet.Configure;
 with Harriet.Money;
@@ -281,6 +283,10 @@ package body Harriet.Factions.Create is
                     Economy          => Get ("economy"));
 
    begin
+
+      Harriet.Configure.Commodities.Configure_Stock
+        (Has_Stock => Harriet.Db.Colony.Get (Colony).Get_Has_Stock_Reference,
+         Config    => Config);
 
       Initial_Facilities
         (Config => Config.Child ("facilities"),
