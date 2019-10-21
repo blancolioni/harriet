@@ -65,7 +65,7 @@ package body Harriet.Configure.Resources is
       use Harriet.Elementary_Functions;
       Gen : Random_Deposit_Generator := Generator;
       Initial_Concentration : constant Unit_Real :=
-        (0.5 + Harriet.Random.Unit_Random / 2.0)
+        (0.4 + Harriet.Random.Unit_Random / 2.0)
         ** (World.Radius
             / Harriet.Solar_System.Earth_Radius);
       Concentration         : Unit_Real :=

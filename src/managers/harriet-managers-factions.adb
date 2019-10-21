@@ -225,14 +225,6 @@ package body Harriet.Managers.Factions is
            Harriet.Db.Deposit.Select_By_World
              (World.Get_World_Reference)
          loop
-            Manager.Log
-              (World.Name & ": "
-               & Harriet.Db.Resource.Get (Deposit.Resource).Tag
-               & " "
-               & Harriet.Quantities.Show (Deposit.Available)
-               & " "
-               & Harriet.Real_Images.Approximate_Image
-                 (Deposit.Concentration * 100.0) & "%");
             Update_Deposit
               (World.Get_World_Reference,
                Deposit.Resource, Deposit.Available,
