@@ -22,4 +22,18 @@ record Colony : Knowable, Managed, Updated, Has_Stock is
    Economy     : Long_Float;
 end Colony;
 
+record Revenue is
+   key Colony;
+   Date    : Time;
+   Revenue : Money_Type;
+   key Historical_Revenue with Colony, Date;
+end Revenue;
+
+record Expense is
+   key Colony;
+   Date    : Time;
+   Expense : Money_Type;
+   key Historical_Expense with Colony, Date;
+end Expense;
+
 end Colonies;
