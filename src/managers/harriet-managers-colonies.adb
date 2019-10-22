@@ -7,6 +7,7 @@ with Harriet.Real_Images;
 with Harriet.Colonies;
 with Harriet.Commodities;
 with Harriet.Factions;
+with Harriet.Ships;
 with Harriet.Worlds;
 
 with Harriet.Managers.Colonies.Requirements;
@@ -17,9 +18,12 @@ with Harriet.Db.Deposit;
 with Harriet.Db.Expense;
 with Harriet.Db.Facility;
 with Harriet.Db.Facility_Input;
+with Harriet.Db.Input_Commodity;
 with Harriet.Db.Installation;
+with Harriet.Db.Manufactured;
 with Harriet.Db.Resource;
 with Harriet.Db.Revenue;
+with Harriet.Db.Ship;
 with Harriet.Db.Stock_Item;
 
 package body Harriet.Managers.Colonies is
@@ -59,6 +63,9 @@ package body Harriet.Managers.Colonies is
    procedure Check_Installations
      (Manager : in out Root_Colony_Manager'Class);
 
+   procedure Check_Ships
+     (Manager : in out Root_Colony_Manager'Class);
+
    procedure Check_Revenue
      (Manager : Root_Colony_Manager'Class);
 
@@ -94,6 +101,7 @@ package body Harriet.Managers.Colonies is
       Requirements.Clear_Requirements (Manager.Require);
 
       Manager.Check_Installations;
+      Manager.Check_Ships;
       Manager.Check_Builds;
       Manager.Check_Revenue;
 
@@ -156,7 +164,7 @@ package body Harriet.Managers.Colonies is
                  (Requirements => Manager.Require,
                   Commodity    => Input.Commodity,
                   Quantity     => Input.Quantity,
-                  Priority     => Medium_Prority);
+                  Priority     => High_Priority);
             end loop;
 
             Manager.Working_Pop :=
@@ -174,7 +182,7 @@ package body Harriet.Managers.Colonies is
 
       if Manager.Missing_Pop > Scale (Manager.Total_Pop, 0.1) then
          Requirements.Add_Population_Requirement
-           (Manager.Require, Manager.Missing_Pop, Medium_Prority);
+           (Manager.Require, Manager.Missing_Pop, Low_Priority);
       end if;
 
    end Check_Installations;
@@ -242,6 +250,38 @@ package body Harriet.Managers.Colonies is
          end;
       end if;
    end Check_Revenue;
+
+   procedure Check_Ships
+     (Manager : in out Root_Colony_Manager'Class)
+   is
+      Required_Fuel : Non_Negative_Real := 0.0;
+      Commodity     : constant Harriet.Db.Commodity_Reference :=
+        Harriet.Db.Commodity.Get_Reference_By_Tag
+          ("ship-fuel");
+   begin
+      for Ship of
+        Harriet.Db.Ship.Select_By_Home (Manager.World)
+      loop
+         Required_Fuel :=
+           Required_Fuel + Harriet.Ships.Tank_Size
+           (Harriet.Ships.Get (Ship.Get_Ship_Reference));
+      end loop;
+
+      Requirements.Add_Requirement
+        (Requirements => Manager.Require,
+         Commodity    => Commodity,
+         Quantity     =>
+           Harriet.Quantities.To_Quantity (Required_Fuel / 4.0),
+         Priority     => High_Priority);
+
+      Requirements.Add_Requirement
+        (Requirements => Manager.Require,
+         Commodity    => Commodity,
+         Quantity     =>
+           Harriet.Quantities.To_Quantity (2.0 * Required_Fuel),
+         Priority     => Medium_Priority);
+
+   end Check_Ships;
 
    ----------------------------
    -- Create_Default_Manager --
@@ -444,9 +484,34 @@ package body Harriet.Managers.Colonies is
             Assign_Mines (Commodity, Requirement, Priority);
          else
             declare
-               Required_Industry : Natural :=
-                 Natural (Harriet.Quantities.To_Real (Requirement));
+               use Harriet.Quantities;
+               Manufacture : constant Harriet.Db.Manufactured_Reference :=
+                 Harriet.Db.Manufactured.Get_Manufactured (Commodity)
+                 .Get_Manufactured_Reference;
+               Max_Production : Quantity_Type := Requirement;
+               Required_Industry : Natural;
             begin
+               for Part of
+                 Harriet.Db.Input_Commodity.Select_By_Manufactured
+                   (Manufacture)
+               loop
+                  declare
+                     Required : constant Quantity_Type :=
+                       Max_Production * Part.Quantity;
+                     Available : constant Quantity_Type :=
+                       Harriet.Commodities.Current_Quantity
+                         (Manager.Colony_Has_Stock, Part.Commodity);
+                  begin
+                     if Available < Required then
+                        Max_Production :=
+                          Available / Part.Quantity;
+                     end if;
+                  end;
+               end loop;
+
+               Required_Industry :=
+                 Natural (Harriet.Quantities.To_Real (Max_Production));
+
                while Remaining_Industry > 0
                  and then Required_Industry > 0
                loop

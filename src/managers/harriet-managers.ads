@@ -12,7 +12,7 @@ package Harriet.Managers is
    Top_Priority        : constant Priority_Type := 1;
    Emergency_Priority  : constant Priority_Type := 3;
    High_Priority       : constant Priority_Type := 6;
-   Medium_Prority      : constant Priority_Type := 10;
+   Medium_Priority     : constant Priority_Type := 10;
    Low_Priority        : constant Priority_Type := 15;
    Lowest_Priority     : constant Priority_Type := Priority_Type'Last;
 
