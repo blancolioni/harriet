@@ -5,6 +5,10 @@ steel = {
 	}
 }
 
+petroleum = {
+   parts = { hydrocarbon = 2 }
+}
+   
 refined-crystals = {
    parts = { crystals = 2 }
 }

@@ -11,11 +11,14 @@ home-colony = {
 	  strip-mine = 1
       industry = 10
       research-lab = 2
-      coal-power = 5
+	  oil-power = 5
+#      coal-power = { when = { deposit = coal } value = 5 }
+	  
    }
    
    stock = {
       coal = 100
+	  petroleum = 10
 	  }
    ships = { scout defender trader }
 }
