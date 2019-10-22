@@ -33,6 +33,10 @@ package Harriet.Ships is
      (Ship : Ship_Type'Class)
       return Non_Negative_Real;
 
+   function Tank_Size
+     (Ship : Ship_Type'Class)
+      return Non_Negative_Real;
+
    function Total_Impulse
      (Ship : Ship_Type'Class)
       return Non_Negative_Real;

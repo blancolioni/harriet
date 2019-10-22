@@ -163,6 +163,7 @@ package body Harriet.Ships is
            Faction           => Owner,
            Star_System       => World_Rec.Star_System,
            World             => World,
+           Home              => World,
            Orbit             => Orbit,
            Alive             => True,
            Training          => 1.0,
@@ -305,6 +306,25 @@ package body Harriet.Ships is
          end loop;
       end return;
    end Dry_Mass;
+
+   ---------------
+   -- Tank_Size --
+   ---------------
+
+   function Tank_Size
+     (Ship : Ship_Type'Class)
+      return Non_Negative_Real
+   is
+   begin
+      return Size : Non_Negative_Real := 0.0 do
+         for Module of
+           Harriet.Db.Tank_Module.Select_By_Ship (Ship.Reference)
+         loop
+            Size := Size
+              + Harriet.Db.Tank.Get (Module.Tank).Capacity;
+         end loop;
+      end return;
+   end Tank_Size;
 
    -------------------
    -- Total_Impulse --
