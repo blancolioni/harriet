@@ -11,14 +11,15 @@ with Worlds;
 package Facilities is
 
    record Facility : Technological, Localised, Constructed is
-      Operating_Cost : Money_Type;
-      Employees      : Quantity_Type;
-      Power          : Natural;
-      Mining         : Natural;
-	  Strip_Mining   : Natural;
-      Industry       : Natural;
-      Research       : Natural;
-	  Generate       : Natural;
+      Operating_Cost     : Money_Type;
+      Employees          : Quantity_Type;
+      Power              : Natural;
+      Mining             : Natural;
+	  Strip_Mining       : Natural;
+      Industry           : Natural;
+      Research           : Natural;
+	  Generate           : Natural;
+	  Free_Installations : Natural;
    end Facility;
    
    record Facility_Input is
