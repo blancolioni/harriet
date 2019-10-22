@@ -113,8 +113,7 @@ package body Harriet.Configure.Commodities is
          Harriet.Db.Manufactured.Create
            (Enabled_By => Harriet.Db.Null_Technology_Reference,
             Tag        => Item_Config.Config_Name,
-            Mass       => Item_Config.Get ("mass", 1.0),
-            Density    => Item_Config.Get ("density", 1000.0));
+            Mass       => Item_Config.Get ("mass", 1.0));
       end loop;
 
       for Item_Config of Commodity_Config loop
@@ -222,7 +221,7 @@ package body Harriet.Configure.Commodities is
    begin
 
       Harriet.Db.Commodity.Create
-        ("raw-resources", Mass => 1.0, Density => 1000.0);
+        ("raw-resources", Mass => 1.0);
 
       for Name_Config of Config.Child ("names") loop
          Names.Append (Name_Config.Config_Name);
@@ -240,7 +239,6 @@ package body Harriet.Configure.Commodities is
                      (Tag             => Names.Element (I),
                       Name            => Names.Element (I),
                       Mass            => 1.0,
-                      Density         => 1000.0,
                       Is_Raw_Resource => False),
                  Frequency => Freq);
             Freq := Freq * 0.9;

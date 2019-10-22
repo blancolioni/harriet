@@ -27,10 +27,5 @@ plastics = {
 	}
 }
 
-lh2 = {
-   density = 70.8
-}
-
-lox = {
-   density = 1141
+ship-fuel = {
 }

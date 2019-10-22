@@ -1,0 +1,4 @@
+class = generator
+mass = 20
+power = 100
+crew = 10

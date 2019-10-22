@@ -1,0 +1,5 @@
+class = jump_drive
+crew = 20
+mass = 100
+power = 1
+jump = 10

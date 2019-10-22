@@ -1,7 +1,9 @@
 default-manager = ship-defend
 components = {
-  basic-chemical-drive = 2
-  basic-cryo-tank = 2
+  basic-drive = 2
+  basic-tank
   basic-fission-pile
-  basic-beam-weapon = 2
+  basic-laser = 4
+  basic-missile-launcher = 10
+  basic-shield
 }

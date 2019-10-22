@@ -1,5 +1,3 @@
-with Ada.Numerics;
-
 with Harriet.Color;
 with Harriet.Constants;
 with Harriet.Solar_System;
@@ -172,8 +170,7 @@ package body Harriet.UI.Models.Worlds is
                Ship_Object.Set_Property
                  ("orbit", Float (Ship.Orbit / World.Radius));
                Ship_Object.Set_Property
-                 ("inclination",
-                  Float (Ship.Inclination * Ada.Numerics.Pi / 180.0));
+                 ("inclination", 0.0);
                Ships.Append (Ship_Object);
             end;
          end loop;

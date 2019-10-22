@@ -1,0 +1,5 @@
+class = shield_generator
+mass = 25
+power = 10
+shield = 20
+crew = 10

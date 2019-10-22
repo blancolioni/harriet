@@ -7,112 +7,102 @@ with Updated;
 
 package Ships is
 
-type Component_Shape is (Rectangular_Prism, Cylinder, Sphere, Conical_Frustum);
+record Component : Localised, Manufactured is
+   Crew    : Natural;
+   Power   : Long_Float;
+end Component;
 
-record Bounding_Box is
-   X1 : Long_Float;
-   X2 : Long_Float;
-   Y1 : Long_Float;
-   Y2 : Long_Float;
-   Z1 : Long_Float;
-   Z2 : Long_Float;
-end Bounding_Box;
+record Engine : Component is
+   Impulse : Long_Float;
+end Engine;
 
-record Ship_Component : Localised, Manufactured, Technological, Bounding_Box is
-   Idle_Power          : Long_Float;
-   Max_Power           : Long_Float;
-   Linear_Accel_Limit  : Long_Float;
-   Angular_Accel_Limit : Long_Float;
-   Max_Normal_Temp     : Long_Float;
-   Failure_Temp        : Long_Float;
-   Start_Power         : Long_Float;
-   Start_Duration      : Long_Float;
-   Throttled           : Boolean;
-   Min_Throttle        : Long_Float;
-   Max_Throttle        : Long_Float;
-   Operating_Heat      : Long_Float;
-   Heat_Sink           : Long_Float;
-   Explosion_Power     : Long_Float;
-end Ship_Component;
+record Jump_Drive : Component is
+   Jump : Long_Float;
+end Jump_Drive;
 
-record Container_Component : Ship_Component is   
-   Capacity : Quantity_Type;
-   Tank     : Boolean;
-   Liquid   : Boolean;
-   Gas      : Boolean;
-   Cryo     : Boolean;
-end Container_Component;
+record Storage : Component is
+   Capacity : Long_Float;
+end Storage;
 
-record Drive_Component : Ship_Component is
-   Minimum_Thrust    : Long_Float;
-   Maximum_Thrust    : Long_Float;
-   Fuel              : Commodity;
-   Oxidiser          : Commodity;
-   Max_Fuel_Burn     : Long_Float;
-   Max_Oxidiser_Burn : Long_Float;
-   Fuel_Propellant   : Boolean;
-   Propellant        : Commodity;
-   Exhaust_Velocity  : Long_Float;
-end Drive_Component;
+record Tank : Storage;
 
-record Power_Component : Ship_Component is
-   Power_Output : Long_Float;
-end Power_Component;
+record Hold : Storage;
 
-record Attachment is
-   key Ship_Component;
-   Position_X  : Long_Float;
-   Position_Y  : Long_Float;
-   Position_Z  : Long_Float;
-end Attachment;
+record Missile_Bay : Storage;
 
+record Fighter_Bay : Storage;
+
+record Generator : Component;
+
+record Shield_Generator : Component is
+   Shields : Long_Float;
+end Shield_Generator;
+
+record Energy_Weapon : Component is
+   Energy : Long_Float;
+end Energy_Weapon;
+
+record Missile_Launcher : Component is
+   Launchers : Positive;
+end Missile_Launcher;
+   
 record Ship_Design : Has_Name is
-   Hold_Size       : Quantity_Type;
    Default_Manager : String (32);
 end Ship_Design;
 
-record Ship_Module_Design is
+record Design_Module is
    key Ship_Design;
-   Ship_Component;
-   Position_X : Long_Float;
-   Position_Y : Long_Float;
-   Position_Z : Long_Float;
-end Ship_Module_Design;
+   Component;
+end Design_Module;
 
-record Design_Attachment is
-   key Ship_Design;
-   From : Ship_Module_Design;
-   To   : Ship_Module_Design;
-   Attachment;
-end Design_Attachment;
-   
 record Ship : Has_Name, Has_Stock, Managed, Updated is
    key Faction;
-   key Star_System;
    key World;
-   Ship_Design;
-   Capacity          : Quantity_Type; 
-   Orbit             : Long_Float;
-   Inclination       : Long_Float;
-   Epoch             : Time;
-   Alive             : Boolean;
-   Training          : Long_Float;
-   Fuel              : Long_Float;
-   Departure         : Time;
-   Arrival           : Time;
-   Dest_Orbit        : Long_Float;
-   Dest_Incl         : Long_Float;
-   Dest_Epoch        : Time;
-   Final_Destination : World;
-   Current_Order     : Natural;
-   Cycle_Orders      : Boolean;
+   key Star_System;
+   Orbit       : Long_Float;
+   Alive       : Boolean;
+   Training    : Long_Float;
+   Fuel        : Long_Float;
+   Destination : World;
 end Ship;
 
-record Ship_Module is
+record Module is
    key Ship;
-   Ship_Module_Design;
-   Crew      : Natural;
-   Condition : Long_Float;
-end Ship_Module;
+   Component;
+   Crew       : Natural;
+   Condition  : Long_Float;
+end Module;
+
+record Engine_Module : Module is
+   Engine;
+end Engine_Module;
+
+record Jump_Module : Module is
+   Jump_Drive;
+end Jump_Module;
+
+record Tank_Module : Module is
+   Tank;
+end Tank_Module;
+
+record Hold_Module : Module is
+   Hold;
+end Hold_Module;
+
+record Generator_Module : Module is
+   Generator;
+end Generator_Module;
+
+record Shield_Module : Module is
+   Shield_Generator;
+end Shield_Module;
+
+record Energy_Weapon_Module : Module is
+   Energy_Weapon;
+end Energy_Weapon_Module;
+ 
+record Launcher_Module : Module is
+   Missile_Launcher;
+end Launcher_Module;
 
 end Ships;

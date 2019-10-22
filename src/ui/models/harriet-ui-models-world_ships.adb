@@ -1,7 +1,6 @@
 with Harriet.Orbits;
 
 with Harriet.Factions;
-with Harriet.Ships;
 with Harriet.Worlds;
 
 with Harriet.UI.Models.Data_Source;
@@ -109,11 +108,8 @@ package body Harriet.UI.Models.World_Ships is
                R ((Ship.Orbit - Harriet.Worlds.Radius (World)) / 1000.0),
                R (Harriet.Orbits.Period
                  (Harriet.Worlds.Mass (World), Ship.Orbit) / 60.0),
-               R (Harriet.Ships.Current_Latitude
-                 (Harriet.Ships.Get (Ship.Get_Ship_Reference))),
-               R (Harriet.Ships.Current_Longitude
-                 (Harriet.Ships.Get (Ship.Get_Ship_Reference)))
-              )
+               R (0.0),
+               R (0.0))
               );
          end Add_Row;
 
