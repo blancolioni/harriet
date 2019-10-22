@@ -6,8 +6,11 @@ with Harriet.Commodities;
 with Harriet.Worlds.Updates;
 
 with Harriet.Db.Colony;
+with Harriet.Db.Commodity;
 with Harriet.Db.Facility;
+with Harriet.Db.Input_Commodity;
 with Harriet.Db.Installation;
+with Harriet.Db.Manufactured;
 with Harriet.Db.Resource;
 with Harriet.Db.World;
 
@@ -23,6 +26,11 @@ package body Harriet.Installations.Updates is
 
    overriding procedure Activate
      (Update : Installation_Update);
+
+   procedure Execute_Production
+     (Colony     : Harriet.Db.Colony_Reference;
+      Commodity  : Harriet.Db.Commodity_Reference;
+      Available  : Natural);
 
    --------------
    -- Activate --
@@ -110,6 +118,14 @@ package body Harriet.Installations.Updates is
                   & " "
                   & Harriet.Db.Resource.Get (Installation.Resource).Tag);
             end;
+         elsif Installation.Commodity /= Null_Commodity_Reference then
+            Execute_Production
+              (Colony     => Installation.Colony,
+               Commodity  => Installation.Commodity,
+               Available  =>
+                 Natural
+                   (Real'Truncation
+                        (Installation.Efficiency * Real (Facility.Industry))));
          end if;
       end if;
 
@@ -128,5 +144,64 @@ package body Harriet.Installations.Updates is
    begin
       return Installation_Update'(Installation => Reference);
    end Daily_Update;
+
+   procedure Execute_Production
+     (Colony     : Harriet.Db.Colony_Reference;
+      Commodity  : Harriet.Db.Commodity_Reference;
+      Available  : Natural)
+   is
+      use Harriet.Quantities;
+      Manufacture : constant Harriet.Db.Manufactured_Reference :=
+        Harriet.Db.Manufactured.Get_Manufactured
+          (Commodity)
+        .Get_Manufactured_Reference;
+      Max_Production : Quantity_Type := To_Quantity (Real (Available));
+      Stock          : constant Harriet.Db.Has_Stock_Reference :=
+        Harriet.Db.Colony.Get (Colony).Get_Has_Stock_Reference;
+   begin
+      for Part of
+        Harriet.Db.Input_Commodity.Select_By_Manufactured
+          (Manufacture)
+      loop
+         declare
+            Required : constant Quantity_Type :=
+              Part.Quantity * Max_Production;
+            Available : constant Quantity_Type :=
+              Harriet.Commodities.Current_Quantity (Stock, Part.Commodity);
+            This_Max  : constant Quantity_Type :=
+              Available / Part.Quantity;
+         begin
+            Max_Production := Min (Max_Production, This_Max);
+            Harriet.Logging.Log
+              ("production",
+               Harriet.Db.Commodity.Get (Part.Commodity).Tag
+               & ": required " & Show (Required)
+               & "; available " & Show (Available)
+               & "; limit " & Show (This_Max)
+               & "; new max " & Show (Max_Production));
+         end;
+      end loop;
+
+      Harriet.Logging.Log
+        (Category => "production",
+         Message  =>
+           "industry on "
+         & Harriet.Db.World.Get
+           (Harriet.Db.Colony.Get (Colony).World).Name
+         & " produces "
+         & Show (Max_Production) & " "
+         & Harriet.Db.Commodity.Get (Commodity).Tag);
+
+      for Part of
+        Harriet.Db.Input_Commodity.Select_By_Manufactured
+          (Manufacture)
+      loop
+         Harriet.Commodities.Remove_Stock
+           (Stock, Part.Commodity, Part.Quantity * Max_Production);
+      end loop;
+
+      Harriet.Commodities.Add_Stock (Stock, Commodity, Max_Production);
+
+   end Execute_Production;
 
 end Harriet.Installations.Updates;
