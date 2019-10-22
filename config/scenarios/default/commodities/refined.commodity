@@ -28,4 +28,8 @@ plastics = {
 }
 
 ship-fuel = {
+   parts = {
+      gases = 2
+	  hydrocarbon = 1
+	  }
 }
