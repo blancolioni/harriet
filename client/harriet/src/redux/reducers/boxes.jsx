@@ -1,4 +1,4 @@
-import { INIT_BOXES, SPLIT, SET_CLIENT, RESET } from '../actionTypes';
+import { INIT_BOXES, SPLIT, SET_CLIENT, UPDATE_MODEL, RESET } from '../actionTypes';
 import { Box, splitVertical, setChildComponent, splitHorizontal } from '../../Dashboard/Box';
 
 const initialState = {    

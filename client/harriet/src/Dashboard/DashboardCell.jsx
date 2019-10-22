@@ -4,18 +4,18 @@ import { connect } from 'react-redux'
 import { userService } from '../_services';
 import { setClient } from '../redux/actions/boxes';
 
-import { Command } from './Models/Command';
-import { Galaxy } from './Models/Galaxy';
-import { Shell } from './Models/Shell';
-import { Table } from './Models/Table';
-import { TerrestrialWorld } from './Models/World';
+import Command from './Models/Command/Command';
+// import { Galaxy } from './Models/Galaxy';
+// import { Shell } from './Models/Shell';
+import Table from './Models/Table/Table';
+// import { TerrestrialWorld } from './Models/World';
 
 const viewMap = {
     Command: Command,
-    Shell: Shell,
+    // Shell: Shell,
     Table: Table,
-    Galaxy: Galaxy,
-    World: TerrestrialWorld,
+    // Galaxy: Galaxy,
+    // World: TerrestrialWorld,
 }
 
 class DashboardCell extends React.Component {
@@ -26,7 +26,7 @@ class DashboardCell extends React.Component {
         if (!box.childComponent) {
             this.props.setClient({
                 boxId: this.props.boxId,
-                view: Command,
+                view: 'Command',
                 model: 'shell',
                 modelArgs: '',
                 title: 'Command',
@@ -38,6 +38,7 @@ class DashboardCell extends React.Component {
     controlHandler(setClient, boxId, packet) {
         for(const cmd of packet) {
             if (cmd.control === 'replace-view') {
+                console.log("replace view", cmd, setClient)
                 if (viewMap[cmd.view]) {
                     setClient({
                         boxId: boxId,
@@ -68,7 +69,8 @@ class DashboardCell extends React.Component {
         const component = box.childComponent;
 
         if (component) {
-            const View = component.view;
+            const View = viewMap[component.view];
+            console.log("dashboard-cell-view", View);
 
             return (
                 <div className="concorde-dashboard-cell" style={cellStyle}>

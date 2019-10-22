@@ -1,6 +1,7 @@
 export const INIT_BOXES = "INIT_BOXES";
 export const SET_CLIENT = "SET_CLIENT";
 export const SPLIT = "SPLIT";
+export const UPDATE_MODEL = "UPDATE_MODEL";
 
 export const UPDATE_FACTION = "UPDATE_FACTION";
 export const SET_CASH = "SET_CASH";

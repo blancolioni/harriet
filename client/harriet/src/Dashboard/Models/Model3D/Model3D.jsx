@@ -5,7 +5,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { CSS2DRenderer } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 
 import { userService } from '../../../_services'
-import DashboardItem from '../../DashboardItem';
+import { DashboardItem } from '../../DashboardItem';
 
 class ModelCanvas extends React.Component {
 
