@@ -87,16 +87,17 @@ package body Harriet.Colonies.Updates is
       use Harriet.Money, Harriet.Quantities;
       Colony  : constant Harriet.Db.Colony.Colony_Type :=
         Harriet.Db.Colony.Get (Update.Colony);
-      Faction : constant Harriet.Db.Faction.Faction_Type :=
+      Faction           : constant Harriet.Db.Faction.Faction_Type :=
         Harriet.Db.Faction.Get (Colony.Faction);
-      World   : constant Harriet.Db.World_Reference :=
+      World             : constant Harriet.Db.World_Reference :=
         Colony.World;
-      Stock   : constant Harriet.Db.Has_Stock_Reference :=
+      Stock             : constant Harriet.Db.Has_Stock_Reference :=
         Colony.Get_Has_Stock_Reference;
-      Pop     : constant Harriet.Quantities.Quantity_Type :=
+      Pop               : constant Harriet.Quantities.Quantity_Type :=
         Colony.Population;
-      Cash    : constant Harriet.Money.Money_Type :=
+      Cash              : constant Harriet.Money.Money_Type :=
         Faction.Cash;
+      Free_Installations : constant Natural := 25;
 
       type Installation_Record is
          record
@@ -127,9 +128,12 @@ package body Harriet.Colonies.Updates is
       Total_Power     : Natural := 0;
       Available_Power : Natural := 0;
       Generated_Power : Natural := 0;
+      Total_Count     : Natural := 0;
 
    begin
       for Installation of Harriet.Db.Installation.Select_By_World (World) loop
+
+         Total_Count := Total_Count + 1;
 
          declare
             Reference : constant Harriet.Db.Installation_Reference :=
@@ -153,7 +157,10 @@ package body Harriet.Colonies.Updates is
             Total_Cost := Total_Cost + Cost;
             Total_Pop := Total_Pop + Employees;
             Total_Power := Total_Power + Power;
-            Efficiency := Efficiency * 0.99;
+
+            if Total_Count > Free_Installations then
+               Efficiency := Efficiency * 0.95;
+            end if;
 
             if Facility.Generate > 0 then
                declare
@@ -279,11 +286,9 @@ package body Harriet.Colonies.Updates is
       for Generator of Generators loop
          exit when Generated_Power = 0;
          declare
-            This_Generator : constant Natural :=
-              Natural'Min (Generated_Power, Generator.Max_Power);
             Scale          : constant Unit_Real :=
-              Real (This_Generator)
-              / Real (Generator.Max_Power);
+              Real (Generated_Power)
+              / Real (Available_Power);
 
             procedure Consume_Input
               (Commodity : Harriet.Commodities.Commodity_Reference;
@@ -297,11 +302,17 @@ package body Harriet.Colonies.Updates is
               (Commodity : Harriet.Commodities.Commodity_Reference;
                Quantity  : Quantity_Type)
             is
+               Consume : constant Quantity_Type :=
+                 Min (Harriet.Commodities.Current_Quantity
+                      (Generator.Consumption, Commodity),
+                      Harriet.Quantities.Scale (Quantity, Scale));
             begin
-               Harriet.Commodities.Remove_Stock
+               Harriet.Commodities.Add_Stock
                  (Stock, Commodity,
-                  Min (Harriet.Commodities.Current_Quantity (Stock, Commodity),
-                    Harriet.Quantities.Scale (Quantity, Scale)));
+                  Harriet.Commodities.Current_Quantity
+                    (Generator.Consumption, Commodity)
+                  - Consume);
+
             end Consume_Input;
 
          begin
