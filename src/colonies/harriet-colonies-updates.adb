@@ -97,7 +97,7 @@ package body Harriet.Colonies.Updates is
         Colony.Population;
       Cash              : constant Harriet.Money.Money_Type :=
         Faction.Cash;
-      Free_Installations : constant Natural := 25;
+      Free_Installations : Natural := 10;
 
       type Installation_Record is
          record
@@ -131,6 +131,13 @@ package body Harriet.Colonies.Updates is
       Total_Count     : Natural := 0;
 
    begin
+
+      for Installation of Harriet.Db.Installation.Select_By_World (World) loop
+         Free_Installations := Free_Installations
+           + Harriet.Db.Facility.Get (Installation.Facility)
+           .Free_Installations;
+      end loop;
+
       for Installation of Harriet.Db.Installation.Select_By_World (World) loop
 
          Total_Count := Total_Count + 1;

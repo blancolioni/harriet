@@ -1,0 +1,7 @@
+free-installations = 20
+operating-cost = 10
+employees = 1000
+
+build = {
+   construction-materials = 100
+}
