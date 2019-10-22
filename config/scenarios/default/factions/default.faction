@@ -19,9 +19,10 @@ home-colony = {
    
    stock = {
       coal = 100
-	  petroleum = 10
+	  petroleum = 50
+	  ship-fuel = 100
 	  }
-   ships = { scout defender trader }
+   ships = { system-scout jump-scout defender trader }
 }
 
 init-script = {
