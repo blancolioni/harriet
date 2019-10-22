@@ -20,6 +20,7 @@ with Harriet.Db.Facility_Input;
 with Harriet.Db.Installation;
 with Harriet.Db.Resource;
 with Harriet.Db.Revenue;
+with Harriet.Db.Stock_Item;
 
 package body Harriet.Managers.Colonies is
 
@@ -34,7 +35,6 @@ package body Harriet.Managers.Colonies is
          Idle_Pop           : Harriet.Quantities.Quantity_Type;
          Missing_Pop        : Harriet.Quantities.Quantity_Type;
          Require            : Requirements.Colony_Requirements;
-         Resources          : Requirements.Colony_Requirements;
          Available_Mines    : Natural := 0;
          Available_Strip_Mines    : Natural := 0;
          Available_Industry : Natural := 0;
@@ -81,6 +81,15 @@ package body Harriet.Managers.Colonies is
          & " colony on "
          & Harriet.Worlds.Name (Manager.World)
          & " activating");
+
+      for Stock_Item of
+        Harriet.Db.Stock_Item.Select_By_Has_Stock
+          (Manager.Colony_Has_Stock)
+      loop
+         Manager.Log
+           (Harriet.Db.Commodity.Get (Stock_Item.Commodity).Tag
+            & ": " & Harriet.Quantities.Show (Stock_Item.Quantity));
+      end loop;
 
       Requirements.Clear_Requirements (Manager.Require);
 
@@ -245,16 +254,17 @@ package body Harriet.Managers.Colonies is
       Colony  : constant Harriet.Db.Colony.Colony_Type :=
                   Harriet.Db.Colony.Get_Colony (Managed);
       Manager : Root_Colony_Manager :=
-                  Root_Colony_Manager'
-                    (Root_Manager_Type with
-                     Colony          => Colony.Get_Colony_Reference,
-                     Faction         => Colony.Faction,
-                     World           => Colony.World,
-                     Total_Pop       => Colony.Population,
-                     Working_Pop     => Harriet.Quantities.Zero,
-                     Idle_Pop        => Harriet.Quantities.Zero,
-                     Missing_Pop     => Harriet.Quantities.Zero,
-                     others          => <>);
+        Root_Colony_Manager'
+          (Root_Manager_Type with
+           Colony           => Colony.Get_Colony_Reference,
+           Faction          => Colony.Faction,
+           World            => Colony.World,
+           Colony_Has_Stock => Colony.Get_Has_Stock_Reference,
+           Total_Pop        => Colony.Population,
+           Working_Pop      => Harriet.Quantities.Zero,
+           Idle_Pop         => Harriet.Quantities.Zero,
+           Missing_Pop      => Harriet.Quantities.Zero,
+           others           => <>);
    begin
       Manager.Colony := Colony.Get_Colony_Reference;
       return new Root_Colony_Manager'(Manager);
@@ -268,7 +278,9 @@ package body Harriet.Managers.Colonies is
      (Manager : in out Root_Colony_Manager'Class)
    is
 
-      Resource_Requirements : Requirements.Colony_Requirements;
+      Elaborated_Requirements : Requirements.Colony_Requirements :=
+        Manager.Require;
+
       Committed_Stock    : Harriet.Commodities.Stock_Type;
 
       procedure Add_Ingredients
@@ -328,18 +340,18 @@ package body Harriet.Managers.Colonies is
          Priority  : Priority_Type)
       is
       begin
+         Requirements.Add_Requirement
+           (Requirements => Elaborated_Requirements,
+            Commodity    => Commodity,
+            Quantity     => Quantity,
+            Priority     => Priority);
+
          if Harriet.Commodities.Is_Resource (Commodity) then
             Manager.Log
               ("resource requirement: "
                & Harriet.Quantities.Show (Quantity)
                & " " & Harriet.Db.Commodity.Get (Commodity).Tag
                & " priority" & Priority'Image);
-
-            Requirements.Add_Requirement
-              (Requirements => Resource_Requirements,
-               Commodity    => Commodity,
-               Quantity     => Quantity,
-               Priority     => Priority);
          else
             declare
                use Harriet.Quantities;
@@ -379,7 +391,7 @@ package body Harriet.Managers.Colonies is
         (Manager.Require, Elaborate_Facility'Access);
       Requirements.Scan_Commodity_Requirements
         (Manager.Require, Elaborate_Commodity'Access);
-      Manager.Resources := Resource_Requirements;
+      Manager.Require := Elaborated_Requirements;
    end Elaborate_Requirements;
 
    --------------------------
@@ -411,7 +423,59 @@ package body Harriet.Managers.Colonies is
          Requirement : Harriet.Quantities.Quantity_Type;
          Priority    : Priority_Type);
 
+      procedure Assign_Facility
+        (Commodity   : Harriet.Db.Commodity_Reference;
+         Requirement : Harriet.Quantities.Quantity_Type;
+         Priority    : Priority_Type);
+
       procedure Initialize_Installation_Maps;
+
+      ---------------------
+      -- Assign_Facility --
+      ---------------------
+
+      procedure Assign_Facility
+        (Commodity   : Harriet.Db.Commodity_Reference;
+         Requirement : Harriet.Quantities.Quantity_Type;
+         Priority    : Priority_Type)
+      is
+      begin
+         if Harriet.Commodities.Is_Resource (Commodity) then
+            Assign_Mines (Commodity, Requirement, Priority);
+         else
+            declare
+               Required_Industry : Natural :=
+                 Natural (Harriet.Quantities.To_Real (Requirement));
+            begin
+               while Remaining_Industry > 0
+                 and then Required_Industry > 0
+               loop
+                  Next_Industry := Next_Industry + 1;
+                  declare
+                     use Harriet.Db;
+                     Next_Ind_Ref : constant Installation_Reference :=
+                       Industry_Map.Element (Next_Industry);
+                     Available    : constant Natural :=
+                       Facility.Get (Installation.Get (Next_Ind_Ref).Facility)
+                         .Industry;
+                     Used         : constant Natural :=
+                       Natural'Min (Available, Required_Industry);
+                  begin
+                     Harriet.Db.Installation.Update_Installation
+                       (Next_Ind_Ref)
+                       .Set_Resource (Harriet.Db.Null_Resource_Reference)
+                       .Set_Commodity (Commodity)
+                       .Done;
+                     Required_Industry := Required_Industry - Used;
+                     Remaining_Industry := Remaining_Industry - 1;
+                     Manager.Log
+                       ("industry assigned to produce" & Used'Image
+                        & " " & Harriet.Db.Commodity.Get (Commodity).Tag);
+                  end;
+               end loop;
+            end;
+         end if;
+      end Assign_Facility;
 
       ------------------
       -- Assign_Mines --
@@ -456,7 +520,7 @@ package body Harriet.Managers.Colonies is
                Manager.Log
                  ("found " & Harriet.Db.Commodity.Get (Commodity).Tag
                   & " deposit: size "
-                  & Image (Deposit.Available)
+                  & Show (Deposit.Available)
                   & " concentration "
                   & Harriet.Real_Images.Approximate_Image
                     (Deposit.Concentration * 100.0)
@@ -465,10 +529,10 @@ package body Harriet.Managers.Colonies is
                declare
                   Available     : constant Quantity_Type := Deposit.Available;
                   Concentration : constant Unit_Real := Deposit.Concentration;
+                  Estimated_Mine : constant Real :=
+                    To_Real (Available) * Concentration / 1.0e4;
                   Required      : constant Natural :=
-                    Natural (To_Real (Quantity)
-                             / (1.0e4
-                               / To_Real (Available) * Concentration));
+                    Natural (To_Real (Quantity) / Estimated_Mine) + 1;
                   Assign        : constant Natural :=
                     Natural'Min (Required, Remaining_Mines);
                begin
@@ -548,6 +612,7 @@ package body Harriet.Managers.Colonies is
                      Next_Industry := Next_Industry + 1;
                      Harriet.Db.Installation.Update_Installation
                        (Industry_Map (Next_Industry))
+                         .Set_Commodity (Harriet.Db.Null_Commodity_Reference)
                          .Set_Resource (Resource)
                        .Done;
                   end loop;
@@ -609,7 +674,7 @@ package body Harriet.Managers.Colonies is
    begin
       Initialize_Installation_Maps;
       Requirements.Scan_Commodity_Requirements
-        (Manager.Resources, Assign_Mines'Access);
+        (Manager.Require, Assign_Facility'Access);
    end Process_Requirements;
 
 end Harriet.Managers.Colonies;
