@@ -14,6 +14,7 @@ with Harriet.Db.Generator;
 with Harriet.Db.Hold;
 with Harriet.Db.Jump_Drive;
 with Harriet.Db.Missile_Launcher;
+with Harriet.Db.Scanner;
 with Harriet.Db.Shield_Generator;
 with Harriet.Db.Tank;
 
@@ -21,6 +22,7 @@ package body Harriet.Configure.Ships is
 
    type Component_Class is
      (Engine, Jump_Drive, Tank, Hold, Generator,
+      Scanner, Sensor, Cloak,
       Shield_Generator,
       Energy_Weapon, Missile_Launcher);
 
@@ -99,6 +101,21 @@ package body Harriet.Configure.Ships is
                Power      => Power,
                Tag        => Tag,
                Enabled_By => Enabled_By);
+
+         when Scanner =>
+            Harriet.Db.Scanner.Create
+              (Crew       => Crew,
+               Mass       => Mass,
+               Power      => Power,
+               Tag        => Tag,
+               Enabled_By => Enabled_By,
+               Scan       =>  Get ("scan"));
+
+         when Sensor =>
+            null;
+
+         when Cloak =>
+            null;
 
          when Shield_Generator =>
             Harriet.Db.Shield_Generator.Create
@@ -196,6 +213,11 @@ package body Harriet.Configure.Ships is
             & Harriet.Real_Images.Approximate_Image
               (Empty_Mass + Fuel_Mass + Cargo_Volume)
             & "t");
+         Ada.Text_IO.Put_Line
+           ("Max system speed (loaded): "
+            & Harriet.Real_Images.Approximate_Image
+              (Harriet.Ships.Design_Maximum_System_Speed (Design))
+            & " AU/day");
       end;
    end Configure_Design;
 

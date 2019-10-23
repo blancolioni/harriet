@@ -16,6 +16,7 @@ with Harriet.Db.Generator;
 with Harriet.Db.Hold;
 with Harriet.Db.Jump_Drive;
 with Harriet.Db.Missile_Launcher;
+with Harriet.Db.Scanner;
 with Harriet.Db.Shield_Generator;
 with Harriet.Db.Tank;
 
@@ -25,6 +26,7 @@ with Harriet.Db.Generator_Module;
 with Harriet.Db.Hold_Module;
 with Harriet.Db.Jump_Module;
 with Harriet.Db.Launcher_Module;
+with Harriet.Db.Scanner_Module;
 with Harriet.Db.Shield_Module;
 with Harriet.Db.Tank_Module;
 
@@ -105,6 +107,16 @@ package body Harriet.Ships is
                Generator =>
                   Harriet.Db.Generator.Get_Generator (Component)
                .Get_Generator_Reference);
+
+         when R_Scanner =>
+            Harriet.Db.Scanner_Module.Create
+              (Ship      => Ship,
+               Component => Component,
+               Crew      => Base.Crew,
+               Condition => 1.0,
+               Scanner =>
+                  Harriet.Db.Scanner.Get_Scanner (Component)
+               .Get_Scanner_Reference);
 
          when R_Shield_Generator =>
             Harriet.Db.Shield_Module.Create
@@ -287,6 +299,20 @@ package body Harriet.Ships is
          end loop;
       end return;
    end Design_Mass;
+
+   ---------------------------------
+   -- Design_Maximum_System_Speed --
+   ---------------------------------
+
+   function Design_Maximum_System_Speed
+     (Design : Harriet.Db.Ship_Design_Reference)
+      return Non_Negative_Real
+   is
+   begin
+      return Design_Impulse (Design)
+        / (Design_Mass (Design) + Design_Fuel_Mass (Design)
+           + Design_Cargo_Volume (Design));
+   end Design_Maximum_System_Speed;
 
    --------------
    -- Dry_Mass --

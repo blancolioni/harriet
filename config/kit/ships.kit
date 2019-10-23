@@ -46,6 +46,10 @@ record Missile_Launcher : Component is
    Launchers : Positive;
 end Missile_Launcher;
    
+record Scanner : Component is
+   Scan : Positive;
+end Scanner;
+
 record Ship_Design : Has_Name is
    Default_Manager : String (32);
 end Ship_Design;
@@ -105,5 +109,9 @@ end Energy_Weapon_Module;
 record Launcher_Module : Module is
    Missile_Launcher;
 end Launcher_Module;
+
+record Scanner_Module : Module is
+   Scanner;
+end Scanner_Module;
 
 end Ships;
