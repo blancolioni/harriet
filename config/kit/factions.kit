@@ -16,4 +16,21 @@ package Factions is
       Cash : Money_Type;
    end Faction;
 
+   record Faction_Knowledge : Knowledge is
+      key Faction;
+   end Faction_Knowledge;
+   
+   record System_Knowledge : Faction_Knowledge is
+      key Star_System;
+	  unique key System_Knowledge with Faction, Star_System;
+   end System_Knowledge;
+   
+   record World_Knowledge : Faction_Knowledge is
+	  key World;
+	  Classification : Boolean;
+	  Orbit          : Boolean;
+	  Deposits       : Boolean;	  
+	  unique key World_Knowledge with Faction, World;
+   end World_Knowledge;
+   
 end Factions;

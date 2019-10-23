@@ -23,7 +23,11 @@ with Harriet.Db.Script;
 with Harriet.Db.Script_Line;
 with Harriet.Db.Ship_Design;
 with Harriet.Db.Star_Gate;
+with Harriet.Db.Star_System;
+with Harriet.Db.System_Knowledge;
 with Harriet.Db.User;
+with Harriet.Db.World;
+with Harriet.Db.World_Knowledge;
 
 package body Harriet.Factions.Create is
 
@@ -66,7 +70,7 @@ package body Harriet.Factions.Create is
    is
       use Harriet.Db;
       Capital : constant Harriet.Db.World_Reference :=
-                  Find_Homeworld;
+        Find_Homeworld;
    begin
       if Capital = Null_World_Reference then
          return Null_Faction_Reference;
@@ -74,32 +78,65 @@ package body Harriet.Factions.Create is
 
       declare
          Cash    : constant Harriet.Money.Money_Type :=
-                     Harriet.Configure.Configure_Money
-                       (Setup, "cash", 1000.0);
+           Harriet.Configure.Configure_Money
+             (Setup, "cash", 1000.0);
+         System  : constant Harriet.Db.Star_System_Reference :=
+           Harriet.Worlds.Star_System (Capital);
          Faction : constant Harriet.Db.Faction_Reference :=
-                     Harriet.Db.Faction.Create
-                       (Name          => Name,
-                        Adjective     =>
-                          (if Adjective = "" then Name else Adjective),
-                        Plural_Name   =>
-                          (if Plural_Name = "" then Name else Plural_Name),
-                        Active        => True,
-                        Scheduled     => False,
-                        Next_Event    => Harriet.Calendar.Clock,
-                        Manager       => "default-faction",
-                        Cash          => Cash,
-                        Red           => Color.Red,
-                        Green         => Color.Green,
-                        Blue          => Color.Blue,
-                        User          => User,
-                        Capital_System =>
-                          Harriet.Worlds.Star_System (Capital),
-                        Capital_World  => Capital);
+           Harriet.Db.Faction.Create
+             (Name           => Name,
+              Adjective      =>
+                (if Adjective = "" then Name else Adjective),
+              Plural_Name    =>
+                (if Plural_Name = "" then Name else Plural_Name),
+              Active         => True,
+              Scheduled      => False,
+              Next_Event     => Harriet.Calendar.Clock,
+              Manager        => "default-faction",
+              Cash           => Cash,
+              Red            => Color.Red,
+              Green          => Color.Green,
+              Blue           => Color.Blue,
+              User           => User,
+              Capital_System => System,
+              Capital_World  => Capital);
          Script           : constant Harriet.Db.Script_Reference :=
            Harriet.Db.Script.Create ("rc", User);
          Line_Index       : Natural := 0;
-
+         Has_Knowledge    : constant Harriet.Db.Has_Knowledge_Reference :=
+           Harriet.Db.Faction.Get (Faction).Get_Has_Knowledge_Reference;
       begin
+
+         Harriet.Db.System_Knowledge.Create
+           (Has_Knowledge => Has_Knowledge,
+            Knowable      =>
+              Harriet.Db.Star_System.Get (System).Get_Knowable_Reference,
+            Existence     => True,
+            Current       => True,
+            Faction       => Faction,
+            Star_System   =>
+              Harriet.Worlds.Star_System (Capital));
+
+         for World of
+           Harriet.Db.World.Select_By_Star_System (System)
+         loop
+            declare
+               Is_Home_World : constant Boolean :=
+                 World.Get_World_Reference = Capital;
+            begin
+               Harriet.Db.World_Knowledge.Create
+                 (Faction        => Faction,
+                  Has_Knowledge  => Has_Knowledge,
+                  Knowable       => World.Get_Knowable_Reference,
+                  Existence      => True,
+                  Current        => Is_Home_World,
+                  World          => World.Get_World_Reference,
+                  Classification => True,
+                  Orbit          => True,
+                  Deposits       => Is_Home_World);
+            end;
+
+         end loop;
 
          Initial_Colony (Setup.Child ("home-colony"), Faction, Capital);
 

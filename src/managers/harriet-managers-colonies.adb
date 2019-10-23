@@ -11,6 +11,7 @@ with Harriet.Ships;
 with Harriet.Worlds;
 
 with Harriet.Managers.Colonies.Requirements;
+with Harriet.Managers.Goals;
 
 with Harriet.Db.Colony;
 with Harriet.Db.Commodity;
@@ -250,6 +251,10 @@ package body Harriet.Managers.Colonies is
          end;
       end if;
    end Check_Revenue;
+
+   -----------------
+   -- Check_Ships --
+   -----------------
 
    procedure Check_Ships
      (Manager : in out Root_Colony_Manager'Class)
@@ -551,7 +556,6 @@ package body Harriet.Managers.Colonies is
          Requirement  : Harriet.Quantities.Quantity_Type;
          Priority     : Priority_Type)
       is
-         pragma Unreferenced (Priority);
          use Harriet.Quantities;
          Resource : constant Harriet.Db.Resource_Reference :=
            Harriet.Db.Resource.Get_Resource (Commodity).Get_Resource_Reference;
@@ -623,6 +627,14 @@ package body Harriet.Managers.Colonies is
 
                end;
             else
+
+               Harriet.Managers.Goals.Colony_Needs_Resource
+                 (Faction  => Manager.Faction,
+                  Priority => Priority,
+                  Colony   => Manager.Colony,
+                  Resource => Resource,
+                  Quantity => Quantity);
+
                Manager.Log ("converting raw resources to "
                             & Show (Quantity)
                             & " "

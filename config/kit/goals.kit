@@ -1,0 +1,35 @@
+with Quantities;
+
+package Goals is
+
+record Goal is
+   Active : Boolean;
+   key Faction;
+   Priority : Positive;
+   key Faction_Priority with Active, Faction, Priority;
+end Goal;
+
+record Transport_Goal : Goal is
+   Commodity;
+   From : World;
+   To   : World;
+   Quantity   : Quantity_Type;
+   key Receive_Commodity with To, Commodity;
+   key Send_Commodity with From, Commodity;
+end Transport_Goal;
+
+record World_Goal : Goal is
+   World;
+end World_Goal;
+
+record Resource_Goal : World_Goal is
+   Resource;
+   Quantity   : Quantity_Type;
+   unique key Resource_Goal with World, Resource;
+end Resource_Goal;
+
+record Colonise_Goal : World_Goal;
+
+record Explore_Goal : World_Goal;
+
+end Goals;
