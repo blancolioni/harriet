@@ -84,22 +84,27 @@ package body Harriet.Factions.Create is
            Harriet.Worlds.Star_System (Capital);
          Faction : constant Harriet.Db.Faction_Reference :=
            Harriet.Db.Faction.Create
-             (Name           => Name,
-              Adjective      =>
+             (Name             => Name,
+              Adjective        =>
                 (if Adjective = "" then Name else Adjective),
-              Plural_Name    =>
+              Plural_Name      =>
                 (if Plural_Name = "" then Name else Plural_Name),
-              Active         => True,
-              Scheduled      => False,
-              Next_Event     => Harriet.Calendar.Clock,
-              Manager        => "default-faction",
-              Cash           => Cash,
-              Red            => Color.Red,
-              Green          => Color.Green,
-              Blue           => Color.Blue,
-              User           => User,
-              Capital_System => System,
-              Capital_World  => Capital);
+              Active           => True,
+              Scheduled        => False,
+              Next_Event       => Harriet.Calendar.Clock,
+              Manager          => "default-faction",
+              Cash             => Cash,
+              Red              => Color.Red,
+              Green            => Color.Green,
+              Blue             => Color.Blue,
+              User             => User,
+              Capital_System   => System,
+              Capital_World    => Capital,
+              Fleet_Manager    => "default-fleet",
+              Army_Manager     => "default-army",
+              Explore_Manager  => "default-exploration",
+              Colonise_Manager => "default-colonisation");
+
          Script           : constant Harriet.Db.Script_Reference :=
            Harriet.Db.Script.Create ("rc", User);
          Line_Index       : Natural := 0;

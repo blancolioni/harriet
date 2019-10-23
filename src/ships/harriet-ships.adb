@@ -178,6 +178,7 @@ package body Harriet.Ships is
            Home              => World,
            Orbit             => Orbit,
            Alive             => True,
+           Status            => Harriet.Db.Idle,
            Training          => 1.0,
            Fuel              => Design_Fuel_Mass (Design),
            Destination       => Harriet.Db.Null_World_Reference);

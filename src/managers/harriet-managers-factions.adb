@@ -5,6 +5,8 @@ with Harriet.Real_Images;
 
 with Harriet.Commodities.Maps;
 
+with Harriet.Managers.Execution;
+
 with Harriet.Db.Deposit;
 with Harriet.Db.Faction;
 with Harriet.Db.Resource;
@@ -139,6 +141,11 @@ package body Harriet.Managers.Factions is
       Manager.Faction := Faction.Get_Faction_Reference;
       Manager.Capital_System := Faction.Capital_System;
       Manager.Capital_World := Faction.Capital_World;
+
+      Harriet.Managers.Execution.Start_Middle_Manager
+        (Faction => Manager.Faction,
+         Area    => Fleet,
+         Name    => Faction.Fleet_Manager);
 
       return new Root_Faction_Manager'(Manager);
    end Create_Default_Manager;

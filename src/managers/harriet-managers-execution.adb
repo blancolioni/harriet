@@ -146,4 +146,37 @@ package body Harriet.Managers.Execution is
       end if;
    end Start_Manager;
 
+   --------------------------
+   -- Start_Middle_Manager --
+   --------------------------
+
+   procedure Start_Middle_Manager
+     (Faction : Harriet.Db.Faction_Reference;
+      Area    : Middle_Manager_Area;
+      Name    : String)
+   is
+   begin
+      if Middle_Register.Contains (Name) then
+         declare
+            Manager : constant Manager_Type :=
+              Middle_Register.Element (Name) (Faction);
+            Update  : constant Manager_Update :=
+              (Manager => Manager);
+         begin
+            Manager.Is_Active := True;
+            Manager.Managed := Harriet.Db.Null_Managed_Reference;
+            Active_Middle (Area).Insert
+              (Harriet.Db.To_String (Faction), Manager);
+
+            Harriet.Updates.Events.Update_At
+              (Clock  => Harriet.Calendar.Clock,
+               Update => Update);
+         end;
+      else
+         Ada.Text_IO.Put_Line
+           (Ada.Text_IO.Standard_Error,
+            "no such middle manager: " & Name);
+      end if;
+   end Start_Middle_Manager;
+
 end Harriet.Managers.Execution;

@@ -59,6 +59,9 @@ record Design_Module is
    Component;
 end Design_Module;
 
+type Ship_Status is
+  (Idle, Moving, Training, Repairing);
+  
 record Ship : Has_Name, Has_Stock, Managed, Updated is
    key Faction;
    key World;
@@ -66,9 +69,11 @@ record Ship : Has_Name, Has_Stock, Managed, Updated is
    key Home    : World;
    Orbit       : Long_Float;
    Alive       : Boolean;
+   Status      : Ship_Status;
    Training    : Long_Float;
    Fuel        : Long_Float;
    Destination : World;
+   key ship_Status with Alive, Faction, Status;
 end Ship;
 
 record Module is

@@ -3,13 +3,63 @@ with Harriet.Logging;
 with Harriet.Worlds;
 
 with Harriet.Db.Available_Commodity;
+with Harriet.Db.Colonise_Goal;
 with Harriet.Db.Colony;
+with Harriet.Db.Deposit;
 with Harriet.Db.Faction;
 with Harriet.Db.Resource;
 with Harriet.Db.Resource_Goal;
+with Harriet.Db.Scan_System_Goal;
+with Harriet.Db.Scan_World_Goal;
 with Harriet.Db.Transport_Goal;
+with Harriet.Db.World_Knowledge;
 
 package body Harriet.Managers.Goals is
+
+   --------------------------
+   -- Add_System_Scan_Goal --
+   --------------------------
+
+   procedure Add_System_Scan_Goal
+     (Faction  : Harriet.Db.Faction_Reference;
+      Priority : Priority_Type;
+      System   : Harriet.Db.Star_System_Reference)
+   is
+   begin
+      Harriet.Db.Scan_System_Goal.Create
+        (Active      => True,
+         Faction     => Faction,
+         Priority    => Positive (Priority),
+         Star_System => System);
+      Harriet.Managers.Signal
+        (Faction => Faction,
+         Area    => Harriet.Managers.Fleet);
+
+   end Add_System_Scan_Goal;
+
+   -------------------------
+   -- Add_World_Scan_Goal --
+   -------------------------
+
+   procedure Add_World_Scan_Goal
+     (Faction  : Harriet.Db.Faction_Reference;
+      Priority : Priority_Type;
+      World    : Harriet.Db.World_Reference)
+   is
+   begin
+      if not Harriet.Db.Scan_World_Goal.Is_Scan_World_Goal
+        (Faction, World)
+      then
+         Harriet.Db.Scan_World_Goal.Create
+           (Active      => True,
+            Faction     => Faction,
+            Priority    => Positive (Priority),
+            World       => World);
+         Harriet.Managers.Signal
+           (Faction => Faction,
+            Area    => Harriet.Managers.Fleet);
+      end if;
+   end Add_World_Scan_Goal;
 
    ---------------------------
    -- Colony_Needs_Resource --
@@ -104,17 +154,75 @@ package body Harriet.Managers.Goals is
          end;
       end loop;
 
+      if Remaining = Zero then
+         return;
+      end if;
+
+      declare
+         Best_World : Harriet.Db.World_Reference :=
+           Harriet.Db.Null_World_Reference;
+         Best_Score : Non_Negative_Real := 0.0;
+      begin
+         for World_Knowledge of
+           Harriet.Db.World_Knowledge.Select_By_Faction (Faction)
+         loop
+            if World_Knowledge.Deposits then
+               declare
+                  Deposit : constant Harriet.Db.Deposit.Deposit_Type :=
+                    Harriet.Db.Deposit.Get_By_Deposit
+                      (World_Knowledge.World, Resource);
+               begin
+                  if Deposit.Has_Element then
+                     declare
+                        This_Score : constant Non_Negative_Real :=
+                          To_Real (Deposit.Available) * Deposit.Concentration;
+                     begin
+                        if This_Score > Best_Score then
+                           Best_World := Deposit.World;
+                           Best_Score := This_Score;
+                        end if;
+                     end;
+                  end if;
+               end;
+            end if;
+         end loop;
+
+         declare
+            use type Harriet.Db.World_Reference;
+         begin
+            if Best_World /= Harriet.Db.Null_World_Reference then
+               declare
+                  use Harriet.Db.Colonise_Goal;
+                  Current_Goal : constant Colonise_Goal_Type :=
+                    Get_By_Colonise_World_Goal (Faction, World);
+               begin
+                  if not Current_Goal.Has_Element then
+                     Add_Colonisation_Goal
+                       (Faction, Priority, World);
+                  end if;
+               end;
+               Remaining := Zero;
+            end if;
+         end;
+      end;
+
+      for World_Knowledge of
+        Harriet.Db.World_Knowledge.Select_By_Faction (Faction)
+      loop
+         if not World_Knowledge.Deposits then
+            Add_World_Scan_Goal
+              (Faction, Priority, World_Knowledge.World);
+         end if;
+      end loop;
+
       if Remaining > Zero then
          declare
             use Harriet.Db, Harriet.Db.Resource_Goal;
             Existing_Goal : constant Harriet.Db.Resource_Goal_Reference :=
-              Get_Reference_By_Resource_Goal (World, Resource);
+              Get_Reference_By_Resource_Goal
+                (Faction, World, Resource, Positive (Priority));
          begin
             if Existing_Goal = Null_Resource_Goal_Reference then
-               Harriet.Logging.Log
-                 ("goals",
-                  "replacing existing goal with "
-                  & Show (Remaining));
                Harriet.Db.Resource_Goal.Create
                  (Active   => True,
                   Faction  => Faction,
@@ -123,6 +231,10 @@ package body Harriet.Managers.Goals is
                   Resource => Resource,
                   Quantity => Remaining);
             else
+               Harriet.Logging.Log
+                 ("goals",
+                  "replacing existing goal with "
+                  & Show (Remaining));
                Update_Resource_Goal (Existing_Goal)
                  .Set_Quantity (Remaining)
                  .Done;
@@ -137,15 +249,6 @@ package body Harriet.Managers.Goals is
    ---------------------------
 
    procedure Add_Colonisation_Goal
-     (Faction : Harriet.Db.Faction_Reference; Priority : Priority_Type;
-      World   : Harriet.Db.World_Reference)
-   is null;
-
-   -------------------------
-   -- Add_World_Scan_Goal --
-   -------------------------
-
-   procedure Add_World_Scan_Goal
      (Faction : Harriet.Db.Faction_Reference; Priority : Priority_Type;
       World   : Harriet.Db.World_Reference)
    is null;

@@ -19,4 +19,9 @@ package Harriet.Managers.Goals is
       Priority : Priority_Type;
       World    : Harriet.Db.World_Reference);
 
+   procedure Add_System_Scan_Goal
+     (Faction  : Harriet.Db.Faction_Reference;
+      Priority : Priority_Type;
+      System   : Harriet.Db.Star_System_Reference);
+
 end Harriet.Managers.Goals;

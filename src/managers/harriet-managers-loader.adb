@@ -1,5 +1,6 @@
 with Harriet.Managers.Colonies;
 with Harriet.Managers.Factions;
+with Harriet.Managers.Fleets;
 with Harriet.Managers.Installations;
 
 package body Harriet.Managers.Loader is
@@ -19,6 +20,11 @@ package body Harriet.Managers.Loader is
       Register.Insert
         ("default-mine",
          Harriet.Managers.Installations.Create_Default_Mine_Manager'Access);
+
+      Middle_Register.Insert
+        ("default-fleet",
+         Harriet.Managers.Fleets.Default_Fleet_Manager'Access);
+
    end Register_Managers;
 
 end Harriet.Managers.Loader;
