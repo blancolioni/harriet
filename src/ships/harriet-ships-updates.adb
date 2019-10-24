@@ -157,7 +157,7 @@ package body Harriet.Ships.Updates is
          Harriet.Factions.Discover_World_Deposits
            (Faction => Faction,
             World   => World,
-            Minimum => Unit_Clamp (1.1 - Capability));
+            Minimum => Unit_Clamp (1.0 / Capability));
       end if;
    end Scan_World;
 
