@@ -97,6 +97,7 @@ package body Harriet.Ships.Updates is
 
       Harriet.Db.Ship.Update_Ship (Ship.Get_Ship_Reference)
         .Set_World (Ship.Destination)
+        .Set_Primary_Massive (Ship.Primary_Massive)
         .Set_Destination (Harriet.Db.Null_World_Reference)
         .Set_Status (Harriet.Db.Idle)
         .Done;
