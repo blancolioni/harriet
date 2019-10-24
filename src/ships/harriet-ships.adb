@@ -1,7 +1,9 @@
 with Ada.Text_IO;
 
 with Harriet.Calendar;
+with Harriet.Orbits;
 with Harriet.Random;
+with Harriet.Solar_System;
 
 with Harriet.Worlds;
 
@@ -158,11 +160,14 @@ package body Harriet.Ships is
       Manager : String;
       Name    : String)
    is
+      use type Harriet.Calendar.Time;
       World_Rec : constant Harriet.Db.World.World_Type :=
         Harriet.Db.World.Get (World);
       Orbit     : constant Long_Float :=
         World_Rec.Radius
           + 1000.0 * (3000.0 + 1000.0 * Harriet.Random.Unit_Random);
+      Period    : constant Non_Negative_Real :=
+        Harriet.Orbits.Period (World_Rec.Mass, Orbit);
       Ship         : constant Harriet.Db.Ship_Reference :=
         Harriet.Db.Ship.Create
           (Name              => Name,
@@ -173,13 +178,22 @@ package body Harriet.Ships is
            Updates_Started   => True,
            Next_Update       => Harriet.Calendar.Clock,
            Faction           => Owner,
+           Mass              => Harriet.Ships.Design_Mass (Design),
            Star_System       => World_Rec.Star_System,
            World             => World,
            Home              => World,
-           Orbit             => Orbit,
+           Primary_Massive   => World_Rec.Get_Massive_Object_Reference,
+           Semimajor_Axis    => Orbit,
+           Epoch             =>
+             Harriet.Calendar.Clock
+           - Duration (Harriet.Random.Unit_Random * Period),
+           Period            => Period,
+           Eccentricity      => 0.0,
            Status            => Harriet.Db.Idle,
            Training          => 1.0,
            Fuel              => Design_Fuel_Mass (Design),
+           Departure         => Harriet.Calendar.Clock,
+           Arrival           => Harriet.Calendar.Clock,
            Destination       => Harriet.Db.Null_World_Reference,
            Goal              => Harriet.Db.Null_Goal_Reference);
    begin
@@ -333,6 +347,22 @@ package body Harriet.Ships is
          end loop;
       end return;
    end Dry_Mass;
+
+   ------------------
+   -- Journey_Time --
+   ------------------
+
+   function Journey_Time
+     (Ship     : Ship_Type'Class;
+      Distance : Non_Negative_Real)
+      return Duration
+   is
+   begin
+      return Harriet.Calendar.Days
+          (Distance
+           / Harriet.Solar_System.Earth_Orbit
+           / Ship.Maximum_System_Speed);
+   end Journey_Time;
 
    --------------------------
    -- Maximum_System_Speed --

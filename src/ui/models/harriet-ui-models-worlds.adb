@@ -168,7 +168,7 @@ package body Harriet.UI.Models.Worlds is
                   Harriet.Color.To_Html_String
                     (Faction.Red, Faction.Green, Faction.Blue));
                Ship_Object.Set_Property
-                 ("orbit", Float (Ship.Orbit / World.Radius));
+                 ("orbit", Float (Ship.Semimajor_Axis / World.Radius));
                Ship_Object.Set_Property
                  ("inclination", 0.0);
                Ships.Append (Ship_Object);

@@ -326,9 +326,11 @@ package body Harriet.Configure.Galaxies is
                            Mass                  => Mass,
                            Radius                => Radius,
                            Density               => Mass / Volume,
+                           Primary_Massive       =>
+                             Harriet.Db.Null_Massive_Object_Reference,
                            Epoch                 => Harriet.Calendar.Clock,
-                           Semimajor_Axis        => 0.0,
                            Period                => 0.0,
+                           Semimajor_Axis        => 0.0,
                            Eccentricity          => 0.0,
                            Rotation_Period       => 0.0,
                            Tilt                  => 0.0,

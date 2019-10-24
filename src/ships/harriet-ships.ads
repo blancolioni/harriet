@@ -45,6 +45,11 @@ package Harriet.Ships is
      (Ship : Ship_Type'Class)
       return Non_Negative_Real;
 
+   function Journey_Time
+     (Ship : Ship_Type'Class;
+      Distance : Non_Negative_Real)
+      return Duration;
+
    function Design_Maximum_System_Speed
      (Design : Harriet.Db.Ship_Design_Reference)
       return Non_Negative_Real;
@@ -106,6 +111,6 @@ private
    function Orbit
      (Ship : Ship_Type'Class)
       return Non_Negative_Real
-   is (Harriet.Db.Ship.Get (Ship.Reference).Orbit);
+   is (Harriet.Db.Ship.Get (Ship.Reference).Semimajor_Axis);
 
 end Harriet.Ships;

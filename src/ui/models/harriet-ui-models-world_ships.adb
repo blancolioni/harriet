@@ -105,9 +105,10 @@ package body Harriet.UI.Models.World_Ships is
               (
                  (T (Ship.Name),
                T (Harriet.Factions.Get (Ship.Faction).Name),
-               R ((Ship.Orbit - Harriet.Worlds.Radius (World)) / 1000.0),
+               R ((Ship.Semimajor_Axis - Harriet.Worlds.Radius (World))
+                 / 1000.0),
                R (Harriet.Orbits.Period
-                 (Harriet.Worlds.Mass (World), Ship.Orbit) / 60.0),
+                 (Harriet.Worlds.Mass (World), Ship.Semimajor_Axis) / 60.0),
                R (0.0),
                R (0.0))
               );
