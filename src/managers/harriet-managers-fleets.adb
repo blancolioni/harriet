@@ -7,6 +7,8 @@ with Harriet.Real_Images;
 with Harriet.Ships;
 with Harriet.Worlds;
 
+with Harriet.Ships.Updates;
+
 with Harriet.Db.Component;
 with Harriet.Db.Faction;
 with Harriet.Db.Goal;
@@ -172,9 +174,12 @@ package body Harriet.Managers.Fleets is
 
       Harriet.Db.Ship.Update_Ship (Ship)
         .Set_Destination (Goal_Rec.World)
-        .Set_Status (Harriet.Db.Moving)
+        .Set_Status (Harriet.Db.Activating)
         .Set_Goal (Goal_Rec.Get_Goal_Reference)
         .Done;
+
+      Harriet.Ships.Updates.Signal (Ship);
+
    end Assign_Ship_To_Goal;
 
    ---------------------------------
