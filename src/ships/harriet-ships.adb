@@ -177,11 +177,11 @@ package body Harriet.Ships is
            World             => World,
            Home              => World,
            Orbit             => Orbit,
-           Alive             => True,
            Status            => Harriet.Db.Idle,
            Training          => 1.0,
            Fuel              => Design_Fuel_Mass (Design),
-           Destination       => Harriet.Db.Null_World_Reference);
+           Destination       => Harriet.Db.Null_World_Reference,
+           Goal              => Harriet.Db.Null_Goal_Reference);
    begin
       for Design_Module of
         Harriet.Db.Design_Module.Select_By_Ship_Design
@@ -333,6 +333,18 @@ package body Harriet.Ships is
          end loop;
       end return;
    end Dry_Mass;
+
+   --------------------------
+   -- Maximum_System_Speed --
+   --------------------------
+
+   function Maximum_System_Speed
+     (Ship : Ship_Type'Class)
+      return Non_Negative_Real
+   is
+   begin
+      return Ship.Total_Impulse / Ship.Current_Mass;
+   end Maximum_System_Speed;
 
    ---------------
    -- Tank_Size --

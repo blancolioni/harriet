@@ -41,6 +41,10 @@ package Harriet.Ships is
      (Ship : Ship_Type'Class)
       return Non_Negative_Real;
 
+   function Maximum_System_Speed
+     (Ship : Ship_Type'Class)
+      return Non_Negative_Real;
+
    function Design_Maximum_System_Speed
      (Design : Harriet.Db.Ship_Design_Reference)
       return Non_Negative_Real;

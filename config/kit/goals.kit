@@ -1,12 +1,15 @@
 with Quantities;
+with Worlds;
 
 package Goals is
 
+type Goal_Status is (Complete, Waiting, In_Progress, Blocked, Canceled);
+
 record Goal is
-   Active : Boolean;
+   Status : Goal_Status;
    key Faction;
    Priority : Positive;
-   key Faction_Priority with Active, Faction, Priority;
+   key Faction_Priority with Status, Faction, Priority;
 end Goal;
 
 record Transport_Goal : Goal is

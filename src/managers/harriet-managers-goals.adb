@@ -27,7 +27,7 @@ package body Harriet.Managers.Goals is
    is
    begin
       Harriet.Db.Scan_System_Goal.Create
-        (Active      => True,
+        (Status      => Harriet.Db.Waiting,
          Faction     => Faction,
          Priority    => Positive (Priority),
          Star_System => System);
@@ -51,7 +51,7 @@ package body Harriet.Managers.Goals is
         (Faction, World)
       then
          Harriet.Db.Scan_World_Goal.Create
-           (Active      => True,
+           (Status      => Harriet.Db.Waiting,
             Faction     => Faction,
             Priority    => Positive (Priority),
             World       => World);
@@ -138,7 +138,7 @@ package body Harriet.Managers.Goals is
                   Remaining := Remaining - Supply;
 
                   Harriet.Db.Transport_Goal.Create
-                    (Active    => True,
+                    (Status    => Harriet.Db.Waiting,
                      Faction   => Faction,
                      Priority  => Positive (Priority),
                      Commodity => Commodity,
@@ -224,7 +224,7 @@ package body Harriet.Managers.Goals is
          begin
             if Existing_Goal = Null_Resource_Goal_Reference then
                Harriet.Db.Resource_Goal.Create
-                 (Active   => True,
+                 (Status   => Harriet.Db.Waiting,
                   Faction  => Faction,
                   Priority => Positive (Priority),
                   World    => World,

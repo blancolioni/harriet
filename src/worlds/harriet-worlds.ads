@@ -48,6 +48,10 @@ package Harriet.Worlds is
      (World : Harriet.Db.World_Reference)
       return Boolean;
 
+   function Distance
+     (From, To : Harriet.Db.World_Reference)
+      return Non_Negative_Real;
+
 private
 
    package World_Lists is
