@@ -1,7 +1,16 @@
 with Harriet.UI;
 
+with Harriet.Logging;
+with Harriet.Quantities;
+with Harriet.Real_Images;
+
+with Harriet.Worlds;
+
+with Harriet.Db.Deposit;
 with Harriet.Db.Faction;
+with Harriet.Db.Resource;
 with Harriet.Db.World;
+with Harriet.Db.World_Knowledge;
 
 package body Harriet.Factions is
 
@@ -66,6 +75,75 @@ package body Harriet.Factions is
    begin
       return (Rec.Red, Rec.Green, Rec.Blue, 1.0);
    end Color;
+
+   -----------------------------
+   -- Discover_World_Deposits --
+   -----------------------------
+
+   procedure Discover_World_Deposits
+     (Faction : Harriet.Db.Faction_Reference;
+      World   : Harriet.Db.World_Reference;
+      Minimum : Unit_Real)
+   is
+   begin
+      if not Harriet.Db.World_Knowledge.Is_World_Knowledge
+        (Faction, World)
+      then
+         Harriet.Db.World_Knowledge.Create
+           (Faction        => Faction,
+            Has_Knowledge  =>
+              Harriet.Db.Faction.Get (Faction).Get_Has_Knowledge_Reference,
+            Knowable       =>
+              Harriet.Db.World.Get (World).Get_Knowable_Reference,
+            Existence      => True,
+            Current        => True,
+            World          => World,
+            Classification => True,
+            Orbit          => True,
+            Deposits       => False);
+      end if;
+
+      declare
+         Ref : constant Harriet.Db.World_Knowledge_Reference :=
+           Harriet.Db.World_Knowledge.Get_Reference_By_World_Knowledge
+             (Faction, World);
+      begin
+         Harriet.Db.World_Knowledge.Update_World_Knowledge (Ref)
+           .Set_Deposits (True)
+           .Done;
+      end;
+
+      for Deposit of
+        Harriet.Db.Deposit.Select_By_World (World)
+      loop
+         if Deposit.Concentration >= Minimum then
+            Harriet.Logging.Log
+              (Harriet.Db.Faction.Get (Faction).Name,
+               Harriet.Worlds.Name (World)
+               & ": discovers "
+               & Harriet.Quantities.Show (Deposit.Available)
+               & " "
+               & Harriet.Db.Resource.Get (Deposit.Resource).Tag
+               & " at "
+               & Harriet.Real_Images.Approximate_Image
+                 (Deposit.Concentration * 100.0)
+               & "%");
+         else
+            Harriet.Logging.Log
+              (Harriet.Db.Faction.Get (Faction).Name,
+               Harriet.Worlds.Name (World)
+               & ": misses "
+               & Harriet.Quantities.Show (Deposit.Available)
+               & " "
+               & Harriet.Db.Resource.Get (Deposit.Resource).Tag
+               & " at "
+               & Harriet.Real_Images.Approximate_Image
+                 (Deposit.Concentration * 100.0)
+               & "%");
+         end if;
+      end loop;
+
+   end Discover_World_Deposits;
 
    ---------
    -- Get --

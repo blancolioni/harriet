@@ -227,6 +227,56 @@ package body Harriet.Ships is
       return Ship.Dry_Mass;
    end Current_Mass;
 
+   -----------------------------
+   -- Current_Scan_Capability --
+   -----------------------------
+
+   function Current_Scan_Capability
+     (Ship : Ship_Type'Class)
+      return Non_Negative_Real
+   is
+      Scan_Capability : Non_Negative_Real := 0.0;
+      Individual      : array (1 .. 20) of Non_Negative_Real :=
+        (others => 0.0);
+      Count           : Natural := 0;
+   begin
+      for Module of
+        Harriet.Db.Scanner_Module.Select_By_Ship (Ship.Reference)
+      loop
+         declare
+            Scanner    : constant Harriet.Db.Scanner.Scanner_Type :=
+              Harriet.Db.Scanner.Get (Module.Scanner);
+            Base_Scan  : constant Non_Negative_Real :=
+              Non_Negative_Real (Scanner.Scan);
+            Condition  : constant Unit_Real :=
+              Module.Condition;
+            Final_Scan : constant Non_Negative_Real :=
+              Base_Scan * Condition ** 2;
+            Index      : Natural := Count;
+         begin
+            Count := Count + 1;
+            while Index > 0
+              and then Final_Scan > Individual (Index)
+            loop
+               Individual (Index + 1) := Individual (Index);
+               Index := Index - 1;
+            end loop;
+            Individual (Index + 1) := Final_Scan;
+         end;
+         exit when Count = Individual'Last;
+      end loop;
+
+      declare
+         Factor : Unit_Real := 1.0;
+      begin
+         for Scan of Individual (1 .. Count) loop
+            Scan_Capability := Scan_Capability + Scan * Factor;
+            Factor := Factor / 2.0;
+         end loop;
+      end;
+      return Scan_Capability;
+   end Current_Scan_Capability;
+
    -------------------------
    -- Design_Cargo_Volume --
    -------------------------

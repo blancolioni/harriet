@@ -45,6 +45,10 @@ package Harriet.Ships is
      (Ship : Ship_Type'Class)
       return Non_Negative_Real;
 
+   function Current_Scan_Capability
+     (Ship : Ship_Type'Class)
+      return Non_Negative_Real;
+
    function Journey_Time
      (Ship : Ship_Type'Class;
       Distance : Non_Negative_Real)
