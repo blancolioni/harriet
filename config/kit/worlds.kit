@@ -52,7 +52,7 @@ package Worlds is
       key World_Gas with World, Gas;
    end Atmosphere;
 
-   record Deposit is
+   record Deposit : Knowable is
       key World;
 	  Resource;
 	  Concentration : Long_Float;

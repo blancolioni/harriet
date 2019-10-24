@@ -37,4 +37,9 @@ package Factions is
 	  unique key World_Knowledge with Faction, World;
    end World_Knowledge;
    
+   record Deposit_Knowledge : Faction_Knowledge is
+      key Deposit;
+	  unique key Deposit_Knowledge with Faction, Deposit;
+   end Deposit_Knowledge;
+   
 end Factions;

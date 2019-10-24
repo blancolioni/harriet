@@ -7,6 +7,7 @@ with Harriet.Real_Images;
 with Harriet.Worlds;
 
 with Harriet.Db.Deposit;
+with Harriet.Db.Deposit_Knowledge;
 with Harriet.Db.Faction;
 with Harriet.Db.Resource;
 with Harriet.Db.World;
@@ -85,14 +86,15 @@ package body Harriet.Factions is
       World   : Harriet.Db.World_Reference;
       Minimum : Unit_Real)
    is
+      Has_Knowledge : constant Harriet.Db.Has_Knowledge_Reference :=
+        Harriet.Db.Faction.Get (Faction).Get_Has_Knowledge_Reference;
    begin
       if not Harriet.Db.World_Knowledge.Is_World_Knowledge
         (Faction, World)
       then
          Harriet.Db.World_Knowledge.Create
            (Faction        => Faction,
-            Has_Knowledge  =>
-              Harriet.Db.Faction.Get (Faction).Get_Has_Knowledge_Reference,
+            Has_Knowledge  => Has_Knowledge,
             Knowable       =>
               Harriet.Db.World.Get (World).Get_Knowable_Reference,
             Existence      => True,
@@ -116,30 +118,43 @@ package body Harriet.Factions is
       for Deposit of
         Harriet.Db.Deposit.Select_By_World (World)
       loop
-         if Deposit.Concentration >= Minimum then
-            Harriet.Logging.Log
-              (Harriet.Db.Faction.Get (Faction).Name,
-               Harriet.Worlds.Name (World)
-               & ": discovers "
-               & Harriet.Quantities.Show (Deposit.Available)
-               & " "
-               & Harriet.Db.Resource.Get (Deposit.Resource).Tag
-               & " at "
-               & Harriet.Real_Images.Approximate_Image
-                 (Deposit.Concentration * 100.0)
-               & "%");
-         else
-            Harriet.Logging.Log
-              (Harriet.Db.Faction.Get (Faction).Name,
-               Harriet.Worlds.Name (World)
-               & ": misses "
-               & Harriet.Quantities.Show (Deposit.Available)
-               & " "
-               & Harriet.Db.Resource.Get (Deposit.Resource).Tag
-               & " at "
-               & Harriet.Real_Images.Approximate_Image
-                 (Deposit.Concentration * 100.0)
-               & "%");
+         if not Harriet.Db.Deposit_Knowledge.Is_Deposit_Knowledge
+           (Faction, Deposit.Get_Deposit_Reference)
+         then
+            if Deposit.Concentration >= Minimum then
+               Harriet.Logging.Log
+                 (Harriet.Db.Faction.Get (Faction).Name,
+                  Harriet.Worlds.Name (World)
+                  & ": discovers "
+                  & Harriet.Quantities.Show (Deposit.Available)
+                  & " "
+                  & Harriet.Db.Resource.Get (Deposit.Resource).Tag
+                  & " at "
+                  & Harriet.Real_Images.Approximate_Image
+                    (Deposit.Concentration * 100.0)
+                  & "%");
+
+               Harriet.Db.Deposit_Knowledge.Create
+                 (Faction        => Faction,
+                  Has_Knowledge  => Has_Knowledge,
+                  Knowable       => Deposit.Get_Knowable_Reference,
+                  Existence      => True,
+                  Current        => True,
+                  Deposit        => Deposit.Get_Deposit_Reference);
+
+            else
+               Harriet.Logging.Log
+                 (Harriet.Db.Faction.Get (Faction).Name,
+                  Harriet.Worlds.Name (World)
+                  & ": misses "
+                  & Harriet.Quantities.Show (Deposit.Available)
+                  & " "
+                  & Harriet.Db.Resource.Get (Deposit.Resource).Tag
+                  & " at "
+                  & Harriet.Real_Images.Approximate_Image
+                    (Deposit.Concentration * 100.0)
+                  & "%");
+            end if;
          end if;
       end loop;
 
