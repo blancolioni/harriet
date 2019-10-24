@@ -27,4 +27,9 @@ record Input_Commodity is
    unique key Input_Commodity with Manufactured, Commodity;
 end Input_Commodity;
 
+record Consumer_Commodity is
+   key Commodity;
+   Pop_Per_Item   : Quantity_Type;
+end Consumer_Commodity;
+
 end Commodities;

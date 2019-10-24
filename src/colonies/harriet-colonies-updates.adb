@@ -13,6 +13,8 @@ with Harriet.Factions;
 with Harriet.Worlds;
 
 with Harriet.Db.Colony;
+with Harriet.Db.Commodity;
+with Harriet.Db.Consumer_Commodity;
 with Harriet.Db.Expense;
 with Harriet.Db.Facility;
 with Harriet.Db.Facility_Input;
@@ -360,8 +362,55 @@ package body Harriet.Colonies.Updates is
       Current_Pop : constant Non_Negative_Real :=
                       Harriet.Quantities.To_Real (Colony.Population);
       New_Pop     : constant Non_Negative_Real :=
-                      Current_Pop * (1.0 + Daily_Rate);
+        Current_Pop * (1.0 + Daily_Rate);
+      Happiness   : Unit_Real := 1.0;
    begin
+
+      for Consumer_Commodity of
+        Harriet.Db.Consumer_Commodity.Scan_By_Commodity
+      loop
+         declare
+            use Harriet.Quantities;
+            Commodity : constant Harriet.Db.Commodity_Reference :=
+              Consumer_Commodity.Commodity;
+            Required : constant Quantity_Type :=
+              (if Colony.Population >= Consumer_Commodity.Pop_Per_Item
+               then Colony.Population / Consumer_Commodity.Pop_Per_Item
+               else Zero);
+            Available : constant Quantity_Type :=
+              Harriet.Commodities.Current_Quantity
+                (Colony.Get_Has_Stock_Reference, Commodity);
+            Consumed  : constant Quantity_Type :=
+              Min (Required, Available);
+            Rating    : constant Unit_Real :=
+              (if Required > Zero
+               then To_Real (Consumed) / To_Real (Required)
+               else 1.0);
+         begin
+            if Required > Zero then
+               Harriet.Logging.Log
+                 (World.Name
+                  & " owned by "
+                  & Faction.Name,
+                  Harriet.Db.Commodity.Get (Commodity).Tag
+                  & ": required "
+                  & Show (Required)
+                  & "; available "
+                  & Show (Available)
+                  & "; consumed "
+                  & Show (Consumed)
+                  & "; rating "
+                  & Harriet.Real_Images.Approximate_Image
+                    (Rating * 100.0) & "%");
+               Happiness := Unit_Real'Min (Happiness, Rating);
+               Harriet.Commodities.Remove_Stock
+                 (Colony.Get_Has_Stock_Reference, Commodity, Consumed);
+            end if;
+         end;
+      end loop;
+
+      Happiness := 0.9 * Colony.Happiness + 0.1 * Happiness;
+
       Harriet.Logging.Log
         (World.Name
          & " owned by "
@@ -377,10 +426,15 @@ package body Harriet.Colonies.Updates is
          & "; change: "
          & Approximate_Image (New_Pop - Current_Pop)
          & "; new pop: "
-         & Approximate_Image (New_Pop));
+         & Approximate_Image (New_Pop)
+         & "; old happiness: "
+         & Approximate_Image (Colony.Happiness * 100.0) & "%"
+         & "; new happiness: "
+         & Approximate_Image (Happiness * 100.0) & "%");
 
       Harriet.Db.Colony.Update_Colony (Update.Colony)
         .Set_Population (Harriet.Quantities.To_Quantity (New_Pop))
+        .Set_Happiness (Happiness)
         .Done;
 
    end Population_Update;

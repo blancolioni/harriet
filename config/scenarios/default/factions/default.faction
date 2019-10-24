@@ -21,6 +21,7 @@ home-colony = {
       coal = 100
 	  petroleum = 50
 	  ship-fuel = 100
+	  basic-consumer-goods = 100
 	  }
    ships = { system-scout jump-scout defender trader }
 }
