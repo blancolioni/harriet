@@ -2,5 +2,5 @@ default-manager = ship-explore
 components = {
   basic-drive = 2
   basic-tank
-  basic-scanner
+  basic-scanner = 2
 }
