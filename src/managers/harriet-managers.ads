@@ -7,7 +7,7 @@ with Harriet.Db.Managed;
 
 package Harriet.Managers is
 
-   type Priority_Type is range 1 .. 20;
+   subtype Priority_Type is Integer range 1 .. 20;
 
    Top_Priority        : constant Priority_Type := 1;
    Emergency_Priority  : constant Priority_Type := 3;
