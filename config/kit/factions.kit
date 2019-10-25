@@ -39,6 +39,8 @@ package Factions is
    
    record Deposit_Knowledge : Faction_Knowledge is
       key Deposit;
+	  Resource;
+	  key Known_Resource with Faction, Resource;
 	  unique key Deposit_Knowledge with Faction, Deposit;
    end Deposit_Knowledge;
    

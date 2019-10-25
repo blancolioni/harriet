@@ -140,6 +140,7 @@ package body Harriet.Factions is
                   Knowable       => Deposit.Get_Knowable_Reference,
                   Existence      => True,
                   Current        => True,
+                  Resource       => Deposit.Resource,
                   Deposit        => Deposit.Get_Deposit_Reference);
 
             else

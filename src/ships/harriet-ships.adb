@@ -206,6 +206,7 @@ package body Harriet.Ships is
            Fuel              => Design_Fuel_Mass (Design),
            Departure         => Harriet.Calendar.Clock,
            Arrival           => Harriet.Calendar.Clock,
+           Start             => Harriet.Calendar.Clock,
            Destination       => Harriet.Db.Null_World_Reference,
            Goal              => Harriet.Db.Null_Goal_Reference);
    begin

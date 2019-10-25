@@ -64,7 +64,7 @@ record Design_Module is
 end Design_Module;
 
 type Ship_Status is
-  (Idle, Activating, Moving, Training, Repairing, Destroyed);
+  (Idle, Activating, Moving, Surveying, Training, Repairing, Destroyed);
   
 record Ship : Has_Name, Has_Stock, Managed, Updated, Orbiting_Object is
    key Faction;
@@ -77,6 +77,7 @@ record Ship : Has_Name, Has_Stock, Managed, Updated, Orbiting_Object is
    Destination : World;
    Departure   : Time;
    Arrival     : Time;
+   Start       : Time;
    Goal;
    key Ship_Status with Faction, Status;
 end Ship;

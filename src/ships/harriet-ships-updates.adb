@@ -11,6 +11,7 @@ with Harriet.Updates.Events;
 with Harriet.Db.World;
 
 with Harriet.Db.Goal;
+with Harriet.Db.Scan_World_Goal;
 with Harriet.Db.World_Goal;
 
 package body Harriet.Ships.Updates is
@@ -74,6 +75,53 @@ package body Harriet.Ships.Updates is
                Harriet.Updates.Events.Update_At
                  (Ship.Arrival, Update);
             end if;
+
+         when Surveying =>
+
+            declare
+               Scan_Start : constant Harriet.Calendar.Time := Ship.Start;
+               Scan_Total : constant Non_Negative_Real :=
+                 Get (Ship).Current_Scan_Capability
+                 * Harriet.Calendar.To_Days
+                 (Harriet.Calendar.Clock - Scan_Start);
+
+               Minimum    : constant Non_Negative_Real :=
+                 100.0 / Scan_Total;
+               Target     : constant Unit_Real :=
+                 Harriet.Db.Scan_World_Goal.Get_Scan_World_Goal
+                   (Ship.Goal)
+                 .Minimum_Deposit;
+            begin
+               Harriet.Logging.Log
+                 (Ship.Name,
+                  "scan started " & Harriet.Calendar.Image (Scan_Start, True)
+                  & "; total scan "
+                  & Harriet.Real_Images.Approximate_Image (Scan_Total)
+                  & "; minimum detected deposit "
+                  & Harriet.Real_Images.Approximate_Image (Minimum));
+
+               if Minimum <= 1.0 then
+                  Harriet.Factions.Discover_World_Deposits
+                    (Faction => Ship.Faction,
+                     World   => Ship.World,
+                     Minimum => Minimum);
+               end if;
+
+               if Minimum <= Target then
+                  Harriet.Db.Ship.Update_Ship (Ship.Get_Ship_Reference)
+                    .Set_Goal (Harriet.Db.Null_Goal_Reference)
+                    .Set_Status (Harriet.Db.Idle)
+                    .Done;
+                  Harriet.Managers.Signal
+                    (Faction => Get (Ship).Owner,
+                     Area    => Harriet.Managers.Fleet);
+               else
+                  Harriet.Updates.Events.Update_With_Delay
+                    (Wait   => Harriet.Calendar.Days (1),
+                     Update => Update);
+               end if;
+            end;
+
          when Training =>
             Harriet.Logging.Log (Ship.Name, "training");
             Harriet.Db.Ship.Update_Ship (Update.Ship)
@@ -143,8 +191,6 @@ package body Harriet.Ships.Updates is
      (Ship  : Harriet.Db.Ship_Reference;
       World : Harriet.Db.World_Reference)
    is
-      Faction : constant Harriet.Db.Faction_Reference :=
-        Get (Ship).Owner;
       Capability : constant Non_Negative_Real :=
         Get (Ship).Current_Scan_Capability;
    begin
@@ -154,10 +200,15 @@ package body Harriet.Ships.Updates is
             "scanning " & Harriet.Worlds.Name (World)
             & " with capability "
             & Harriet.Real_Images.Approximate_Image (Capability));
-         Harriet.Factions.Discover_World_Deposits
-           (Faction => Faction,
-            World   => World,
-            Minimum => Unit_Clamp (1.0 / Capability));
+         Harriet.Db.Ship.Update_Ship (Ship)
+           .Set_Status (Harriet.Db.Surveying)
+           .Set_Start  (Harriet.Calendar.Clock)
+           .Done;
+
+         Harriet.Updates.Events.Update_With_Delay
+           (Wait   => Harriet.Calendar.Days (1),
+            Update => Ship_Update'(Ship => Ship));
+
       end if;
    end Scan_World;
 

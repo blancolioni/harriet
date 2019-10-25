@@ -6,6 +6,7 @@ with Harriet.Db.Available_Commodity;
 with Harriet.Db.Colonise_Goal;
 with Harriet.Db.Colony;
 with Harriet.Db.Deposit;
+with Harriet.Db.Deposit_Knowledge;
 with Harriet.Db.Faction;
 with Harriet.Db.Resource;
 with Harriet.Db.Resource_Goal;
@@ -51,10 +52,11 @@ package body Harriet.Managers.Goals is
         (Faction, World)
       then
          Harriet.Db.Scan_World_Goal.Create
-           (Status      => Harriet.Db.Waiting,
-            Faction     => Faction,
-            Priority    => Positive (Priority),
-            World       => World);
+           (Status          => Harriet.Db.Waiting,
+            Faction         => Faction,
+            Priority        => Positive (Priority),
+            World           => World,
+            Minimum_Deposit => 0.1);
          Harriet.Managers.Signal
            (Faction => Faction,
             Area    => Harriet.Managers.Fleet);
@@ -109,6 +111,8 @@ package body Harriet.Managers.Goals is
          return;
       end if;
 
+      Harriet.Logging.Log ("goals", "checking existing colonies");
+
       for Check_Colony of
         Harriet.Db.Colony.Select_By_Faction (Faction)
       loop
@@ -158,47 +162,51 @@ package body Harriet.Managers.Goals is
          return;
       end if;
 
+      Harriet.Logging.Log ("goals", "checking known deposits");
+
       declare
          Best_World : Harriet.Db.World_Reference :=
            Harriet.Db.Null_World_Reference;
          Best_Score : Non_Negative_Real := 0.0;
       begin
-         for World_Knowledge of
-           Harriet.Db.World_Knowledge.Select_By_Faction (Faction)
+         for Deposit_Knowledge of
+           Harriet.Db.Deposit_Knowledge.Select_By_Known_Resource
+             (Faction, Resource)
          loop
-            if World_Knowledge.Deposits then
-               declare
-                  Deposit : constant Harriet.Db.Deposit.Deposit_Type :=
-                    Harriet.Db.Deposit.Get_By_Deposit
-                      (World_Knowledge.World, Resource);
-               begin
-                  if Deposit.Has_Element then
-                     declare
-                        This_Score : constant Non_Negative_Real :=
-                          To_Real (Deposit.Available) * Deposit.Concentration;
-                     begin
-                        if This_Score > Best_Score then
-                           Best_World := Deposit.World;
-                           Best_Score := This_Score;
-                        end if;
-                     end;
-                  end if;
-               end;
-            end if;
+            declare
+               Deposit : constant Harriet.Db.Deposit.Deposit_Type :=
+                 Harriet.Db.Deposit.Get (Deposit_Knowledge.Deposit);
+               This_Score : constant Non_Negative_Real :=
+                 To_Real (Deposit.Available) * Deposit.Concentration;
+            begin
+               if This_Score > Best_Score then
+                  Best_World := Deposit.World;
+                  Best_Score := This_Score;
+               end if;
+            end;
          end loop;
 
          declare
             use type Harriet.Db.World_Reference;
          begin
             if Best_World /= Harriet.Db.Null_World_Reference then
+               Harriet.Logging.Log
+                 ("goals",
+                  "best deposit is on "
+                  & Harriet.Worlds.Name (Best_World));
+
                declare
                   use Harriet.Db.Colonise_Goal;
                   Current_Goal : constant Colonise_Goal_Type :=
-                    Get_By_Colonise_World_Goal (Faction, World);
+                    Get_By_Colonise_World_Goal (Faction, Best_World);
                begin
                   if not Current_Goal.Has_Element then
+                     Harriet.Logging.Log
+                       ("goals",
+                        "ordering colonisation of "
+                          & Harriet.Worlds.Name (Best_World));
                      Add_Colonisation_Goal
-                       (Faction, Priority, World);
+                       (Faction, Priority, Best_World);
                   end if;
                end;
                Remaining := Zero;

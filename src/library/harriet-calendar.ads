@@ -102,6 +102,10 @@ package Harriet.Calendar is
      (Value : Real)
       return Time;
 
+   function To_Days
+     (Interval : Duration)
+      return Non_Negative_Real;
+
    function Start_Year return Year_Number;
    function Start return Time;
 
@@ -177,5 +181,10 @@ private
 
    function Delay_Days (Days_Delay : Non_Negative_Real) return Time
    is (Clock + Days (Days_Delay));
+
+   function To_Days
+     (Interval : Duration)
+      return Non_Negative_Real
+   is (Non_Negative_Real (Interval / Day_Length));
 
 end Harriet.Calendar;

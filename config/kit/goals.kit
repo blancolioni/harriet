@@ -33,6 +33,7 @@ end Resource_Goal;
 
 record Scan_World_Goal : World_Goal is
    unique key Scan_World_Goal with Faction, World;
+   Minimum_Deposit : Long_Float;
 end Scan_World_Goal;
 
 record Scan_System_Goal : Goal is
