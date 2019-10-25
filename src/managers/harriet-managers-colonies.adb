@@ -7,6 +7,7 @@ with Harriet.Real_Images;
 with Harriet.Colonies;
 with Harriet.Commodities;
 with Harriet.Factions;
+with Harriet.Installations;
 with Harriet.Ships;
 with Harriet.Worlds;
 
@@ -20,9 +21,9 @@ with Harriet.Db.Deposit;
 with Harriet.Db.Expense;
 with Harriet.Db.Facility;
 with Harriet.Db.Facility_Input;
-with Harriet.Db.Input_Commodity;
 with Harriet.Db.Installation;
-with Harriet.Db.Manufactured;
+--  with Harriet.Db.Manufactured;
+with Harriet.Db.Production_Goal;
 with Harriet.Db.Resource;
 with Harriet.Db.Revenue;
 with Harriet.Db.Ship;
@@ -105,6 +106,16 @@ package body Harriet.Managers.Colonies is
 
       Requirements.Clear_Requirements (Manager.Require);
 
+      for Goal of
+        Harriet.Db.Production_Goal.Select_By_Colony
+          (Manager.Colony)
+      loop
+         Harriet.Db.Production_Goal.Update_Production_Goal
+           (Goal.Get_Production_Goal_Reference)
+           .Set_Quantity (Harriet.Quantities.Zero)
+           .Done;
+      end loop;
+
       Manager.Check_Population;
       Manager.Check_Installations;
       Manager.Check_Ships;
@@ -170,7 +181,10 @@ package body Harriet.Managers.Colonies is
                  (Requirements => Manager.Require,
                   Commodity    => Input.Commodity,
                   Quantity     => Input.Quantity,
-                  Priority     => High_Priority);
+                  Priority     =>
+                    (if Facility.Generate > 0
+                     then High_Priority - 1
+                     else High_Priority));
             end loop;
 
             Manager.Working_Pop :=
@@ -263,11 +277,15 @@ package body Harriet.Managers.Colonies is
                New_Tax_Rate :=
                  Real'Min
                    (0.6,
-                    Tax_Rate * To_Real (Last_Expense)
+                    1.02 * Tax_Rate * To_Real (Last_Expense)
                     / To_Real (Last_Revenue));
             end if;
 
-            if New_Tax_Rate /= Tax_Rate then
+            if New_Tax_Rate /= Tax_Rate
+              and then (Tax_Rate = 0.0
+                        or else abs (New_Tax_Rate - Tax_Rate) / Tax_Rate
+                        > 0.01)
+            then
                Manager.Log ("change tax rate from "
                             & Approximate_Image (Tax_Rate * 100.0)
                             & "%"
@@ -438,6 +456,14 @@ package body Harriet.Managers.Colonies is
                  Harriet.Commodities.Current_Quantity
                    (Committed_Stock, Commodity);
             begin
+               Manager.Log
+                 ("commodity requirement: "
+                  & Harriet.Db.Commodity.Get (Commodity).Tag
+                  & ": required: " & Harriet.Quantities.Show (Quantity)
+                  & "; have: " & Harriet.Quantities.Show (Current)
+                  & "; committed: " & Harriet.Quantities.Show (Committed)
+                  & "; available: " & Harriet.Quantities.Show
+                    (Current - Min (Current, Committed)));
                if Committed + Quantity > Current then
                   Add_Ingredients
                     (Commodity,
@@ -482,34 +508,30 @@ package body Harriet.Managers.Colonies is
                                 Harriet.Db."=");
 
       Remaining_Mines       : Natural := 0;
-      Remaining_Strip_Mines : Natural := 0;
-      Remaining_Industry    : Natural := 0;
 
       Mine_Map       : Installation_Vectors.Vector;
       Strip_Mine_Map : Installation_Vectors.Vector;
       Industry_Map   : Installation_Vectors.Vector;
 
       Next_Mine       : Natural := 0;
-      Next_Strip_Mine : Natural := 0;
-      Next_Industry   : Natural := 0;
 
       procedure Assign_Mines
         (Commodity   : Harriet.Db.Commodity_Reference;
          Requirement : Harriet.Quantities.Quantity_Type;
          Priority    : Priority_Type);
 
-      procedure Assign_Facility
+      procedure Add_Production_Goal
         (Commodity   : Harriet.Db.Commodity_Reference;
          Requirement : Harriet.Quantities.Quantity_Type;
          Priority    : Priority_Type);
 
       procedure Initialize_Installation_Maps;
 
-      ---------------------
-      -- Assign_Facility --
-      ---------------------
+      -------------------------
+      -- Add_Production_Goal --
+      -------------------------
 
-      procedure Assign_Facility
+      procedure Add_Production_Goal
         (Commodity   : Harriet.Db.Commodity_Reference;
          Requirement : Harriet.Quantities.Quantity_Type;
          Priority    : Priority_Type)
@@ -520,9 +542,6 @@ package body Harriet.Managers.Colonies is
          else
             declare
                use Harriet.Quantities;
-               Manufacture : constant Harriet.Db.Manufactured_Reference :=
-                 Harriet.Db.Manufactured.Get_Manufactured (Commodity)
-                 .Get_Manufactured_Reference;
                Available      : constant Quantity_Type :=
                  Harriet.Commodities.Current_Quantity
                    (Manager.Colony_Has_Stock, Commodity);
@@ -530,8 +549,6 @@ package body Harriet.Managers.Colonies is
                  (if Requirement > Available
                   then Requirement - Available
                   else Zero);
-               Max_Production : Quantity_Type := Quantity;
-               Required_Industry : Natural;
             begin
                Manager.Log
                  (Harriet.Db.Commodity.Get (Commodity).Tag
@@ -543,58 +560,15 @@ package body Harriet.Managers.Colonies is
                   & Show (Quantity));
 
                if Quantity > Zero then
-                  for Part of
-                    Harriet.Db.Input_Commodity.Select_By_Manufactured
-                      (Manufacture)
-                  loop
-                     declare
-                        Required  : constant Quantity_Type :=
-                          Max_Production * Part.Quantity;
-                        Available : constant Quantity_Type :=
-                          Harriet.Commodities.Current_Quantity
-                            (Manager.Colony_Has_Stock, Part.Commodity);
-                     begin
-                        if Available < Required then
-                           Max_Production :=
-                             Available / Part.Quantity;
-                        end if;
-                     end;
-                  end loop;
-
-                  Required_Industry :=
-                    Natural (Harriet.Quantities.To_Real (Max_Production));
-
-                  while Remaining_Industry > 0
-                    and then Required_Industry > 0
-                  loop
-                     Next_Industry := Next_Industry + 1;
-                     declare
-                        use Harriet.Db;
-                        Next_Ind_Ref : constant Installation_Reference :=
-                          Industry_Map.Element (Next_Industry);
-                        Available    : constant Natural :=
-                          Facility.Get
-                            (Installation.Get (Next_Ind_Ref).Facility)
-                            .Industry;
-                        Used         : constant Natural :=
-                          Natural'Min (Available, Required_Industry);
-                     begin
-                        Harriet.Db.Installation.Update_Installation
-                          (Next_Ind_Ref)
-                          .Set_Resource (Harriet.Db.Null_Resource_Reference)
-                          .Set_Commodity (Commodity)
-                          .Done;
-                        Required_Industry := Required_Industry - Used;
-                        Remaining_Industry := Remaining_Industry - 1;
-                        Manager.Log
-                          ("industry assigned to produce" & Used'Image
-                           & " " & Harriet.Db.Commodity.Get (Commodity).Tag);
-                     end;
-                  end loop;
+                  Harriet.Installations.Add_Production_Goal
+                    (Colony    => Manager.Colony,
+                     Commodity => Commodity,
+                     Quantity  => Quantity,
+                     Priority  => Priority);
                end if;
             end;
          end if;
-      end Assign_Facility;
+      end Add_Production_Goal;
 
       ------------------
       -- Assign_Mines --
@@ -684,67 +658,11 @@ package body Harriet.Managers.Colonies is
                   Resource => Resource,
                   Quantity => Quantity);
 
-               Manager.Log ("converting raw resources to "
-                            & Show (Quantity)
-                            & " "
-                            & Harriet.Db.Commodity.Get (Commodity).Tag);
-               declare
-                  Current_Raw : constant Quantity_Type :=
-                    Harriet.Commodities.Current_Quantity
-                      (Manager.Colony_Has_Stock,
-                       Harriet.Commodities.Raw_Resources);
-                  Required_Raw : constant Quantity_Type :=
-                    Scale (Quantity, 10.0);
-                  Missing_Raw  : constant Quantity_Type :=
-                    Required_Raw - Min (Current_Raw, Required_Raw);
-                  Required_Industry : constant Natural :=
-                    (Natural (To_Real (Quantity)) + 99) / 10;
-                  Assigned_Industry : constant Natural :=
-                    Natural'Min (Required_Industry, Remaining_Industry);
-                  Required_Strip_Mines : constant Natural :=
-                    (Natural (To_Real (Missing_Raw) * 10.0) + 99) / 100;
-                  Assigned_Strip_Mines : constant Natural :=
-                    Natural'Min (Required_Strip_Mines, Remaining_Strip_Mines);
-               begin
-
-                  if Required_Strip_Mines > Remaining_Strip_Mines then
-                     Manager.Required_Strip_Mines :=
-                       Manager.Required_Strip_Mines
-                       + Required_Strip_Mines - Remaining_Strip_Mines;
-                  end if;
-
-                  for I in 1 .. Assigned_Strip_Mines loop
-                     Next_Strip_Mine := Next_Strip_Mine + 1;
-                  end loop;
-
-                  Remaining_Strip_Mines := Remaining_Strip_Mines
-                    - Assigned_Strip_Mines;
-
-                  Manager.Log
-                    (Show (Quantity) & " "
-                     & Harriet.Db.Commodity.Get (Commodity).Tag
-                     & " requires"
-                     & Required_Strip_Mines'Image & " strip mines");
-
-                  Manager.Log
-                    ("assigning" & Assigned_Industry'Image
-                     & " industry");
-                  if Assigned_Industry < Required_Industry then
-                     Manager.Required_Industry := Manager.Required_Industry
-                       + Required_Industry - Assigned_Industry;
-                  end if;
-
-                  for I in 1 .. Assigned_Industry loop
-                     Next_Industry := Next_Industry + 1;
-                     Harriet.Db.Installation.Update_Installation
-                       (Industry_Map (Next_Industry))
-                         .Set_Commodity (Harriet.Db.Null_Commodity_Reference)
-                         .Set_Resource (Resource)
-                       .Done;
-                  end loop;
-                  Remaining_Industry := Remaining_Industry - Assigned_Industry;
-
-               end;
+               Harriet.Installations.Add_Production_Goal
+                 (Colony    => Manager.Colony,
+                  Commodity => Commodity,
+                  Quantity  => Requirement,
+                  Priority  => Priority);
 
             end if;
 
@@ -788,9 +706,7 @@ package body Harriet.Managers.Colonies is
             end;
          end loop;
 
-         Remaining_Strip_Mines := Manager.Available_Strip_Mines;
          Remaining_Mines := Manager.Available_Mines;
-         Remaining_Industry := Manager.Available_Industry;
 
          Manager.Log
            ("found" & Manager.Available_Mines'Image & " mines and"
@@ -800,17 +716,7 @@ package body Harriet.Managers.Colonies is
    begin
       Initialize_Installation_Maps;
       Requirements.Scan_Commodity_Requirements
-        (Manager.Require, Assign_Facility'Access);
-
-      while Next_Industry < Manager.Available_Industry loop
-         Next_Industry := Next_Industry + 1;
-
-         Harriet.Db.Installation.Update_Installation
-           (Industry_Map.Element (Next_Industry))
-           .Set_Resource (Harriet.Db.Null_Resource_Reference)
-           .Set_Commodity (Harriet.Db.Null_Commodity_Reference)
-           .Done;
-      end loop;
+        (Manager.Require, Add_Production_Goal'Access);
 
    end Process_Requirements;
 

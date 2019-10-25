@@ -31,6 +31,13 @@ record Resource_Goal : World_Goal is
    unique key Resource_Goal with Faction, World, Resource, Priority;
 end Resource_Goal;
 
+record Production_Goal : Goal is
+   key Colony;
+   Commodity;
+   Quantity : Quantity_Type;
+   key Production_Priority with Colony, Priority;
+end Production_Goal;
+
 record Scan_World_Goal : World_Goal is
    unique key Scan_World_Goal with Faction, World;
    Minimum_Deposit : Long_Float;
