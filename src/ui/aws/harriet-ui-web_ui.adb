@@ -94,6 +94,9 @@ package body Harriet.UI.Web_UI is
      (Item    : Web_UI_Type;
       Message : String);
 
+   overriding procedure Wait
+     (Web_UI  : Web_UI_Type);
+
    overriding procedure Broadcast
      (UI     : Web_UI_Type;
       Signal : Harriet.Signals.Signal_Type);
@@ -414,6 +417,18 @@ package body Harriet.UI.Web_UI is
       AWS.Server.Shutdown (Server);
       Logging.On_Stop;
    end Stop;
+
+   ----------
+   -- Wait --
+   ----------
+
+   overriding procedure Wait
+     (Web_UI  : Web_UI_Type)
+   is
+      pragma Unreferenced (Web_UI);
+   begin
+      AWS.Server.Wait;
+   end Wait;
 
 begin
    Clock_Handler_Id :=

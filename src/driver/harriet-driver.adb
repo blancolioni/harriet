@@ -362,13 +362,15 @@ begin
       begin
          UI.Start;
 
-         Ada.Text_IO.Put ("Press return to exit");
-         Ada.Text_IO.Flush;
-         Ada.Text_IO.Skip_Line;
-         Ada.Text_IO.Put_Line ("Stopping ...");
-
-         UI.Stop ("Server going down");
-
+         if Harriet.Options.Interactive then
+            Ada.Text_IO.Put ("Press return to exit");
+            Ada.Text_IO.Flush;
+            Ada.Text_IO.Skip_Line;
+            Ada.Text_IO.Put_Line ("Stopping ...");
+            UI.Stop ("Server going down");
+         else
+            UI.Wait;
+         end if;
       end;
 
    end if;
