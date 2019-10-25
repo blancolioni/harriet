@@ -32,6 +32,10 @@ record Missile_Bay : Storage;
 
 record Fighter_Bay : Storage;
 
+record Crew_Quarters : Storage;
+
+record Passenger_Berth : Storage;
+
 record Generator : Component;
 
 record Shield_Generator : Component is
@@ -99,6 +103,14 @@ end Tank_Module;
 record Hold_Module : Module is
    Hold;
 end Hold_Module;
+
+record Crew_Module : Module is
+   Crew_Quarters;
+end Crew_Module;
+
+record Passenger_Module : Module is
+   Passenger_Berth;
+end Passenger_Module;
 
 record Generator_Module : Module is
    Generator;

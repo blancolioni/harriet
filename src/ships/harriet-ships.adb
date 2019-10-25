@@ -12,6 +12,7 @@ with Harriet.Db.Design_Module;
 with Harriet.Db.Module;
 with Harriet.Db.World;
 
+with Harriet.Db.Crew_Quarters;
 with Harriet.Db.Energy_Weapon;
 with Harriet.Db.Engine;
 with Harriet.Db.Generator;
@@ -22,6 +23,7 @@ with Harriet.Db.Scanner;
 with Harriet.Db.Shield_Generator;
 with Harriet.Db.Tank;
 
+with Harriet.Db.Crew_Module;
 with Harriet.Db.Engine_Module;
 with Harriet.Db.Energy_Weapon_Module;
 with Harriet.Db.Generator_Module;
@@ -52,6 +54,16 @@ package body Harriet.Ships is
       Top : constant Harriet.Db.Record_Type := Base.Top_Record;
    begin
       case Top is
+         when R_Crew_Quarters =>
+            Harriet.Db.Crew_Module.Create
+              (Ship          => Ship,
+               Component     => Component,
+               Crew          => Base.Crew,
+               Condition     => 1.0,
+               Crew_Quarters =>
+                  Harriet.Db.Crew_Quarters.Get_Crew_Quarters (Component)
+               .Get_Crew_Quarters_Reference);
+
          when R_Engine =>
             Harriet.Db.Engine_Module.Create
               (Ship      => Ship,
@@ -299,6 +311,48 @@ package body Harriet.Ships is
          end loop;
       end return;
    end Design_Cargo_Volume;
+
+   -----------------
+   -- Design_Crew --
+   -----------------
+
+   function Design_Crew
+     (Design : Harriet.Db.Ship_Design_Reference)
+      return Natural
+   is
+   begin
+      return Crew : Natural := 0 do
+         for Module of
+           Harriet.Db.Design_Module.Select_By_Ship_Design (Design)
+         loop
+            Crew := Crew +
+              Harriet.Db.Component.Get (Module.Component).Crew;
+         end loop;
+      end return;
+   end Design_Crew;
+
+   function Design_Crew_Berths
+     (Design : Harriet.Db.Ship_Design_Reference)
+      return Natural
+   is
+      use all type Harriet.Db.Record_Type;
+   begin
+      return Crew : Natural := 0 do
+         for Module of
+           Harriet.Db.Design_Module.Select_By_Ship_Design (Design)
+         loop
+            if Harriet.Db.Component.Get (Module.Component).Top_Record
+              = R_Crew_Quarters
+            then
+               Crew := Crew +
+                 Natural
+                   (Harriet.Db.Crew_Quarters.Get_Crew_Quarters
+                      (Module.Component)
+                    .Capacity);
+            end if;
+         end loop;
+      end return;
+   end Design_Crew_Berths;
 
    ----------------------
    -- Design_Fuel_Mass --

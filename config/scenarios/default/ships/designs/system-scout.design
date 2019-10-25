@@ -3,4 +3,5 @@ components = {
   basic-drive = 2
   basic-tank
   basic-scanner = 2
+  small-crew-quarters = 1
 }

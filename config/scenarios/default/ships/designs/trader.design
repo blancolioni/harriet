@@ -5,4 +5,5 @@ components = {
   basic-tank = 2
   basic-fission-pile = 1
   basic-hold = 4
+  basic-crew-quarters = 6
 }

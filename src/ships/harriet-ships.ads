@@ -66,6 +66,14 @@ package Harriet.Ships is
      (Design : Harriet.Db.Ship_Design_Reference)
       return Non_Negative_Real;
 
+   function Design_Crew
+     (Design : Harriet.Db.Ship_Design_Reference)
+      return Natural;
+
+   function Design_Crew_Berths
+     (Design : Harriet.Db.Ship_Design_Reference)
+      return Natural;
+
    function Design_Fuel_Mass
      (Design : Harriet.Db.Ship_Design_Reference)
       return Non_Negative_Real;

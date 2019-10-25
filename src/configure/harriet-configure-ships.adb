@@ -8,6 +8,7 @@ with Harriet.Db.Component;
 with Harriet.Db.Design_Module;
 with Harriet.Db.Ship_Design;
 
+with Harriet.Db.Crew_Quarters;
 with Harriet.Db.Energy_Weapon;
 with Harriet.Db.Engine;
 with Harriet.Db.Generator;
@@ -21,7 +22,7 @@ with Harriet.Db.Tank;
 package body Harriet.Configure.Ships is
 
    type Component_Class is
-     (Engine, Jump_Drive, Tank, Hold, Generator,
+     (Engine, Jump_Drive, Tank, Hold, Generator, Quarters,
       Scanner, Sensor, Cloak,
       Shield_Generator,
       Energy_Weapon, Missile_Launcher);
@@ -93,6 +94,15 @@ package body Harriet.Configure.Ships is
                Tag        => Tag,
                Enabled_By => Enabled_By,
                Capacity   => Get ("cargo"));
+
+         when Quarters =>
+            Harriet.Db.Crew_Quarters.Create
+              (Crew       => Crew,
+               Mass       => Mass,
+               Power      => Power,
+               Tag        => Tag,
+               Enabled_By => Enabled_By,
+               Capacity   => Get ("berths"));
 
          when Generator =>
             Harriet.Db.Generator.Create
@@ -218,6 +228,13 @@ package body Harriet.Configure.Ships is
             & Harriet.Real_Images.Approximate_Image
               (Harriet.Ships.Design_Maximum_System_Speed (Design))
             & " AU/day");
+         Ada.Text_IO.Put_Line
+           ("Required crew:"
+            & Natural'Image
+              (Harriet.Ships.Design_Crew (Design))
+            & " /"
+            & Natural'Image
+              (Harriet.Ships.Design_Crew_Berths (Design)));
       end;
    end Configure_Design;
 

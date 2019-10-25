@@ -6,4 +6,5 @@ components = {
   basic-laser = 4
   basic-missile-launcher = 10
   basic-shield
+  basic-crew-quarters = 7
 }
