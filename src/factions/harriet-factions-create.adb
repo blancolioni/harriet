@@ -10,15 +10,18 @@ with Harriet.Configure;
 with Harriet.Money;
 with Harriet.Quantities;
 with Harriet.Random;
+with Harriet.Real_Images;
 
 with Harriet.Ships;
 with Harriet.Star_Systems;
 with Harriet.Worlds;
 
 with Harriet.Db.Colony;
+with Harriet.Db.Deposit;
 with Harriet.Db.Facility;
 with Harriet.Db.Faction;
 with Harriet.Db.Installation;
+with Harriet.Db.Resource;
 with Harriet.Db.Script;
 with Harriet.Db.Script_Line;
 with Harriet.Db.Ship_Design;
@@ -325,6 +328,51 @@ package body Harriet.Factions.Create is
                     Economy          => Get ("economy"));
 
    begin
+
+      for Deposit_Config of Config.Child ("deposits") loop
+         declare
+            use Harriet.Db;
+            Resource      : constant Resource_Reference :=
+              Harriet.Db.Resource.Get_Reference_By_Tag
+                (Deposit_Config.Config_Name);
+            Size          : constant Harriet.Quantities.Quantity_Type :=
+              Harriet.Quantities.To_Quantity (Deposit_Config.Get ("size"));
+            Concentration : constant Unit_Real :=
+              Unit_Clamp (Deposit_Config.Get ("concentration"));
+            Deposit       : constant Deposit_Reference :=
+              Harriet.Db.Deposit.Get_Reference_By_Deposit
+                (World, Resource);
+         begin
+            if Resource = Null_Resource_Reference then
+               raise Constraint_Error with
+                 "unknown resource: " & Deposit_Config.Config_Name;
+            end if;
+
+            if Deposit = Null_Deposit_Reference then
+               Ada.Text_IO.Put_Line
+                 ("creating " & Deposit_Config.Config_Name
+                  & " size " & Harriet.Quantities.Show (Size)
+                  & " concentration "
+                  & Harriet.Real_Images.Approximate_Image (Concentration));
+
+               Harriet.Db.Deposit.Create
+                 (World         => World,
+                  Resource      => Resource,
+                  Concentration => Concentration,
+                  Available     => Size);
+            else
+               Ada.Text_IO.Put_Line
+                 ("updating " & Deposit_Config.Config_Name
+                  & " size " & Harriet.Quantities.Show (Size)
+                  & " concentration "
+                  & Harriet.Real_Images.Approximate_Image (Concentration));
+               Harriet.Db.Deposit.Update_Deposit (Deposit)
+                 .Set_Concentration (Concentration)
+                 .Set_Available (Size)
+                 .Done;
+            end if;
+         end;
+      end loop;
 
       Harriet.Configure.Commodities.Configure_Stock
         (Has_Stock => Harriet.Db.Colony.Get (Colony).Get_Has_Stock_Reference,

@@ -6,9 +6,17 @@ home-colony = {
    tax-rate = 10%
    economy = 10%
    
+   deposits = {
+      hydrocarbon = { size = ~1M concentration = ~0.9 }
+	  gases = { size = ~100K concentration = ~0.5 }
+	  semiconductors = { size = ~200K concentration = ~0.5 }
+	  iron = { size = ~2M concentration = ~0.8 }
+	  coal = { size = ~2M concentration = ~0.6 }
+	  }
+	  
    facilities = {
 	  small-admin-centre = 1
-      mine = 10
+      mine = 20
 	  strip-mine = 1
       industry = 10
       research-lab = 2
@@ -20,7 +28,7 @@ home-colony = {
    stock = {
       coal = 100
 	  petroleum = 50
-	  ship-fuel = 100
+	  ship-fuel = 250
 	  basic-consumer-goods = 100
 	  }
    ships = { system-scout jump-scout defender trader }
