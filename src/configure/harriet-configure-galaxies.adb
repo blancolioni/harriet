@@ -334,13 +334,7 @@ package body Harriet.Configure.Galaxies is
                            Eccentricity          => 0.0,
                            Rotation_Period       => 0.0,
                            Tilt                  => 0.0,
-                           Surface_Acceleration  => 0.0,
                            Surface_Gravity       => 0.0,
-                           Escape_Velocity       => 0.0,
-                           Surface_Temperature   => 0.0,
-                           Min_Molecular_Weight  => 0.0,
-                           Rms_Velocity          => 0.0,
-                           Resonant_Period       => False,
                            Red                   => R,
                            Green                 => G,
                            Blue                  => B,
@@ -490,19 +484,19 @@ package body Harriet.Configure.Galaxies is
             & Approximate_Image (Real (Total) / Real (Number_Of_Systems)));
       end;
 
-      Process.Start_Bar
-        (Name            => "Generating planets  ",
-         Finish          => Number_Of_Systems,
-         With_Percentage => True,
-         Bar_Length      => 40);
+--        Process.Start_Bar
+--          (Name            => "Generating planets  ",
+--           Finish          => Number_Of_Systems,
+--           With_Percentage => True,
+--           Bar_Length      => 40);
 
       for I in 1 .. Number_Of_Systems loop
          Harriet.Configure.Star_Systems.Generate_Star_System
            (Vector.Element (I).Reference);
-         Process.Tick;
+--           Process.Tick;
       end loop;
 
-      Process.Finish;
+--        Process.Finish;
 
    end Generate_Galaxy;
 
@@ -513,7 +507,7 @@ package body Harriet.Configure.Galaxies is
    procedure Generate_Palettes is
       Default_File_Name : constant String := "temperate.bmp";
    begin
-      for Category in Harriet.Db.World_Category loop
+      for Category in Harriet.Db.World_Climate loop
          declare
             Tag : constant String :=
               Ada.Characters.Handling.To_Lower
@@ -606,22 +600,29 @@ package body Harriet.Configure.Galaxies is
    ----------------------
 
    function Random_Star_Mass return Non_Negative_Real is
+      Realistic_Star_Masses : constant Boolean := False;
       Seed : constant Real := Harriet.Random.Unit_Random;
       Solar_Mass_Count : Real;
    begin
-      if Seed <= 0.99 then
-         Solar_Mass_Count :=
-           0.1 + 6.0 * Seed - 15.0 * Seed ** 2
-             + 11.0 * Seed ** 3;
+      if Realistic_Star_Masses then
+         if Seed <= 0.99 then
+            Solar_Mass_Count :=
+              0.1 + 6.0 * Seed - 15.0 * Seed ** 2
+                + 11.0 * Seed ** 3;
+         else
+            declare
+               X : constant Real := (Seed - 0.99) * 1.0E4;
+               A : constant Real := 0.110833;
+               B : constant Real := -14.0358;
+               C : constant Real := 445.25;
+            begin
+               Solar_Mass_Count := A * X ** 2 + B * X + C;
+            end;
+         end if;
       else
-         declare
-            X : constant Real := (Seed - 0.99) * 1.0E4;
-            A : constant Real := 0.110833;
-            B : constant Real := -14.0358;
-            C : constant Real := 445.25;
-         begin
-            Solar_Mass_Count := A * X ** 2 + B * X + C;
-         end;
+         Solar_Mass_Count :=
+           Signed_Unit_Clamp (Harriet.Random.Normal_Random (0.2))
+             + 1.0;
       end if;
       return Solar_Mass_Count;
    end Random_Star_Mass;

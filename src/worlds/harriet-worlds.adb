@@ -140,9 +140,9 @@ package body Harriet.Worlds is
      (World : Harriet.Db.World_Reference)
       return Boolean
    is
-      use type Harriet.Db.World_Category;
+      use type Harriet.Db.World_Climate;
    begin
-      return Harriet.Db.World.Get (World).Category =
+      return Harriet.Db.World.Get (World).Climate =
         Harriet.Db.Temperate;
    end Is_Terrestrial;
 

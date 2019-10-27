@@ -1,5 +1,5 @@
 with Harriet.Color;
-with Harriet.Constants;
+--  with Harriet.Constants;
 with Harriet.Solar_System;
 
 with Harriet.Factions;
@@ -99,7 +99,7 @@ package body Harriet.UI.Models.Worlds is
 
    begin
       Prop ("name", World.Name);
-      Prop ("category", Harriet.Db.World_Category'Image (World.Category));
+--        Prop ("category", Harriet.Db.World_Category'Image (World.Category));
       Prop ("mass", World.Mass / Earth_Mass);
       Prop ("radius", World.Radius / Earth_Radius);
       Prop ("density", World.Density / Earth_Density);
@@ -107,9 +107,9 @@ package body Harriet.UI.Models.Worlds is
       Prop ("day", World.Rotation_Period / 3600.0);
       Prop ("tilt", World.Tilt);
       Prop ("gravity", World.Surface_Gravity / Earth_Gravity);
-      Prop ("surfaceTemperature",
-            World.Surface_Temperature
-            - Harriet.Constants.Freezing_Point_Of_Water);
+--        Prop ("surfaceTemperature",
+--              World.Surface_Temperature
+--              - Harriet.Constants.Freezing_Point_Of_Water);
 
       declare
          Atmosphere : Json.Json_Array;

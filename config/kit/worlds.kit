@@ -7,8 +7,11 @@ with Star_Systems;
 
 package Worlds is
 
-   type World_Category is
-     (Airless, Desert, Iceball, Jovian, Martian, Sub_Jovian, Temperate, Venusian, Water);
+    type World_Composition is
+     (Hydrogen, Gaseous, Ice, Rock, Rock_Ice, Rock_Iron);
+
+   type World_Climate is
+     (Airless, Desert, Iceball, Martian, Temperate, Venusian, Water, Jovian);
 
     record Gas : Has_Name is
        unique key Formula   : String (16);
@@ -23,25 +26,14 @@ package Worlds is
     end Gas;
 
    record World : Star_System_Object, Has_Name, Knowable, Has_Palette is
-      Category                 : World_Category;
-      Greenhouse_Effect        : Boolean;
+      Composition              : World_Composition;
+      Climate                  : World_Climate;
       Gas_Giant                : Boolean;
       key Habitability         : Long_Float;
-      Solid_Mass               : Long_Float;
-      Gas_Mass                 : Long_Float;
-      Exospheric_Temp          : Long_Float;
       Surface_Pressure         : Long_Float;
       Water_Coverage           : Long_Float;
       Cloud_Coverage           : Long_Float;
       Ice_Coverage             : Long_Float;
-      Water_Boiling_Point      : Long_Float;
-      Volatile_Gas_Inventory   : Long_Float;
-      Greenhouse_Rise          : Long_Float;
-      Minimum_Temperature      : Long_Float;
-      Maximum_Temperature      : Long_Float;
-      Night_Temperature_Low    : Long_Float;
-      Daytime_Temperature_High : Long_Float;
-      Albedo                   : Long_Float;
    end World; 
 
    record Atmosphere is
