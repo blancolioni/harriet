@@ -4,15 +4,20 @@ with Ada.Text_IO;
 with WL.Numerics.Roman;
 with WL.Random;
 
+with Harriet.Calendar;
 with Harriet.Elementary_Functions;
 with Harriet.Random;
 with Harriet.Real_Images;
 
 with Harriet.Solar_System;
 
+with Harriet.Db.Palette;
 with Harriet.Db.Star;
+with Harriet.Db.World;
 
 package body Harriet.Configure.Star_Systems is
+
+   Log_Generation : constant Boolean := False;
 
    use all type Harriet.Db.World_Composition;
 
@@ -29,6 +34,11 @@ package body Harriet.Configure.Star_Systems is
 
    type Atmospheric_Gas is
      (Ar, Cl2, CH4, CO2, F2, H2, He, N2, NH3, O2, SO2);
+
+   type World_Terrain is
+     (Ocean, Desert, Ice, Tundra, Mountains);
+--     , Grassland, Wetland,
+--        Jungle, Forest);
 
    type Atmospheric_Component is
       record
@@ -69,11 +79,19 @@ package body Harriet.Configure.Star_Systems is
    is (Harriet.Random.Unit_Random * 5.0 + 1.0);
 
    function D (Count : Positive) return Non_Negative_Real;
-   function DR return Positive
-   is (WL.Random.Random_Number (1, 6) + WL.Random.Random_Number (1, 6));
 
-   function TDR return Positive
-   is (WL.Random.Random_Number (1, 6) + DR);
+   subtype Die_Roll is Integer range 1 .. 6;
+   subtype Double_Roll is Integer range 2 .. 12;
+   subtype Triple_Roll is Integer range 3 .. 18;
+
+   function D6 return Die_Roll
+   is (WL.Random.Random_Number (1, 6));
+
+   function DR return Double_Roll
+   is (D6 + D6);
+
+   function TDR return Triple_Roll
+   is (D6 + DR);
 
    procedure Put (Width : Positive;
                   Value : String);
@@ -111,6 +129,9 @@ package body Harriet.Configure.Star_Systems is
          Orbit : Non_Negative_Real;
          Year  : Non_Negative_Real)
          return Non_Negative_Real;
+
+      function Random_Planet_Tilt
+         return Real;
 
       function Random_Atmospheric_Class
         (Zone : Orbit_Zone;
@@ -305,13 +326,13 @@ package body Harriet.Configure.Star_Systems is
                          elsif Mass <= 0.7 then Thin
                          elsif Mass <= 0.9 then Standard
                          elsif Mass <= 1.3
-                         then (if Close then Dense else Standard)
+                         then (if Close then Standard else Dense)
                          else Dense);
          Step_Roll  : constant Unit_Real := Harriet.Random.Unit_Random;
          Class      : constant Atmosphere_Class :=
-                        (if Step_Roll <= 0.1 and then Base_Class > None
+                        (if Step_Roll <= 0.05 and then Base_Class > None
                          then Atmosphere_Class'Pred (Base_Class)
-                         elsif Step_Roll >= 0.9 and then Base_Class < Dense
+                         elsif Step_Roll >= 0.95 and then Base_Class < Dense
                          then Atmosphere_Class'Succ (Base_Class)
                          else Base_Class);
       begin
@@ -386,9 +407,9 @@ package body Harriet.Configure.Star_Systems is
             if Orbit < 0.3 then
                return Year * Harriet.Solar_System.Earth_Sidereal_Year;
             elsif Orbit < 0.4 then
-               return Base * Real (D6) * 10.0;
+               return Base * D6 * 10.0;
             elsif Orbit < 0.5 then
-               return Base * Real (D6);
+               return Base * D6;
             else
                return Base;
             end if;
@@ -396,6 +417,34 @@ package body Harriet.Configure.Star_Systems is
             return Base;
          end if;
       end Random_Planet_Rotation;
+
+      ------------------------
+      -- Random_Planet_Tilt --
+      ------------------------
+
+      function Random_Planet_Tilt
+        return Real
+      is
+      begin
+         case D6 is
+            when 1 =>
+               return D6;
+            when 2 | 3 =>
+               return 10.0 + D (2);
+            when 4 | 5 =>
+               return 20.0 + D (2);
+            when 6 =>
+               declare
+                  Tilt : constant Real := D (2) * 10.0;
+               begin
+                  if Tilt > 90.0 then
+                     return 90.0 - Tilt;
+                  else
+                     return Tilt;
+                  end if;
+               end;
+         end case;
+      end Random_Planet_Tilt;
 
       -----------------------------
       -- Random_Surface_Pressure --
@@ -414,7 +463,7 @@ package body Harriet.Configure.Star_Systems is
                     when Thin  =>
                       Gravity * D6 * 0.1,
                     when Standard =>
-                      Gravity * D (3) * 0.1,
+                      Gravity * D (3) * 0.2,
                     when Dense    =>
                       Gravity * D (2) * 10.0);
       end Random_Surface_Pressure;
@@ -482,50 +531,54 @@ package body Harriet.Configure.Star_Systems is
       Planet_Count : constant Positive := TDR;
       Ds           : array (1 .. Planet_Count) of Non_Negative_Real;
    begin
-      Ds (Ds'First) := Real (D6) / 10.0;
+      Ds (Ds'First) := D6 / 10.0;
       for I in Ds'First + 1 .. Ds'Last loop
          Ds (I) := Ds (I - 1) * (Real (D (2)) / 10.0 + 1.0);
       end loop;
 
-      Put (16, Star.Name);
-      Ada.Text_IO.Put (Harriet.Db.Spectral_Class'Image (Star.Class));
-      Ada.Text_IO.Put (Character'Val (48 + Star.Subclass));
-      Ada.Text_IO.Set_Col (24);
-      Put (8, Star.Age / 1.0e9);
-      Put (8, Planet_Count);
+      if Log_Generation then
+         Put (16, Star.Name);
+         Ada.Text_IO.Put (Harriet.Db.Spectral_Class'Image (Star.Class));
+         Ada.Text_IO.Put (Character'Val (48 + Star.Subclass));
+         Ada.Text_IO.Set_Col (24);
+         Put (8, Star.Age / 1.0e9);
+         Put (8, Planet_Count);
 
-      for D of Ds loop
-         declare
-            Zone : constant Orbit_Zone :=
-                     Get_Zone (Star, D);
-         begin
-            Ada.Text_IO.Put
-              (case Zone is
-                  when Red => 'R',
-                  when Yellow => 'Y',
-                  when Green  => 'G',
-                  when Blue   => 'B',
-                  when Black  => 'x');
-         end;
-      end loop;
-      Ada.Text_IO.New_Line;
+         for D of Ds loop
+            declare
+               Zone : constant Orbit_Zone :=
+                 Get_Zone (Star, D);
+            begin
+               Ada.Text_IO.Put
+                 (case Zone is
+                     when Red    => 'R',
+                     when Yellow => 'Y',
+                     when Green  => 'G',
+                     when Blue   => 'B',
+                     when Black  => 'x');
+            end;
+         end loop;
+         Ada.Text_IO.New_Line;
 
-      Ada.Text_IO.Put ("  World");
-      Ada.Text_IO.Set_Col (16);
-      Put (8, "Zone");
-      Put (12, "Type");
-      Put (8, "Orbit");
-      Put (8, "Mass");
-      Put (8, "Density");
-      Put (8, "Radius");
-      Put (8, "Gravity");
-      Put (8, "Year");
-      Put (8, "Day");
-      Put (8, "Temp");
-      Put (16, "Life");
-      Put (8, "Atm");
-      Put (8, "Pressure");
-      Ada.Text_IO.New_Line;
+         Ada.Text_IO.Put ("  World");
+         Ada.Text_IO.Set_Col (16);
+         Put (8, "Zone");
+         Put (12, "Type");
+         Put (8, "Orbit");
+         Put (8, "Mass");
+         Put (8, "Density");
+         Put (8, "Radius");
+         Put (8, "Gravity");
+         Put (8, "Year");
+         Put (8, "Day");
+         Put (8, "Ocean%");
+         Put (8, "Temp");
+         Put (16, "Life");
+         Put (8, "Atm");
+         Put (8, "Hab");
+         Put (8, "Pressure");
+         Ada.Text_IO.New_Line;
+      end if;
 
       declare
          Count : Natural := 0;
@@ -538,7 +591,9 @@ package body Harriet.Configure.Star_Systems is
          end loop;
       end;
 
-      Ada.Text_IO.New_Line;
+      if Log_Generation then
+         Ada.Text_IO.New_Line;
+      end if;
 
    end Generate_Star_System;
 
@@ -562,7 +617,9 @@ package body Harriet.Configure.Star_Systems is
       Mass : constant Non_Negative_Real :=
                Planet_Tables.Random_Planet_Mass (Zone);
       Composition : constant World_Composition :=
-                      Planet_Tables.Composition (Mass, Zone);
+        Planet_Tables.Composition (Mass, Zone);
+      Gas_Giant   : constant Boolean :=
+        Composition in Gaseous | Hydrogen;
       Density     : constant Non_Negative_Real :=
                       Planet_Tables.Random_Planet_Density (Composition, Mass);
       Radius      : constant Non_Negative_Real :=
@@ -573,6 +630,9 @@ package body Harriet.Configure.Star_Systems is
                         (Mass  => Mass,
                          Orbit => Orbit,
                          Year  => Year);
+      Tilt        : constant Real :=
+        Planet_Tables.Random_Planet_Tilt;
+
       Atmospheric_Class : constant Atmosphere_Class :=
                             Planet_Tables.Random_Atmospheric_Class
                               (Zone, Mass);
@@ -620,6 +680,12 @@ package body Harriet.Configure.Star_Systems is
       Current_Pressure : Non_Negative_Real := Primordial_Pressure;
       Current_Temperature : Non_Negative_Real := Primordial_Temp;
 
+      Terrain             : array (World_Terrain) of Unit_Real :=
+        (others => 0.0);
+
+      Hydrosphere         : Unit_Real renames Terrain (Ocean);
+      Climate             : Harriet.Db.World_Climate;
+      Habitability        : Unit_Real;
    begin
 
       if Life_Bearing
@@ -643,66 +709,233 @@ package body Harriet.Configure.Star_Systems is
          end if;
       end loop;
 
-      Ada.Text_IO.Put ("  " & Name);
-      Ada.Text_IO.Set_Col (16);
-      Ada.Text_IO.Put
-        (case Zone is
-            when Yellow => "Yellow",
-            when Green  => "Green",
-            when Blue   => "Blue",
-            when Black  => "Black");
-      Ada.Text_IO.Set_Col (24);
-      Ada.Text_IO.Put
-        (case Composition is
-            when Hydrogen => "Hydrogen",
-            when Gaseous  => "Gas",
-            when Ice      => "Ice",
-            when Rock     => "Rock",
-            when Rock_Ice => "Rock-Ice",
-            when Rock_Iron => "Rock-Iron");
+      declare
+         Base_Hydrosphere : constant Real := D (2)
+           + (if Mass > 1.25 then 1.0 else 0.0)
+           - (if Mass < 0.75 then 1.0 else 0.0)
+           + (if Current_Temperature in 290.0 .. 320.0
+              then 1.0 else 0.0)
+           - (if Current_Temperature > 250.0
+              and then Current_Temperature <= 270.0
+              then 1.0 else 0.0)
+           - (if Current_Temperature in 220.0 .. 250.0
+              then 2.0 else 0.0);
+      begin
+         Hydrosphere :=
+           (if Current_Temperature < 220.0
+            or else Current_Temperature > 370.0
+            then 0.0
+            else Unit_Clamp (Base_Hydrosphere / 12.0))
+             * (if Current_Temperature > 320.0 then 0.5 else 1.0);
+      end;
 
-      Ada.Text_IO.Set_Col (36);
-      Put (8, Orbit);
-      Put (8, Mass);
-      Put (8, Density);
-      Put (8, Radius);
-      Put (8, Gravity);
-      Put (8, Year);
-      Put (8, Day);
-      Put (8, Current_Temperature - 273.0);
+      if not Gas_Giant then
+         declare
+            Land : constant Unit_Real := 1.0 - Hydrosphere;
+         begin
+            Terrain (Desert) := Land ** 2;
 
-      if Composition not in Hydrogen | Gaseous
-        and then Life_Bearing
-      then
-         Put (16,
-              (case Life_Complexity is
-                  when Prebiotic     => "prebiotic",
-                  when Single_Celled => "single-celled",
-                  when Plants        => "plants",
-                  when Multicellular => "multi-cellular"));
-      else
-         Put (16, "none");
+            if Current_Temperature > 320.0 then
+               Terrain (Ice) := 0.0;
+               Terrain (Tundra) := 0.0;
+            elsif Current_Temperature < 220.0 then
+               Terrain (Ice) := Land;
+            else
+               Terrain (Ice) :=
+                 Real'Min (Land,
+                           (320.0 - Current_Temperature) / 300.0);
+               Terrain (Tundra) :=
+                 Real'Min (Land - Terrain (Ice),
+                           (320.0 - Current_Temperature) / 500.0);
+            end if;
+
+            Terrain (Mountains) :=
+              Real'Min (Land, Mass * 0.05);
+         end;
       end if;
 
-      if Composition not in Hydrogen | Gaseous then
-         Put (8,
-              (case Atmospheric_Class is
-                  when None => "None",
-                  when Trace => "Trace",
-                  when Thin  => "Thin",
-                  when Standard => "Std",
-                  when Dense    => "Dense"));
-      else
-         Put (8, " - ");
+      Climate :=
+        (if Gas_Giant
+         then Harriet.Db.Jovian
+         elsif Current_Pressure = 0.0
+         then Harriet.Db.Airless
+         elsif Terrain (Ice) > 0.9
+         then Harriet.Db.Iceball
+         elsif Hydrosphere > 0.9
+         then Harriet.Db.Water
+         elsif Hydrosphere < 0.1
+         then Harriet.Db.Desert
+         elsif Atmospheric_Class = Dense
+         then Harriet.Db.Venusian
+         elsif Atmospheric_Class = Thin
+         then Harriet.Db.Martian
+         else Harriet.Db.Temperate);
+
+      declare
+         use all type Harriet.Db.World_Climate;
+         Ideal_Tmp  : constant := 285.0;
+         Std_Dev_Tmp : constant := 25.0;
+         Tmp_Factor : constant Unit_Real :=
+           Unit_Clamp
+             (Exp
+                (-(Current_Temperature - Ideal_Tmp) ** 2
+                 / (2.0 * Std_Dev_Tmp ** 2)));
+         Std_Dev_Oxygen : constant := 0.2;
+         function Oxygen_Factor (Partial : Unit_Real) return Unit_Real
+         is (Unit_Clamp
+             (Exp
+              (-(Partial * Current_Pressure - 0.2) ** 2
+               / (2.0 * Std_Dev_Oxygen ** 2))));
+
+         Atm_Factor : Unit_Real := 1.0;
+      begin
+
+         for Item of Current_Atm.List loop
+            declare
+               This_Factor : constant Unit_Real :=
+                 (case Item.Gas is
+                     when O2 =>
+                       Oxygen_Factor (Item.Partial),
+                     when Cl2 | F2 | NH3 | SO2 => 0.0,
+                     when CH4                  =>
+                       Unit_Clamp (1.0 - Item.Partial * 10.0),
+                     when CO2                  =>
+                       Unit_Clamp (1.0 - Item.Partial * 10.0),
+                     when H2 | He | N2 | Ar    =>
+                       1.0);
+            begin
+               Atm_Factor := Real'Min (Atm_Factor, This_Factor);
+            end;
+         end loop;
+
+         Habitability :=
+           Atm_Factor *
+           (case Climate is
+               when Airless => 0.0,
+               when Desert  =>
+                 Tmp_Factor * (Hydrosphere + 0.5),
+               when Iceball => 0.0,
+               when Martian => 0.0,
+               when Temperate => Tmp_Factor,
+               when Venusian     => 0.0,
+               when Water        => Tmp_Factor,
+               when Jovian       => 0.0);
+      end;
+
+      if Log_Generation then
+         Ada.Text_IO.Put ("  " & Name);
+         Ada.Text_IO.Set_Col (16);
+         Ada.Text_IO.Put
+           (case Zone is
+               when Yellow => "Yellow",
+               when Green  => "Green",
+               when Blue   => "Blue",
+               when Black  => "Black");
+         Ada.Text_IO.Set_Col (24);
+         Ada.Text_IO.Put
+           (case Composition is
+               when Hydrogen  => "Hydrogen",
+               when Gaseous   => "Gas",
+               when Ice       => "Ice",
+               when Rock      => "Rock",
+               when Rock_Ice  => "Rock-Ice",
+               when Rock_Iron => "Rock-Iron");
+
+         Ada.Text_IO.Set_Col (36);
+         Put (8, Orbit);
+         Put (8, Mass);
+         Put (8, Density);
+         Put (8, Radius);
+         Put (8, Gravity);
+         Put (8, Year);
+         Put (8, Day);
+
+         if Composition not in Hydrogen | Gaseous then
+            if Hydrosphere = 0.0 then
+               Put (8, " -");
+            else
+               Put (8, Hydrosphere * 100.0);
+            end if;
+         else
+            Put (8, " -");
+         end if;
+
+         Put (8, Current_Temperature - 273.0);
+
+         if Composition not in Hydrogen | Gaseous
+           and then Life_Bearing
+         then
+            Put (16,
+                 (case Life_Complexity is
+                     when Prebiotic     => "prebiotic",
+                     when Single_Celled => "single-celled",
+                     when Plants        => "plants",
+                     when Multicellular => "multi-cellular"));
+         else
+            Put (16, "none");
+         end if;
+
+         if Composition not in Hydrogen | Gaseous then
+            Put (8,
+                 (case Atmospheric_Class is
+                     when None     => "None",
+                     when Trace    => "Trace",
+                     when Thin     => "Thin",
+                     when Standard => "Std",
+                     when Dense    => "Dense"));
+         else
+            Put (8, " - ");
+         end if;
+
+         Put (8, Habitability);
+
+         Put (8, Current_Pressure);
+
+         if not Gas_Giant then
+            for Item of Current_Atm.List loop
+               Ada.Text_IO.Put (" " & Item.Gas'Image);
+               Ada.Text_IO.Put
+                 (Natural'Image (Natural (Item.Partial * 100.0)));
+            end loop;
+
+            for T in Terrain'Range loop
+               if Terrain (T) > 0.0 then
+                  Ada.Text_IO.Put (" " & T'Image);
+                  Ada.Text_IO.Put
+                    (Natural'Image (Natural (Terrain (T) * 100.0)));
+               end if;
+            end loop;
+         end if;
+         Ada.Text_IO.New_Line;
       end if;
 
-      Put (8, Current_Pressure);
-      for Item of Current_Atm.List loop
-         Ada.Text_IO.Put (" " & Item.Gas'Image);
-         Ada.Text_IO.Put (Natural'Image (Natural (Item.Partial * 100.0)));
-      end loop;
-
-      Ada.Text_IO.New_Line;
+      declare
+         use Harriet.Solar_System;
+      begin
+         Harriet.Db.World.Create
+           (Star_System      => Star.Star_System,
+            Primary          => Star.Get_Star_System_Object_Reference,
+            Radius           => Radius * Earth_Radius,
+            Density          => Density * Earth_Density,
+            Rotation_Period  => Day * 3600.0,
+            Tilt             => Tilt,
+            Surface_Gravity  => Gravity * Earth_Gravity,
+            Name             => Name,
+            Palette          =>
+              Harriet.Db.Palette.Get_Reference_By_Tag ("temperate"),
+            Primary_Massive  => Star.Get_Massive_Object_Reference,
+            Semimajor_Axis   => Orbit * Earth_Orbit,
+            Epoch            => Harriet.Calendar.To_Time
+              (-1.0 * Harriet.Random.Unit_Random * Year * Earth_Sidereal_Year),
+            Eccentricity     => 0.0,
+            Period           => Year * Earth_Sidereal_Year,
+            Mass             => Mass * Earth_Mass,
+            Composition      => Composition,
+            Climate          => Climate,
+            Gas_Giant        => Gas_Giant,
+            Habitability     => Habitability,
+            Surface_Pressure => Current_Pressure * Earth_Surface_Pressure);
+      end;
    end Generate_World;
 
    --------------
