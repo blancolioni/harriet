@@ -5,6 +5,10 @@ steel = {
 	}
 }
 
+petroleum = {
+   parts = { hydrocarbon = 2 }
+}
+   
 refined-crystals = {
    parts = { crystals = 2 }
 }
@@ -23,10 +27,9 @@ plastics = {
 	}
 }
 
-lh2 = {
-   density = 70.8
-}
-
-lox = {
-   density = 1141
+ship-fuel = {
+   parts = {
+      gases = 2
+	  hydrocarbon = 1
+	  }
 }

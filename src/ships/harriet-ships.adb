@@ -1,25 +1,165 @@
-with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Text_IO;
 
-with Harriet.Elementary_Functions;
-with Harriet.Quantities;
-with Harriet.Random;
-with Harriet.Real_Images;
-
+with Harriet.Calendar;
 with Harriet.Orbits;
+with Harriet.Random;
+with Harriet.Solar_System;
 
 with Harriet.Worlds;
 
-with Harriet.Db.Commodity;
-with Harriet.Db.Container_Component;
-with Harriet.Db.Drive_Component;
-with Harriet.Db.Ship_Component;
-with Harriet.Db.Ship_Design;
-with Harriet.Db.Ship_Module;
-with Harriet.Db.Ship_Module_Design;
+with Harriet.Db.Component;
+with Harriet.Db.Design_Module;
+with Harriet.Db.Module;
 with Harriet.Db.World;
 
+with Harriet.Db.Crew_Quarters;
+with Harriet.Db.Energy_Weapon;
+with Harriet.Db.Engine;
+with Harriet.Db.Generator;
+with Harriet.Db.Hold;
+with Harriet.Db.Jump_Drive;
+with Harriet.Db.Missile_Launcher;
+with Harriet.Db.Scanner;
+with Harriet.Db.Shield_Generator;
+with Harriet.Db.Tank;
+
+with Harriet.Db.Crew_Module;
+with Harriet.Db.Engine_Module;
+with Harriet.Db.Energy_Weapon_Module;
+with Harriet.Db.Generator_Module;
+with Harriet.Db.Hold_Module;
+with Harriet.Db.Jump_Module;
+with Harriet.Db.Launcher_Module;
+with Harriet.Db.Scanner_Module;
+with Harriet.Db.Shield_Module;
+with Harriet.Db.Tank_Module;
+
 package body Harriet.Ships is
+
+   procedure Create_Module
+     (Ship      : Harriet.Db.Ship_Reference;
+      Component : Harriet.Db.Component_Reference);
+
+   -------------------
+   -- Create_Module --
+   -------------------
+
+   procedure Create_Module
+     (Ship      : Harriet.Db.Ship_Reference;
+      Component : Harriet.Db.Component_Reference)
+   is
+      use all type Harriet.Db.Record_Type;
+      Base : constant Harriet.Db.Component.Component_Type :=
+        Harriet.Db.Component.Get (Component);
+      Top : constant Harriet.Db.Record_Type := Base.Top_Record;
+   begin
+      case Top is
+         when R_Crew_Quarters =>
+            Harriet.Db.Crew_Module.Create
+              (Ship          => Ship,
+               Component     => Component,
+               Crew          => Base.Crew,
+               Condition     => 1.0,
+               Crew_Quarters =>
+                  Harriet.Db.Crew_Quarters.Get_Crew_Quarters (Component)
+               .Get_Crew_Quarters_Reference);
+
+         when R_Engine =>
+            Harriet.Db.Engine_Module.Create
+              (Ship      => Ship,
+               Component => Component,
+               Crew      => Base.Crew,
+               Condition => 1.0,
+               Engine    =>
+                  Harriet.Db.Engine.Get_Engine (Component)
+               .Get_Engine_Reference);
+
+         when R_Hold =>
+            Harriet.Db.Hold_Module.Create
+              (Ship      => Ship,
+               Component => Component,
+               Crew      => Base.Crew,
+               Condition => 1.0,
+               Hold      =>
+                  Harriet.Db.Hold.Get_Hold (Component).Get_Hold_Reference);
+
+         when R_Tank =>
+            Harriet.Db.Tank_Module.Create
+              (Ship      => Ship,
+               Component => Component,
+               Crew      => Base.Crew,
+               Condition => 1.0,
+               Tank      =>
+                  Harriet.Db.Tank.Get_Tank (Component).Get_Tank_Reference);
+
+         when R_Missile_Launcher =>
+            Harriet.Db.Launcher_Module.Create
+              (Ship      => Ship,
+               Component => Component,
+               Crew      => Base.Crew,
+               Condition => 1.0,
+               Missile_Launcher =>
+                  Harriet.Db.Missile_Launcher.Get_Missile_Launcher (Component)
+               .Get_Missile_Launcher_Reference);
+
+         when R_Energy_Weapon =>
+            Harriet.Db.Energy_Weapon_Module.Create
+              (Ship      => Ship,
+               Component => Component,
+               Crew      => Base.Crew,
+               Condition => 1.0,
+               Energy_Weapon =>
+                  Harriet.Db.Energy_Weapon.Get_Energy_Weapon (Component)
+               .Get_Energy_Weapon_Reference);
+
+         when R_Generator =>
+            Harriet.Db.Generator_Module.Create
+              (Ship      => Ship,
+               Component => Component,
+               Crew      => Base.Crew,
+               Condition => 1.0,
+               Generator =>
+                  Harriet.Db.Generator.Get_Generator (Component)
+               .Get_Generator_Reference);
+
+         when R_Scanner =>
+            Harriet.Db.Scanner_Module.Create
+              (Ship      => Ship,
+               Component => Component,
+               Crew      => Base.Crew,
+               Condition => 1.0,
+               Scanner =>
+                  Harriet.Db.Scanner.Get_Scanner (Component)
+               .Get_Scanner_Reference);
+
+         when R_Shield_Generator =>
+            Harriet.Db.Shield_Module.Create
+              (Ship      => Ship,
+               Component => Component,
+               Crew      => Base.Crew,
+               Condition => 1.0,
+               Shield_Generator =>
+                  Harriet.Db.Shield_Generator.Get_Shield_Generator
+                 (Component)
+               .Get_Shield_Generator_Reference);
+
+         when R_Jump_Drive =>
+            Harriet.Db.Jump_Module.Create
+              (Ship             => Ship,
+               Component        => Component,
+               Crew             => Base.Crew,
+               Condition        => 1.0,
+               Jump_Drive =>
+                  Harriet.Db.Jump_Drive.Get_Jump_Drive (Component)
+               .Get_Jump_Drive_Reference);
+
+         when others =>
+            raise Constraint_Error with
+              "not a supported module type: "
+              & Top'Image;
+
+      end case;
+   end Create_Module;
 
    -----------------
    -- Create_Ship --
@@ -38,51 +178,43 @@ package body Harriet.Ships is
       Orbit     : constant Long_Float :=
         World_Rec.Radius
           + 1000.0 * (3000.0 + 1000.0 * Harriet.Random.Unit_Random);
-      M : constant Real := World_Rec.Mass;
-      Period    : constant Long_Float := Harriet.Orbits.Period (M, Orbit);
+      Period    : constant Non_Negative_Real :=
+        Harriet.Orbits.Period (World_Rec.Mass, Orbit);
       Ship         : constant Harriet.Db.Ship_Reference :=
-                       Harriet.Db.Ship.Create
-                         (Name              => Name,
-                          Capacity          =>
-                            Harriet.Db.Ship_Design.Get (Design).Hold_Size,
-                          Faction           => Owner,
-                          Updates_Started   => True,
-                          Next_Update       => Harriet.Calendar.Clock,
-                          Active            => True,
-                          Scheduled         => False,
-                          Next_Event        => Harriet.Calendar.Clock,
-                          Manager           => Manager,
-                          World             => World,
-                          Star_System       => World_Rec.Star_System,
-                          Orbit             => Orbit,
-                          Inclination       =>
-                            Harriet.Random.Unit_Random * 10.0 - 5.0,
-                          Epoch             =>
-                            Harriet.Calendar.Clock
-                          - Duration (Period * Harriet.Random.Unit_Random),
-                          Ship_Design       => Design,
-                          Alive             => True,
-                          Training          => 0.0,
-                          Fuel              => 0.0,
-                          Departure         => Harriet.Calendar.Clock,
-                          Arrival           => Harriet.Calendar.Clock,
-                          Dest_Orbit        => 0.0,
-                          Dest_Incl         => 0.0,
-                          Dest_Epoch        => Harriet.Calendar.Clock,
-                          Final_Destination => Harriet.Db.Null_World_Reference,
-                          Current_Order     => 0,
-                          Cycle_Orders      => False);
+        Harriet.Db.Ship.Create
+          (Name              => Name,
+           Active            => True,
+           Scheduled         => False,
+           Next_Event        => Harriet.Calendar.Clock,
+           Manager           => Manager,
+           Updates_Started   => True,
+           Next_Update       => Harriet.Calendar.Clock,
+           Faction           => Owner,
+           Mass              => Harriet.Ships.Design_Mass (Design),
+           Star_System       => World_Rec.Star_System,
+           World             => World,
+           Home              => World,
+           Primary_Massive   => World_Rec.Get_Massive_Object_Reference,
+           Semimajor_Axis    => Orbit,
+           Epoch             =>
+             Harriet.Calendar.Clock
+           - Duration (Harriet.Random.Unit_Random * Period),
+           Period            => Period,
+           Eccentricity      => 0.0,
+           Status            => Harriet.Db.Idle,
+           Training          => 1.0,
+           Fuel              => Design_Fuel_Mass (Design),
+           Departure         => Harriet.Calendar.Clock,
+           Arrival           => Harriet.Calendar.Clock,
+           Start             => Harriet.Calendar.Clock,
+           Destination       => Harriet.Db.Null_World_Reference,
+           Goal              => Harriet.Db.Null_Goal_Reference);
    begin
-      for Design_Component of
-        Harriet.Db.Ship_Module_Design.Select_By_Ship_Design
+      for Design_Module of
+        Harriet.Db.Design_Module.Select_By_Ship_Design
           (Design)
       loop
-         Harriet.Db.Ship_Module.Create
-           (Ship               => Ship,
-            Ship_Module_Design =>
-              Design_Component.Get_Ship_Module_Design_Reference,
-            Crew               => 0,
-            Condition          => 0.0);
+         Create_Module (Ship, Design_Module.Component);
       end loop;
 
       if True then
@@ -91,79 +223,10 @@ package body Harriet.Ships is
          begin
             Ada.Text_IO.Put_Line
               (S.Name & " in orbit above "
-               & Harriet.Worlds.Name (S.World)
-               & ": alt"
-               & Natural'Image
-                 (Natural
-                      ((S.Orbit - Harriet.Worlds.Radius (S.World)) / 1_000.0))
-               & "km incl "
-               & Harriet.Real_Images.Approximate_Image
-                 (S.Inclination)
-               & " deg prd "
-               & Harriet.Real_Images.Approximate_Image
-                 (Harriet.Orbits.Period
-                      (Harriet.Worlds.Mass (S.World), S.Orbit) / 60.0)
-               & "m posn "
-               & Harriet.Real_Images.Approximate_Image
-                 (S.Current_Longitude)
-               & " E");
+               & Harriet.Worlds.Name (S.World));
          end;
       end if;
    end Create_Ship;
-
-   ----------------------
-   -- Current_Latitude --
-   ----------------------
-
-   function Current_Latitude
-     (Ship : Ship_Type'Class)
-      return Real
-   is
-      use type Harriet.Calendar.Time;
-      Latitude, Longitude : Real;
-   begin
-      Harriet.Orbits.Calculate_Position
-        (Large_Mass => Harriet.Worlds.Mass (Ship.World),
-         Orbit      => Ship.Orbit,
-         Elapsed    =>
-           Harriet.Calendar.Clock - Ship.Epoch,
-         Latitude   => Latitude,
-         Longitude  => Longitude);
-      return Latitude;
-   end Current_Latitude;
-
-   -----------------------
-   -- Current_Longitude --
-   -----------------------
-
-   function Current_Longitude
-     (Ship : Ship_Type'Class)
-      return Real
-   is
-      use Harriet.Calendar;
-      Orbit       : constant Non_Negative_Real := Ship.Orbit;
-      World_Mass  : constant Non_Negative_Real :=
-                     Harriet.Worlds.Mass (Ship.World);
-      Period      : constant Non_Negative_Real :=
-        Harriet.Orbits.Period (World_Mass, Orbit);
-      Epoch       : constant Time :=
-                     Harriet.Db.Ship.Get (Ship.Reference).Epoch;
-      Now         : constant Time := Clock;
-      Elapsed     : constant Duration := Now - Epoch;
-      Orbit_Count : constant Non_Negative_Real := Real (Elapsed) / Period;
-      Partial     : constant Unit_Real :=
-                      Orbit_Count - Real'Truncation (Orbit_Count);
-      Longitude   : Real := Partial * 360.0;
-   begin
-      if Longitude >= 360.0 then
-         Longitude := Longitude - 360.0;
-      end if;
-      if Longitude >= 180.0 then
-         Longitude := -(360.0 - Longitude);
-      end if;
-
-      return Longitude;
-   end Current_Longitude;
 
    ------------------
    -- Current_Mass --
@@ -177,6 +240,56 @@ package body Harriet.Ships is
       return Ship.Dry_Mass;
    end Current_Mass;
 
+   -----------------------------
+   -- Current_Scan_Capability --
+   -----------------------------
+
+   function Current_Scan_Capability
+     (Ship : Ship_Type'Class)
+      return Non_Negative_Real
+   is
+      Scan_Capability : Non_Negative_Real := 0.0;
+      Individual      : array (1 .. 20) of Non_Negative_Real :=
+        (others => 0.0);
+      Count           : Natural := 0;
+   begin
+      for Module of
+        Harriet.Db.Scanner_Module.Select_By_Ship (Ship.Reference)
+      loop
+         declare
+            Scanner    : constant Harriet.Db.Scanner.Scanner_Type :=
+              Harriet.Db.Scanner.Get (Module.Scanner);
+            Base_Scan  : constant Non_Negative_Real :=
+              Non_Negative_Real (Scanner.Scan);
+            Condition  : constant Unit_Real :=
+              Module.Condition;
+            Final_Scan : constant Non_Negative_Real :=
+              Base_Scan * Condition ** 2;
+            Index      : Natural := Count;
+         begin
+            Count := Count + 1;
+            while Index > 0
+              and then Final_Scan > Individual (Index)
+            loop
+               Individual (Index + 1) := Individual (Index);
+               Index := Index - 1;
+            end loop;
+            Individual (Index + 1) := Final_Scan;
+         end;
+         exit when Count = Individual'Last;
+      end loop;
+
+      declare
+         Factor : Unit_Real := 1.0;
+      begin
+         for Scan of Individual (1 .. Count) loop
+            Scan_Capability := Scan_Capability + Scan * Factor;
+            Factor := Factor / 2.0;
+         end loop;
+      end;
+      return Scan_Capability;
+   end Current_Scan_Capability;
+
    -------------------------
    -- Design_Cargo_Volume --
    -------------------------
@@ -184,77 +297,63 @@ package body Harriet.Ships is
    function Design_Cargo_Volume
      (Design : Harriet.Db.Ship_Design_Reference) return Non_Negative_Real
    is
+      use all type Harriet.Db.Record_Type;
    begin
       return Volume : Non_Negative_Real := 0.0 do
          for Module of
-           Harriet.Db.Ship_Module_Design.Select_By_Ship_Design (Design)
+           Harriet.Db.Design_Module.Select_By_Ship_Design (Design)
          loop
-            declare
-               use Harriet.Db, Harriet.Db.Ship_Component;
-               Component : constant Ship_Component_Type :=
-                             Get (Module.Ship_Component);
-            begin
-               if Component.Top_Record = R_Container_Component then
-                  declare
-                     use Harriet.Db.Container_Component;
-                     Container : constant Container_Component_Type :=
-                       Get_Container_Component
-                         (Component.Get_Ship_Component_Reference);
-                  begin
-                     if not Container.Tank then
-                        Volume := Volume
-                          + Harriet.Quantities.To_Real
-                          (Container.Capacity);
-                     end if;
-                  end;
-               end if;
-            end;
+            if Harriet.Db.Component.Get (Module.Component).Top_Record
+              = R_Hold
+            then
+               Volume := Volume
+                 + Harriet.Db.Hold.Get_Hold (Module.Component).Capacity;
+            end if;
          end loop;
       end return;
    end Design_Cargo_Volume;
 
-   --------------------
-   -- Design_Delta_V --
-   --------------------
+   -----------------
+   -- Design_Crew --
+   -----------------
 
-   function Design_Delta_V
-     (Design     : Harriet.Db.Ship_Design_Reference;
-      Cargo_Mass : Non_Negative_Real) return Non_Negative_Real
+   function Design_Crew
+     (Design : Harriet.Db.Ship_Design_Reference)
+      return Natural
    is
-      Ve : Non_Negative_Real := 0.0;
    begin
-      for Module of
-        Harriet.Db.Ship_Module_Design.Select_By_Ship_Design (Design)
-      loop
-         declare
-            use Harriet.Db, Harriet.Db.Ship_Component;
-            Rec_Type : constant Record_Type :=
-                         Get (Module.Ship_Component).Top_Record;
-         begin
-            if Rec_Type = R_Drive_Component then
-               declare
-                  use Harriet.Db.Drive_Component;
-                  Drive : constant Drive_Component_Type :=
-                                Get_Drive_Component
-                              (Module.Ship_Component);
-               begin
-                  Ve := Drive.Exhaust_Velocity;
-                  exit;
-               end;
-            end if;
-         end;
-      end loop;
+      return Crew : Natural := 0 do
+         for Module of
+           Harriet.Db.Design_Module.Select_By_Ship_Design (Design)
+         loop
+            Crew := Crew +
+              Harriet.Db.Component.Get (Module.Component).Crew;
+         end loop;
+      end return;
+   end Design_Crew;
 
-      declare
-         use Harriet.Elementary_Functions;
-         Dry_Mass : constant Non_Negative_Real :=
-                      Design_Mass (Design) + Cargo_Mass;
-         Fuel_Mass : constant Non_Negative_Real := Design_Fuel_Mass (Design);
-         Full_Mass : constant Non_Negative_Real := Dry_Mass + Fuel_Mass;
-      begin
-         return Ve * Log (Full_Mass / Dry_Mass);
-      end;
-   end Design_Delta_V;
+   function Design_Crew_Berths
+     (Design : Harriet.Db.Ship_Design_Reference)
+      return Natural
+   is
+      use all type Harriet.Db.Record_Type;
+   begin
+      return Crew : Natural := 0 do
+         for Module of
+           Harriet.Db.Design_Module.Select_By_Ship_Design (Design)
+         loop
+            if Harriet.Db.Component.Get (Module.Component).Top_Record
+              = R_Crew_Quarters
+            then
+               Crew := Crew +
+                 Natural
+                   (Harriet.Db.Crew_Quarters.Get_Crew_Quarters
+                      (Module.Component)
+                    .Capacity);
+            end if;
+         end loop;
+      end return;
+   end Design_Crew_Berths;
 
    ----------------------
    -- Design_Fuel_Mass --
@@ -264,192 +363,44 @@ package body Harriet.Ships is
      (Design : Harriet.Db.Ship_Design_Reference)
       return Non_Negative_Real
    is
-      type Consumption_Record is
-         record
-            Commodity       : Harriet.Db.Commodity_Reference;
-            Liquid          : Boolean;
-            Cryo            : Boolean;
-            Density         : Non_Negative_Real;
-            Kg_Per_Second   : Non_Negative_Real;
-            Relative_Mass   : Non_Negative_Real;
-            Relative_Volume : Non_Negative_Real;
-         end record;
-
-      package Consumption_Record_Lists is
-        new Ada.Containers.Doubly_Linked_Lists (Consumption_Record);
-
-      List : Consumption_Record_Lists.List;
-
-      procedure Update_Fuel
-        (Fuel          : Harriet.Db.Commodity_Reference;
-         Kg_Per_Second : Non_Negative_Real);
-
-      -----------------
-      -- Update_Fuel --
-      -----------------
-
-      procedure Update_Fuel
-        (Fuel          : Harriet.Db.Commodity_Reference;
-         Kg_Per_Second : Non_Negative_Real)
-      is
-         use Harriet.Db;
-         Rec : constant Harriet.Db.Commodity.Commodity_Type :=
-                 Commodity.Get (Fuel);
-      begin
-         for Item of List loop
-            if Item.Commodity = Fuel then
-               Item.Kg_Per_Second :=
-                 Item.Kg_Per_Second + Kg_Per_Second;
-               return;
-            end if;
-         end loop;
-         List.Append
-           (Consumption_Record'
-              (Commodity       => Fuel,
-               Liquid          => True,
-               Cryo            => True,
-               Density         => Rec.Density,
-               Kg_Per_Second   => Kg_Per_Second,
-               Relative_Mass   => 0.0,
-               Relative_Volume => 0.0));
-      end Update_Fuel;
-
-      Liquid_Tank_Size : Non_Negative_Real := 0.0;
-      Cryo_Tank_Size   : Non_Negative_Real := 0.0;
-      Liquid_Fuel_Mass : Non_Negative_Real := 0.0;
-      Cryo_Fuel_Mass   : Non_Negative_Real := 0.0;
+      use all type Harriet.Db.Record_Type;
    begin
-      for Module of
-        Harriet.Db.Ship_Module_Design.Select_By_Ship_Design (Design)
-      loop
-         declare
-            use Harriet.Db, Harriet.Db.Ship_Component;
-            Rec_Type : constant Record_Type :=
-                         Get (Module.Ship_Component).Top_Record;
-         begin
-            if Rec_Type = R_Drive_Component then
-               declare
-                  Drive : constant Drive_Component.Drive_Component_Type :=
-                            Drive_Component.Get_Drive_Component
-                              (Module.Ship_Component);
-               begin
-                  if Drive.Fuel /= Null_Commodity_Reference then
-                     Update_Fuel (Drive.Fuel, Drive.Max_Fuel_Burn);
-                  end if;
-
-                  if Drive.Oxidiser /= Null_Commodity_Reference then
-                     Update_Fuel (Drive.Oxidiser, Drive.Max_Oxidiser_Burn);
-                  end if;
-               end;
-            elsif Rec_Type = R_Container_Component then
-               declare
-                  use Harriet.Db.Container_Component;
-                  Container : constant Container_Component_Type :=
-                                Get_Container_Component
-                                  (Module.Ship_Component);
-               begin
-                  if Container.Liquid then
-                     if Container.Cryo then
-                        Cryo_Tank_Size := Cryo_Tank_Size
-                          + Harriet.Quantities.To_Real
-                          (Container.Capacity);
-                     else
-                        Liquid_Tank_Size := Liquid_Tank_Size
-                          + Harriet.Quantities.To_Real
-                          (Container.Capacity);
-                     end if;
-                  end if;
-               end;
-            end if;
-         end;
-      end loop;
-
-      declare
-         Total_Liquid_Mass_Consumption   : Non_Negative_Real := 0.0;
-         Total_Cryo_Mass_Consumption     : Non_Negative_Real := 0.0;
-         Total_Liquid_Volume_Consumption : Non_Negative_Real := 0.0;
-         Total_Cryo_Volume_Consumption   : Non_Negative_Real := 0.0;
-      begin
-         for Item of List loop
-            if Item.Liquid then
-               if Item.Cryo then
-                  Total_Cryo_Mass_Consumption :=
-                    Total_Cryo_Mass_Consumption + Item.Kg_Per_Second;
-                  Total_Cryo_Volume_Consumption :=
-                    Total_Cryo_Volume_Consumption
-                    + Item.Kg_Per_Second / Item.Density;
-               else
-                  Total_Liquid_Mass_Consumption :=
-                    Total_Liquid_Mass_Consumption + Item.Kg_Per_Second;
-                  Total_Liquid_Volume_Consumption :=
-                    Total_Liquid_Volume_Consumption +
-                      Item.Kg_Per_Second / Item.Density;
-               end if;
+      return Mass : Non_Negative_Real := 0.0 do
+         for Module of
+           Harriet.Db.Design_Module.Select_By_Ship_Design (Design)
+         loop
+            if Harriet.Db.Component.Get (Module.Component).Top_Record
+              = R_Tank
+            then
+               Mass := Mass
+                 + Harriet.Db.Tank.Get_Tank (Module.Component).Capacity;
             end if;
          end loop;
-
-         for Item of List loop
-            if Item.Liquid then
-               if Item.Cryo then
-                  declare
-                     use Harriet.Real_Images;
-                     function Img (X : Real) return String
-                                   renames Approximate_Image;
-
-                     This_Vol_Per_Second : constant Non_Negative_Real :=
-                                             Item.Kg_Per_Second
-                                               / Item.Density;
-                     Partial_Volume      : constant Non_Negative_Real :=
-                                             This_Vol_Per_Second
-                                               / Total_Cryo_Volume_Consumption;
-                     Required_Volume     : constant Non_Negative_Real :=
-                                             Partial_Volume
-                                               * Cryo_Tank_Size;
-                     Required_Mass       : constant Non_Negative_Real :=
-                                             Required_Volume
-                                               * Item.Density;
-                  begin
-                     if False then
-                        Ada.Text_IO.Put_Line
-                          (Harriet.Db.Commodity.Get (Item.Commodity).Tag
-                           & ": density: "
-                           & Img (Item.Density)
-                           & "kg/m3; consumption: "
-                           & Img (Item.Kg_Per_Second)
-                           & "kg/s; vol. consumption: "
-                           & Img (This_Vol_Per_Second)
-                           & "m3/s; partial vol: "
-                           & Img (Partial_Volume)
-                           & " total vol: "
-                           & Img (Required_Volume)
-                           & " total mass: "
-                           & Img (Required_Mass));
-                     end if;
-
-                     Cryo_Fuel_Mass := Cryo_Fuel_Mass + Required_Mass;
-                  end;
-               else
-                  Liquid_Fuel_Mass :=
-                    Liquid_Fuel_Mass
-                      + Item.Kg_Per_Second / Item.Density
-                    * Liquid_Tank_Size;
-               end if;
-            end if;
-         end loop;
-
-         if False then
-            Ada.Text_IO.Put_Line
-              ("cryo tank size "
-               & Harriet.Real_Images.Approximate_Image (Cryo_Tank_Size)
-               & "; cryo fuel mass "
-               & Harriet.Real_Images.Approximate_Image (Cryo_Fuel_Mass));
-         end if;
-
-         return Cryo_Fuel_Mass + Liquid_Fuel_Mass;
-
-      end;
-
+      end return;
    end Design_Fuel_Mass;
+
+   --------------------
+   -- Design_Impulse --
+   --------------------
+
+   function Design_Impulse
+     (Design : Harriet.Db.Ship_Design_Reference) return Non_Negative_Real
+   is
+      use all type Harriet.Db.Record_Type;
+   begin
+      return Impulse : Non_Negative_Real := 0.0 do
+         for Module of
+           Harriet.Db.Design_Module.Select_By_Ship_Design (Design)
+         loop
+            if Harriet.Db.Component.Get (Module.Component).Top_Record
+              = R_Engine
+            then
+               Impulse := Impulse
+                 + Harriet.Db.Engine.Get_Engine (Module.Component).Impulse;
+            end if;
+         end loop;
+      end return;
+   end Design_Impulse;
 
    -----------------
    -- Design_Mass --
@@ -461,45 +412,27 @@ package body Harriet.Ships is
    begin
       return Mass : Non_Negative_Real := 0.0 do
          for Module of
-           Harriet.Db.Ship_Module_Design.Select_By_Ship_Design (Design)
+           Harriet.Db.Design_Module.Select_By_Ship_Design (Design)
          loop
             Mass := Mass +
-              Harriet.Db.Ship_Component.Get (Module.Ship_Component).Mass;
+              Harriet.Db.Component.Get (Module.Component).Mass;
          end loop;
       end return;
    end Design_Mass;
 
-   -------------------
-   -- Design_Thrust --
-   -------------------
+   ---------------------------------
+   -- Design_Maximum_System_Speed --
+   ---------------------------------
 
-   function Design_Thrust
-     (Design : Harriet.Db.Ship_Design_Reference) return Non_Negative_Real
+   function Design_Maximum_System_Speed
+     (Design : Harriet.Db.Ship_Design_Reference)
+      return Non_Negative_Real
    is
    begin
-      return Thrust : Non_Negative_Real := 0.0 do
-         for Module of
-           Harriet.Db.Ship_Module_Design.Select_By_Ship_Design (Design)
-         loop
-            declare
-               use Harriet.Db, Harriet.Db.Ship_Component;
-               Component : constant Ship_Component_Type :=
-                 Get (Module.Ship_Component);
-            begin
-               if Component.Top_Record = R_Drive_Component then
-                  declare
-                     use Harriet.Db.Drive_Component;
-                     Drive : constant Drive_Component_Type :=
-                       Get_Drive_Component
-                         (Component.Get_Ship_Component_Reference);
-                  begin
-                     Thrust := Thrust + Drive.Maximum_Thrust;
-                  end;
-               end if;
-            end;
-         end loop;
-      end return;
-   end Design_Thrust;
+      return Design_Impulse (Design)
+        / (Design_Mass (Design) + Design_Fuel_Mass (Design)
+           + Design_Cargo_Volume (Design));
+   end Design_Maximum_System_Speed;
 
    --------------
    -- Dry_Mass --
@@ -510,21 +443,86 @@ package body Harriet.Ships is
       return Non_Negative_Real
    is
    begin
-      return Design_Mass
-        (Harriet.Db.Ship.Get (Ship.Reference).Ship_Design);
+      return Mass : Non_Negative_Real := 0.0 do
+         for Module of
+           Harriet.Db.Module.Select_By_Ship (Ship.Reference)
+         loop
+            Mass := Mass +
+              Harriet.Db.Component.Get (Module.Component).Mass;
+         end loop;
+      end return;
    end Dry_Mass;
 
    ------------------
-   -- Total_Thrust --
+   -- Journey_Time --
    ------------------
 
-   function Total_Thrust
+   function Journey_Time
+     (Ship     : Ship_Type'Class;
+      Distance : Non_Negative_Real)
+      return Duration
+   is
+   begin
+      return Harriet.Calendar.Days
+          (Distance
+           / Harriet.Solar_System.Earth_Orbit
+           / Ship.Maximum_System_Speed);
+   end Journey_Time;
+
+   --------------------------
+   -- Maximum_System_Speed --
+   --------------------------
+
+   function Maximum_System_Speed
      (Ship : Ship_Type'Class)
       return Non_Negative_Real
    is
    begin
-      return Design_Thrust
-        (Harriet.Db.Ship.Get (Ship.Reference).Ship_Design);
-   end Total_Thrust;
+      return Ship.Total_Impulse / Ship.Current_Mass;
+   end Maximum_System_Speed;
+
+   ---------------
+   -- Tank_Size --
+   ---------------
+
+   function Tank_Size
+     (Ship : Ship_Type'Class)
+      return Non_Negative_Real
+   is
+   begin
+      return Size : Non_Negative_Real := 0.0 do
+         for Module of
+           Harriet.Db.Tank_Module.Select_By_Ship (Ship.Reference)
+         loop
+            Size := Size
+              + Harriet.Db.Tank.Get (Module.Tank).Capacity;
+         end loop;
+      end return;
+   end Tank_Size;
+
+   -------------------
+   -- Total_Impulse --
+   -------------------
+
+   function Total_Impulse
+     (Ship : Ship_Type'Class)
+      return Non_Negative_Real
+   is
+      use all type Harriet.Db.Record_Type;
+   begin
+      return Impulse : Non_Negative_Real := 0.0 do
+         for Module of
+           Harriet.Db.Module.Select_By_Ship (Ship.Reference)
+         loop
+            if Harriet.Db.Component.Get (Module.Component).Top_Record
+              = R_Engine
+            then
+               Impulse := Impulse
+                 + Harriet.Db.Engine.Get_Engine (Module.Component).Impulse
+                 * Module.Condition ** 2;
+            end if;
+         end loop;
+      end return;
+   end Total_Impulse;
 
 end Harriet.Ships;

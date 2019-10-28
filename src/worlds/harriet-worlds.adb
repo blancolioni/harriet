@@ -1,3 +1,8 @@
+with Harriet.Calendar;
+with Harriet.Elementary_Functions;
+with Harriet.Orbits;
+
+with Harriet.Db.Star_System_Object;
 with Harriet.Db.World;
 
 package body Harriet.Worlds is
@@ -10,6 +15,46 @@ package body Harriet.Worlds is
    begin
       Selection.List.Clear;
    end Clear;
+
+   --------------
+   -- Distance --
+   --------------
+
+   function Distance
+     (From, To : Harriet.Db.World_Reference)
+      return Non_Negative_Real
+   is
+      use Harriet.Db, Harriet.Calendar, Harriet.Elementary_Functions;
+      W1 : constant Harriet.Db.World.World_Type :=
+        Harriet.Db.World.Get (From);
+      W2 : constant Harriet.Db.World.World_Type :=
+        Harriet.Db.World.Get (To);
+      R1 : constant Non_Negative_Real := W1.Semimajor_Axis;
+      R2 : constant Non_Negative_Real := W2.Semimajor_Axis;
+      pragma Assert (W1.Primary = W2.Primary);
+      Primary_Mass : constant Non_Negative_Real :=
+        Harriet.Db.Star_System_Object.Get (W1.Primary).Mass;
+      From_Angle : constant Real :=
+        Harriet.Orbits.Calculate_Longitude
+          (Large_Mass => Primary_Mass,
+           Orbit      => W1.Semimajor_Axis,
+           Elapsed    =>
+             Harriet.Calendar.Clock - W1.Epoch);
+      To_Angle     : constant Real :=
+        Harriet.Orbits.Calculate_Longitude
+          (Large_Mass => Primary_Mass,
+           Orbit      => W2.Semimajor_Axis,
+           Elapsed    =>
+             Harriet.Calendar.Clock - W1.Epoch);
+      X1           : constant Real := R1 * Cos (From_Angle, 360.0);
+      Y1           : constant Real := R1 * Sin (From_Angle, 360.0);
+      X2           : constant Real := R2 * Cos (To_Angle, 360.0);
+      Y2           : constant Real := R2 * Sin (To_Angle, 360.0);
+      D            : constant Non_Negative_Real :=
+        Sqrt ((X1 - X2) ** 2 + (Y1 - Y2) ** 2);
+   begin
+      return D;
+   end Distance;
 
    ------------
    -- Filter --
@@ -95,9 +140,9 @@ package body Harriet.Worlds is
      (World : Harriet.Db.World_Reference)
       return Boolean
    is
-      use type Harriet.Db.World_Category;
+      use type Harriet.Db.World_Climate;
    begin
-      return Harriet.Db.World.Get (World).Category =
+      return Harriet.Db.World.Get (World).Climate =
         Harriet.Db.Temperate;
    end Is_Terrestrial;
 

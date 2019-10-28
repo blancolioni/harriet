@@ -6,7 +6,6 @@ package Commodities is
 
 record Commodity : Localised is
    Mass : Long_Float;
-   Density : Long_Float;
 end Commodity;
 
 record Has_Stock;
@@ -27,5 +26,10 @@ record Input_Commodity is
    Quantity : Quantity_Type;
    unique key Input_Commodity with Manufactured, Commodity;
 end Input_Commodity;
+
+record Consumer_Commodity is
+   key Commodity;
+   Pop_Per_Item   : Quantity_Type;
+end Consumer_Commodity;
 
 end Commodities;

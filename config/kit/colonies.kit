@@ -36,4 +36,11 @@ record Expense is
    key Historical_Expense with Colony, Date;
 end Expense;
 
+record Available_Commodity is
+   key Colony;
+   Commodity;
+   Quantity : Quantity_Type;
+   unique key Available_Commodity with Colony, Commodity;
+end Available_Commodity;
+
 end Colonies;

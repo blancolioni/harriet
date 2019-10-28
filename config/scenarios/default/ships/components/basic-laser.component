@@ -1,0 +1,5 @@
+class = energy_weapon
+crew = 10
+mass = 10
+energy = 100
+power = 2

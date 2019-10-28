@@ -1,5 +1,3 @@
-with Harriet.Calendar;
-
 with Harriet.Db.Ship;
 
 package Harriet.Ships is
@@ -27,22 +25,6 @@ package Harriet.Ships is
      (Ship : Ship_Type'Class)
       return Non_Negative_Real;
 
-   function Inclination
-     (Ship : Ship_Type'Class)
-      return Real;
-
-   function Epoch
-     (Ship : Ship_Type'Class)
-      return Harriet.Calendar.Time;
-
-   function Current_Longitude
-     (Ship : Ship_Type'Class)
-      return Real;
-
-   function Current_Latitude
-     (Ship : Ship_Type'Class)
-      return Real;
-
    function Dry_Mass
      (Ship : Ship_Type'Class)
       return Non_Negative_Real;
@@ -51,28 +33,52 @@ package Harriet.Ships is
      (Ship : Ship_Type'Class)
       return Non_Negative_Real;
 
-   function Total_Thrust
+   function Tank_Size
      (Ship : Ship_Type'Class)
+      return Non_Negative_Real;
+
+   function Total_Impulse
+     (Ship : Ship_Type'Class)
+      return Non_Negative_Real;
+
+   function Maximum_System_Speed
+     (Ship : Ship_Type'Class)
+      return Non_Negative_Real;
+
+   function Current_Scan_Capability
+     (Ship : Ship_Type'Class)
+      return Non_Negative_Real;
+
+   function Journey_Time
+     (Ship : Ship_Type'Class;
+      Distance : Non_Negative_Real)
+      return Duration;
+
+   function Design_Maximum_System_Speed
+     (Design : Harriet.Db.Ship_Design_Reference)
       return Non_Negative_Real;
 
    function Design_Cargo_Volume
      (Design : Harriet.Db.Ship_Design_Reference)
       return Non_Negative_Real;
 
-   function Design_Delta_V
-     (Design     : Harriet.Db.Ship_Design_Reference;
-      Cargo_Mass : Non_Negative_Real)
-      return Non_Negative_Real;
-
    function Design_Mass
      (Design : Harriet.Db.Ship_Design_Reference)
       return Non_Negative_Real;
+
+   function Design_Crew
+     (Design : Harriet.Db.Ship_Design_Reference)
+      return Natural;
+
+   function Design_Crew_Berths
+     (Design : Harriet.Db.Ship_Design_Reference)
+      return Natural;
 
    function Design_Fuel_Mass
      (Design : Harriet.Db.Ship_Design_Reference)
       return Non_Negative_Real;
 
-   function Design_Thrust
+   function Design_Impulse
      (Design : Harriet.Db.Ship_Design_Reference)
       return Non_Negative_Real;
 
@@ -117,16 +123,6 @@ private
    function Orbit
      (Ship : Ship_Type'Class)
       return Non_Negative_Real
-   is (Harriet.Db.Ship.Get (Ship.Reference).Orbit);
-
-   function Inclination
-     (Ship : Ship_Type'Class)
-      return Real
-   is (Harriet.Db.Ship.Get (Ship.Reference).Inclination);
-
-   function Epoch
-     (Ship : Ship_Type'Class)
-      return Harriet.Calendar.Time
-   is (Harriet.Db.Ship.Get (Ship.Reference).Epoch);
+   is (Harriet.Db.Ship.Get (Ship.Reference).Semimajor_Axis);
 
 end Harriet.Ships;

@@ -1,0 +1,4 @@
+class = engine
+mass = 40
+power = 1
+impulse = 10

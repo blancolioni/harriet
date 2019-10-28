@@ -163,11 +163,12 @@ package body Harriet.Commodities is
         Harriet.Db.Stock_Item.Get_By_Stock_Item (From, Commodity);
    begin
       pragma Assert (Stock.Has_Element or else Quantity = Zero);
-      pragma Assert (Quantity = Zero or else Quantity <= Stock.Quantity);
+      pragma Assert (Quantity = Zero
+                     or else Quantity <= Scale (Stock.Quantity, 1.01));
       if Quantity > Zero then
          Harriet.Db.Stock_Item.Update_Stock_Item
            (Stock.Get_Stock_Item_Reference)
-           .Set_Quantity (Stock.Quantity - Quantity)
+           .Set_Quantity (Stock.Quantity - Min (Quantity, Stock.Quantity))
            .Done;
       end if;
    end Remove_Stock;

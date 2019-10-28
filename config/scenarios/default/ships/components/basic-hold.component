@@ -1,0 +1,6 @@
+class = hold
+crew = 3
+mass = 10
+power = 1
+cargo = 1000
+

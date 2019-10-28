@@ -1,0 +1,4 @@
+class = scanner
+mass = 1
+power = 1
+scan = 10

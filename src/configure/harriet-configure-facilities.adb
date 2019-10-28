@@ -39,18 +39,19 @@ package body Harriet.Configure.Facilities is
    is
       Facility  : constant Harriet.Db.Facility_Reference :=
         Harriet.Db.Facility.Create
-          (Enabled_By     => Harriet.Db.Null_Technology_Reference,
-           Tag            => Config.Config_Name,
-           Operating_Cost =>
+          (Enabled_By         => Harriet.Db.Null_Technology_Reference,
+           Tag                => Config.Config_Name,
+           Operating_Cost     =>
              Harriet.Money.To_Money (Config.Get ("operating-cost")),
-           Employees      =>
+           Employees          =>
              Harriet.Quantities.To_Quantity (Config.Get ("employees")),
-           Power          => Config.Get ("power", 0),
-           Generate       => Config.Get ("generate", 0),
-           Strip_Mining   => Config.Get ("strip-mine", 0),
-           Mining         => Config.Get ("mine", 0),
-           Industry       => Config.Get ("industry", 0),
-           Research       => Config.Get ("research", 0));
+           Power              => Config.Get ("power", 0),
+           Generate           => Config.Get ("generate", 0),
+           Free_Installations => Config.Get ("free-installations", 0),
+           Strip_Mining       => Config.Get ("strip-mine", 0),
+           Mining             => Config.Get ("mine", 0),
+           Industry           => Config.Get ("industry", 0),
+           Research           => Config.Get ("research", 0));
    begin
       Harriet.Configure.Commodities.Configure_Constructed
         (Constructed => Harriet.Db.Facility.Get (Facility)

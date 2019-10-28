@@ -29,6 +29,10 @@ package Harriet.UI is
       Message : String)
    is abstract;
 
+   procedure Wait
+     (Item  : UI_Interface)
+   is abstract;
+
    procedure Broadcast
      (UI     : UI_Interface;
       Signal : Harriet.Signals.Signal_Type)

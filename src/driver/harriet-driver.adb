@@ -88,7 +88,13 @@ begin
       Harriet.Paths.Config_File ("totro-consonants.txt"));
 
    if Harriet.Options.Randomise then
+      Harriet.Random.Reset;
       WL.Random.Randomise;
+   else
+      Ada.Text_IO.Put_Line
+        ("seed:" & Natural'Image (Harriet.Options.Random_Seed));
+      Harriet.Random.Reset (Harriet.Options.Random_Seed);
+      WL.Random.Reset (Harriet.Options.Random_Seed);
    end if;
 
    if Harriet.Options.Create then
@@ -113,14 +119,6 @@ begin
            ("faction-colors-file", Harriet.Options.Faction_Colors_File)
          then
             return;
-         end if;
-
-         if Harriet.Options.Randomise then
-            Harriet.Random.Reset;
-            WL.Random.Randomise;
-         else
-            Harriet.Random.Reset (Harriet.Options.Random_Seed);
-            WL.Random.Reset (Harriet.Options.Random_Seed);
          end if;
 
          Harriet.Db.Database.Open;
@@ -364,13 +362,15 @@ begin
       begin
          UI.Start;
 
-         Ada.Text_IO.Put ("Press return to exit");
-         Ada.Text_IO.Flush;
-         Ada.Text_IO.Skip_Line;
-         Ada.Text_IO.Put_Line ("Stopping ...");
-
-         UI.Stop ("Server going down");
-
+         if Harriet.Options.Interactive then
+            Ada.Text_IO.Put ("Press return to exit");
+            Ada.Text_IO.Flush;
+            Ada.Text_IO.Skip_Line;
+            Ada.Text_IO.Put_Line ("Stopping ...");
+            UI.Stop ("Server going down");
+         else
+            UI.Wait;
+         end if;
       end;
 
    end if;

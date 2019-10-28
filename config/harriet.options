@@ -9,6 +9,7 @@ package Harriet.Options is
    Command_Line            : Boolean;
    Batch_Mode              : Boolean;
    Update_Count            : Natural;
+   Interactive             : Boolean;
    
    Create                  : Boolean;
    System_Count            : Natural;

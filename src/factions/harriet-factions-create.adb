@@ -10,20 +10,27 @@ with Harriet.Configure;
 with Harriet.Money;
 with Harriet.Quantities;
 with Harriet.Random;
+with Harriet.Real_Images;
 
 with Harriet.Ships;
 with Harriet.Star_Systems;
 with Harriet.Worlds;
 
 with Harriet.Db.Colony;
+with Harriet.Db.Deposit;
 with Harriet.Db.Facility;
 with Harriet.Db.Faction;
 with Harriet.Db.Installation;
+with Harriet.Db.Resource;
 with Harriet.Db.Script;
 with Harriet.Db.Script_Line;
 with Harriet.Db.Ship_Design;
 with Harriet.Db.Star_Gate;
+with Harriet.Db.Star_System;
+with Harriet.Db.System_Knowledge;
 with Harriet.Db.User;
+with Harriet.Db.World;
+with Harriet.Db.World_Knowledge;
 
 package body Harriet.Factions.Create is
 
@@ -66,7 +73,7 @@ package body Harriet.Factions.Create is
    is
       use Harriet.Db;
       Capital : constant Harriet.Db.World_Reference :=
-                  Find_Homeworld;
+        Find_Homeworld;
    begin
       if Capital = Null_World_Reference then
          return Null_Faction_Reference;
@@ -74,32 +81,70 @@ package body Harriet.Factions.Create is
 
       declare
          Cash    : constant Harriet.Money.Money_Type :=
-                     Harriet.Configure.Configure_Money
-                       (Setup, "cash", 1000.0);
+           Harriet.Configure.Configure_Money
+             (Setup, "cash", 1000.0);
+         System  : constant Harriet.Db.Star_System_Reference :=
+           Harriet.Worlds.Star_System (Capital);
          Faction : constant Harriet.Db.Faction_Reference :=
-                     Harriet.Db.Faction.Create
-                       (Name          => Name,
-                        Adjective     =>
-                          (if Adjective = "" then Name else Adjective),
-                        Plural_Name   =>
-                          (if Plural_Name = "" then Name else Plural_Name),
-                        Active        => True,
-                        Scheduled     => False,
-                        Next_Event    => Harriet.Calendar.Clock,
-                        Manager       => "default-faction",
-                        Cash          => Cash,
-                        Red           => Color.Red,
-                        Green         => Color.Green,
-                        Blue          => Color.Blue,
-                        User          => User,
-                        Capital_System =>
-                          Harriet.Worlds.Star_System (Capital),
-                        Capital_World  => Capital);
+           Harriet.Db.Faction.Create
+             (Name             => Name,
+              Adjective        =>
+                (if Adjective = "" then Name else Adjective),
+              Plural_Name      =>
+                (if Plural_Name = "" then Name else Plural_Name),
+              Active           => True,
+              Scheduled        => False,
+              Next_Event       => Harriet.Calendar.Clock,
+              Manager          => "default-faction",
+              Cash             => Cash,
+              Red              => Color.Red,
+              Green            => Color.Green,
+              Blue             => Color.Blue,
+              User             => User,
+              Capital_System   => System,
+              Capital_World    => Capital,
+              Fleet_Manager    => "default-fleet",
+              Army_Manager     => "default-army",
+              Explore_Manager  => "default-exploration",
+              Colonise_Manager => "default-colonisation");
+
          Script           : constant Harriet.Db.Script_Reference :=
            Harriet.Db.Script.Create ("rc", User);
          Line_Index       : Natural := 0;
-
+         Has_Knowledge    : constant Harriet.Db.Has_Knowledge_Reference :=
+           Harriet.Db.Faction.Get (Faction).Get_Has_Knowledge_Reference;
       begin
+
+         Harriet.Db.System_Knowledge.Create
+           (Has_Knowledge => Has_Knowledge,
+            Knowable      =>
+              Harriet.Db.Star_System.Get (System).Get_Knowable_Reference,
+            Existence     => True,
+            Current       => True,
+            Faction       => Faction,
+            Star_System   =>
+              Harriet.Worlds.Star_System (Capital));
+
+         for World of
+           Harriet.Db.World.Select_By_Star_System (System)
+         loop
+            declare
+               Is_Home_World : constant Boolean :=
+                 World.Get_World_Reference = Capital;
+            begin
+               Harriet.Db.World_Knowledge.Create
+                 (Faction        => Faction,
+                  Has_Knowledge  => Has_Knowledge,
+                  Knowable       => World.Get_Knowable_Reference,
+                  Existence      => True,
+                  Current        => Is_Home_World,
+                  World          => World.Get_World_Reference,
+                  Classification => True,
+                  Orbit          => True,
+                  Deposits       => Is_Home_World);
+            end;
+
+         end loop;
 
          Initial_Colony (Setup.Child ("home-colony"), Faction, Capital);
 
@@ -283,6 +328,51 @@ package body Harriet.Factions.Create is
                     Economy          => Get ("economy"));
 
    begin
+
+      for Deposit_Config of Config.Child ("deposits") loop
+         declare
+            use Harriet.Db;
+            Resource      : constant Resource_Reference :=
+              Harriet.Db.Resource.Get_Reference_By_Tag
+                (Deposit_Config.Config_Name);
+            Size          : constant Harriet.Quantities.Quantity_Type :=
+              Harriet.Quantities.To_Quantity (Deposit_Config.Get ("size"));
+            Concentration : constant Unit_Real :=
+              Unit_Clamp (Deposit_Config.Get ("concentration"));
+            Deposit       : constant Deposit_Reference :=
+              Harriet.Db.Deposit.Get_Reference_By_Deposit
+                (World, Resource);
+         begin
+            if Resource = Null_Resource_Reference then
+               raise Constraint_Error with
+                 "unknown resource: " & Deposit_Config.Config_Name;
+            end if;
+
+            if Deposit = Null_Deposit_Reference then
+               Ada.Text_IO.Put_Line
+                 ("creating " & Deposit_Config.Config_Name
+                  & " size " & Harriet.Quantities.Show (Size)
+                  & " concentration "
+                  & Harriet.Real_Images.Approximate_Image (Concentration));
+
+               Harriet.Db.Deposit.Create
+                 (World         => World,
+                  Resource      => Resource,
+                  Concentration => Concentration,
+                  Available     => Size);
+            else
+               Ada.Text_IO.Put_Line
+                 ("updating " & Deposit_Config.Config_Name
+                  & " size " & Harriet.Quantities.Show (Size)
+                  & " concentration "
+                  & Harriet.Real_Images.Approximate_Image (Concentration));
+               Harriet.Db.Deposit.Update_Deposit (Deposit)
+                 .Set_Concentration (Concentration)
+                 .Set_Available (Size)
+                 .Done;
+            end if;
+         end;
+      end loop;
 
       Harriet.Configure.Commodities.Configure_Stock
         (Has_Stock => Harriet.Db.Colony.Get (Colony).Get_Has_Stock_Reference,

@@ -1,0 +1,5 @@
+class = quarters
+crew = 1
+mass = 20
+power = 2
+berths = 10

@@ -7,12 +7,12 @@ with Harriet.Db.Managed;
 
 package Harriet.Managers is
 
-   type Priority_Type is range 1 .. 20;
+   subtype Priority_Type is Integer range 1 .. 20;
 
    Top_Priority        : constant Priority_Type := 1;
    Emergency_Priority  : constant Priority_Type := 3;
    High_Priority       : constant Priority_Type := 6;
-   Medium_Prority      : constant Priority_Type := 10;
+   Medium_Priority     : constant Priority_Type := 10;
    Low_Priority        : constant Priority_Type := 15;
    Lowest_Priority     : constant Priority_Type := Priority_Type'Last;
 
@@ -45,6 +45,17 @@ package Harriet.Managers is
      function (Managed : Harriet.Db.Managed_Reference)
                return Manager_Type;
 
+   type Middle_Manager_Area is
+     (Fleet, Army, Exploration, Colonisation);
+
+   type Middle_Constructor_Function is access
+     function (Faction : Harriet.Db.Faction_Reference)
+               return Manager_Type;
+
+   procedure Signal
+     (Faction : Harriet.Db.Faction_Reference;
+      Area    : Middle_Manager_Area);
+
 private
 
    type Root_Manager_Type is abstract tagged
@@ -53,6 +64,7 @@ private
                              Harriet.Db.Null_Managed_Reference;
          Is_Active       : Boolean := False;
          Has_Next_Update : Boolean := False;
+         Signaled        : Boolean := False;
          Next_Update     : Harriet.Calendar.Time;
       end record;
 
@@ -61,10 +73,20 @@ private
 
    Register : Register_Maps.Map;
 
+   package Middle_Maps is
+     new WL.String_Maps (Middle_Constructor_Function);
+
+   Middle_Register : Middle_Maps.Map;
+
    package Manager_Maps is
      new WL.String_Maps (Manager_Type);
 
    Active_Map : Manager_Maps.Map;
+
+   package Active_Middle_Maps is
+     new WL.String_Maps (Manager_Type);
+
+   Active_Middle : array (Middle_Manager_Area) of Active_Middle_Maps.Map;
 
    type Manager_Update is
      new Harriet.Updates.Update_Interface with

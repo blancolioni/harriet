@@ -46,6 +46,11 @@ package Harriet.Factions is
      (Faction : Harriet.Db.Faction_Reference)
       return Harriet.Db.Star_System_Reference;
 
+   procedure Discover_World_Deposits
+     (Faction : Harriet.Db.Faction_Reference;
+      World   : Harriet.Db.World_Reference;
+      Minimum : Unit_Real);
+
    procedure Synchronise (Faction : Harriet.Db.Faction_Reference);
 
 private

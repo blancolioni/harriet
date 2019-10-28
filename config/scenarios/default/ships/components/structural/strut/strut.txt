@@ -1,5 +1,0 @@
-class = strut
-density = 20
-colour = { 200 200 200 }
-shape = cylinder
-layout = { 1 1 4 }

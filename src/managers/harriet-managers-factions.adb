@@ -5,6 +5,8 @@ with Harriet.Real_Images;
 
 with Harriet.Commodities.Maps;
 
+with Harriet.Managers.Execution;
+
 with Harriet.Db.Deposit;
 with Harriet.Db.Faction;
 with Harriet.Db.Resource;
@@ -140,6 +142,11 @@ package body Harriet.Managers.Factions is
       Manager.Capital_System := Faction.Capital_System;
       Manager.Capital_World := Faction.Capital_World;
 
+      Harriet.Managers.Execution.Start_Middle_Manager
+        (Faction => Manager.Faction,
+         Area    => Fleet,
+         Name    => Faction.Fleet_Manager);
+
       return new Root_Faction_Manager'(Manager);
    end Create_Default_Manager;
 
@@ -225,14 +232,6 @@ package body Harriet.Managers.Factions is
            Harriet.Db.Deposit.Select_By_World
              (World.Get_World_Reference)
          loop
-            Manager.Log
-              (World.Name & ": "
-               & Harriet.Db.Resource.Get (Deposit.Resource).Tag
-               & " "
-               & Harriet.Quantities.Show (Deposit.Available)
-               & " "
-               & Harriet.Real_Images.Approximate_Image
-                 (Deposit.Concentration * 100.0) & "%");
             Update_Deposit
               (World.Get_World_Reference,
                Deposit.Resource, Deposit.Available,

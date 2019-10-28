@@ -21,4 +21,10 @@ package Harriet.Installations is
      (Installation : Harriet.Db.Installation.Installation_Type)
       return Harriet.Quantities.Quantity_Type;
 
+   procedure Add_Production_Goal
+     (Colony    : Harriet.Db.Colony_Reference;
+      Commodity : Harriet.Db.Commodity_Reference;
+      Quantity  : Harriet.Quantities.Quantity_Type;
+      Priority  : Positive);
+
 end Harriet.Installations;

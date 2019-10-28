@@ -1,0 +1,5 @@
+class = tank
+crew = 3
+mass = 10
+power = 1
+fuel = 100

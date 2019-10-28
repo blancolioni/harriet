@@ -1,7 +1,9 @@
 default-manager = ship-trade
 components = {
-  basic-chemical-drive = 2
-  basic-cryo-tank = 4
-  basic-fission-pile
-  basic-hold
+  basic-drive = 1
+  basic-jump-drive = 1
+  basic-tank = 1
+  basic-fission-pile = 1
+  basic-hold = 4
+  basic-crew-quarters = 5
 }

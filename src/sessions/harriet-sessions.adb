@@ -41,6 +41,8 @@ package body Harriet.Sessions is
 
    Status_Settings : Status_Setting_Maps.Map;
 
+   procedure Check_Status;
+
    procedure Add_Status
      (Name : String;
       Get  : Status_Get_Function;
@@ -243,6 +245,19 @@ package body Harriet.Sessions is
          Session.Data.Reference;
       end if;
    end Adjust;
+
+   ------------------
+   -- Check_Status --
+   ------------------
+
+   procedure Check_Status is
+   begin
+      if Status_Settings.Is_Empty then
+         Add_Status ("updateSpeed",
+                     Harriet.Sessions.Status.Get_Update_Speed'Access,
+                     Harriet.Sessions.Status.Set_Update_Speed'Access);
+      end if;
+   end Check_Status;
 
    ------------------
    -- Close_Client --
@@ -653,6 +668,7 @@ package body Harriet.Sessions is
       Value   : Harriet.Json.Json_Value'Class)
    is
    begin
+      Check_Status;
       if Status_Settings.Contains (Name) then
          Status_Settings.Element (Name).Set (Session, Value);
       else
@@ -707,6 +723,7 @@ package body Harriet.Sessions is
       return Harriet.Json.Json_Value'Class
    is
    begin
+      Check_Status;
       if Status_Settings.Contains (Name) then
          return Status_Settings.Element (Name).Get (Session);
       else
@@ -741,8 +758,4 @@ package body Harriet.Sessions is
       return Session.User /= Harriet.Db.Null_User_Reference;
    end Valid;
 
-begin
-   Add_Status ("updateSpeed",
-               Harriet.Sessions.Status.Get_Update_Speed'Access,
-               Harriet.Sessions.Status.Set_Update_Speed'Access);
 end Harriet.Sessions;

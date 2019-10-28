@@ -1,0 +1,4 @@
+class = missile_launcher
+mass = 1
+power = 1
+launcher = 1

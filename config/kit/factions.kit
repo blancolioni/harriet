@@ -14,6 +14,34 @@ package Factions is
       key Capital_System : Star_System;
       key Capital_World  : World;
       Cash : Money_Type;
+	  Fleet_Manager    : String (28);
+	  Army_Manager     : String (28);
+	  Explore_Manager  : String (28);
+	  Colonise_Manager : String (28);
    end Faction;
 
+   record Faction_Knowledge : Knowledge is
+      key Faction;
+   end Faction_Knowledge;
+   
+   record System_Knowledge : Faction_Knowledge is
+      key Star_System;
+	  unique key System_Knowledge with Faction, Star_System;
+   end System_Knowledge;
+   
+   record World_Knowledge : Faction_Knowledge is
+	  key World;
+	  Classification : Boolean;
+	  Orbit          : Boolean;
+	  Deposits       : Boolean;	  
+	  unique key World_Knowledge with Faction, World;
+   end World_Knowledge;
+   
+   record Deposit_Knowledge : Faction_Knowledge is
+      key Deposit;
+	  Resource;
+	  key Known_Resource with Faction, Resource;
+	  unique key Deposit_Knowledge with Faction, Deposit;
+   end Deposit_Knowledge;
+   
 end Factions;

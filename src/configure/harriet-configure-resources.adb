@@ -1,3 +1,5 @@
+with Ada.Characters.Handling;
+
 with Harriet.Elementary_Functions;
 with Harriet.Random;
 with Harriet.Solar_System;
@@ -37,7 +39,9 @@ package body Harriet.Configure.Resources is
 
          begin
             Harriet.Db.Gas.Create
-              (Formula          => Formula,
+              (Tag              =>
+                 Ada.Characters.Handling.To_Lower (Cfg.Config_Name),
+               Formula          => Formula,
                Molecular_Weight => Weight,
                Melting_Point    => MP,
                Boiling_Point    => BP,
@@ -48,8 +52,7 @@ package body Harriet.Configure.Resources is
                Max_Ipp          =>
                  (if Max_IPP_HG /= 0.0
                   then Max_IPP_HG * Earth_Surface_Pressure / 760.0
-                  else Max_IPP_PPM * Earth_Surface_Pressure / 1.0E6),
-               Name             => Cfg.Get ("name", Formula));
+                  else Max_IPP_PPM * Earth_Surface_Pressure / 1.0E6));
          end;
       end loop;
    end Configure_Atmosphere_Components;
@@ -65,7 +68,7 @@ package body Harriet.Configure.Resources is
       use Harriet.Elementary_Functions;
       Gen : Random_Deposit_Generator := Generator;
       Initial_Concentration : constant Unit_Real :=
-        (0.5 + Harriet.Random.Unit_Random / 2.0)
+        (0.4 + Harriet.Random.Unit_Random / 2.0)
         ** (World.Radius
             / Harriet.Solar_System.Earth_Radius);
       Concentration         : Unit_Real :=

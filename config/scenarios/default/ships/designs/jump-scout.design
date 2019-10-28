@@ -1,0 +1,8 @@
+default-manager = ship-explore
+components = {
+  basic-drive = 2
+  basic-tank
+  basic-jump-drive
+  basic-scanner
+  basic-crew-quarters = 3
+}

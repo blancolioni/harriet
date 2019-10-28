@@ -1,0 +1,8 @@
+generate = 10
+operating-cost = 5
+employees = 1000
+inputs = { petroleum = 5 }
+
+build = {
+   construction-materials = 100
+}

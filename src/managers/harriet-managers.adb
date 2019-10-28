@@ -10,26 +10,34 @@ package body Harriet.Managers is
    overriding procedure Activate
      (Update : Manager_Update)
    is
+      use type Harriet.Db.Managed_Reference;
+      Has_Managed : constant Boolean :=
+        Update.Manager.Managed /= Harriet.Db.Null_Managed_Reference;
    begin
       Update.Manager.Has_Next_Update := False;
       Update.Manager.Activate;
+      Update.Manager.Signaled := False;
 
       if Update.Manager.Has_Next_Update then
          Update.Manager.Is_Active := True;
          Harriet.Updates.Events.Update_At
            (Clock  => Update.Manager.Next_Update,
             Update => Update);
-         Harriet.Db.Managed.Update_Managed (Update.Manager.Managed)
-           .Set_Next_Event (Update.Manager.Next_Update)
-           .Set_Active (True)
-           .Done;
+         if Has_Managed then
+            Harriet.Db.Managed.Update_Managed (Update.Manager.Managed)
+              .Set_Next_Event (Update.Manager.Next_Update)
+              .Set_Active (True)
+              .Done;
+         end if;
       else
          Harriet.Logging.Log
-           (Category => "update",
+           (Category => Update.Manager.Identifier,
             Message  => "deactivating");
-         Harriet.Db.Managed.Update_Managed (Update.Manager.Managed)
-           .Set_Active (False)
-           .Done;
+         if Has_Managed then
+            Harriet.Db.Managed.Update_Managed (Update.Manager.Managed)
+              .Set_Active (False)
+              .Done;
+         end if;
       end if;
 
    end Activate;
@@ -86,5 +94,29 @@ package body Harriet.Managers is
       end if;
 
    end Set_Next_Update_Time;
+
+   ------------
+   -- Signal --
+   ------------
+
+   procedure Signal
+     (Faction : Harriet.Db.Faction_Reference;
+      Area    : Middle_Manager_Area)
+   is
+      Manager : constant Manager_Type :=
+        Active_Middle (Area).Element (Harriet.Db.To_String (Faction));
+   begin
+      if not Manager.Signaled then
+         Manager.Log ("signal");
+         Manager.Signaled := True;
+         Manager.Is_Active := True;
+         Manager.Has_Next_Update := True;
+         Manager.Next_Update := Harriet.Calendar.Clock;
+         Harriet.Updates.Events.Update_At
+           (Clock  => Harriet.Calendar.Clock,
+            Update => Manager_Update'
+              (Manager => Manager));
+      end if;
+   end Signal;
 
 end Harriet.Managers;

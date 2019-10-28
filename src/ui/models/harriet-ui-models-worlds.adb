@@ -1,7 +1,7 @@
-with Ada.Numerics;
+with WL.Localisation;
 
 with Harriet.Color;
-with Harriet.Constants;
+--  with Harriet.Constants;
 with Harriet.Solar_System;
 
 with Harriet.Factions;
@@ -101,7 +101,7 @@ package body Harriet.UI.Models.Worlds is
 
    begin
       Prop ("name", World.Name);
-      Prop ("category", Harriet.Db.World_Category'Image (World.Category));
+--        Prop ("category", Harriet.Db.World_Category'Image (World.Category));
       Prop ("mass", World.Mass / Earth_Mass);
       Prop ("radius", World.Radius / Earth_Radius);
       Prop ("density", World.Density / Earth_Density);
@@ -109,9 +109,9 @@ package body Harriet.UI.Models.Worlds is
       Prop ("day", World.Rotation_Period / 3600.0);
       Prop ("tilt", World.Tilt);
       Prop ("gravity", World.Surface_Gravity / Earth_Gravity);
-      Prop ("surfaceTemperature",
-            World.Surface_Temperature
-            - Harriet.Constants.Freezing_Point_Of_Water);
+--        Prop ("surfaceTemperature",
+--              World.Surface_Temperature
+--              - Harriet.Constants.Freezing_Point_Of_Water);
 
       declare
          Atmosphere : Json.Json_Array;
@@ -122,7 +122,8 @@ package body Harriet.UI.Models.Worlds is
                  Harriet.Db.Gas.Get (Atm.Gas);
                Gas_Object : Json.Json_Object;
             begin
-               Gas_Object.Set_Property ("name", Gas.Name);
+               Gas_Object.Set_Property
+                 ("name", WL.Localisation.Local_Text (Gas.Tag));
                Gas_Object.Set_Property ("formula", Gas.Formula);
                Gas_Object.Set_Property
                  ("fraction", Json.Float_Value (Float (Atm.Percentage)));
@@ -170,10 +171,9 @@ package body Harriet.UI.Models.Worlds is
                   Harriet.Color.To_Html_String
                     (Faction.Red, Faction.Green, Faction.Blue));
                Ship_Object.Set_Property
-                 ("orbit", Float (Ship.Orbit / World.Radius));
+                 ("orbit", Float (Ship.Semimajor_Axis / World.Radius));
                Ship_Object.Set_Property
-                 ("inclination",
-                  Float (Ship.Inclination * Ada.Numerics.Pi / 180.0));
+                 ("inclination", 0.0);
                Ships.Append (Ship_Object);
             end;
          end loop;

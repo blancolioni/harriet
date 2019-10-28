@@ -6,18 +6,32 @@ home-colony = {
    tax-rate = 10%
    economy = 10%
    
+   deposits = {
+      hydrocarbon = { size = ~1M concentration = ~0.9 }
+	  gases = { size = ~100K concentration = ~0.5 }
+	  semiconductors = { size = ~200K concentration = ~0.5 }
+	  iron = { size = ~2M concentration = ~0.8 }
+	  coal = { size = ~2M concentration = ~0.6 }
+	  }
+	  
    facilities = {
-      mine = 10
+	  small-admin-centre = 1
+      mine = 20
 	  strip-mine = 1
       industry = 10
       research-lab = 2
-      coal-power = 5
+	  oil-power = 5
+#      coal-power = { when = { deposit = coal } value = 5 }
+	  
    }
    
    stock = {
       coal = 100
+	  petroleum = 50
+	  ship-fuel = 250
+	  basic-consumer-goods = 100
 	  }
-   ships = { scout defender trader }
+   ships = { system-scout jump-scout defender trader }
 }
 
 init-script = {

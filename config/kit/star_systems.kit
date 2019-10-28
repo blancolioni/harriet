@@ -11,25 +11,26 @@ package Star_Systems is
        Claimed       : Boolean;
    end Star_System;
    
-   record Star_System_Object : Has_Name, Knowable is
+   record Massive_Object is
+      Mass : Long_Float;
+   end Massive_Object;
+   
+   record Orbiting_Object : Massive_Object is
+      key Primary_Massive : Massive_Object;
+	  Semimajor_Axis  : Long_Float;
+	  Epoch           : Time;
+	  Eccentricity    : Long_Float;
+	  Period          : Long_Float;
+   end Orbiting_Object;
+   
+   record Star_System_Object : Has_Name, Knowable, Orbiting_Object is
       key Star_System;
       key Primary : Star_System_Object;
-      Mass                 : Long_Float;
-      Radius               : Long_Float;
-      Density              : Long_Float;
-      Semimajor_Axis       : Long_Float;
-      Epoch                : Time;
-      Period               : Long_Float;
-      Eccentricity         : Long_Float;
-      Rotation_Period      : Long_Float;
-      Tilt                 : Long_Float;
-      Surface_Acceleration : Long_Float;
+      Radius          : Long_Float;
+      Density         : Long_Float;
+      Rotation_Period : Long_Float;
+      Tilt            : Long_Float;
       Surface_Gravity      : Long_Float;
-      Escape_Velocity      : Long_Float;
-      Surface_Temperature  : Long_Float;
-      Min_Molecular_Weight : Long_Float;
-      RMS_Velocity         : Long_Float;
-      Resonant_Period      : Boolean;
    end Star_System_Object;
    
    record Star_Gate is

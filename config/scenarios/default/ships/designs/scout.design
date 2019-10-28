@@ -1,6 +1,0 @@
-default-manager = ship-explore
-components = {
-  basic-chemical-drive = 2
-  basic-cryo-tank = 2
-  basic-hyperdrive
-}
