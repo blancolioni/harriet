@@ -55,6 +55,11 @@ package body Harriet.Configure.Star_Systems is
       Gas     : Atmospheric_Gas;
       Partial : Unit_Real);
 
+   function Partial
+     (Atm : Atmosphere;
+      Gas : Atmospheric_Gas)
+      return Unit_Real;
+
    function Get_Zone
      (Star : Harriet.Db.Star.Star_Type;
       AUs  : Non_Negative_Real)
@@ -425,13 +430,31 @@ package body Harriet.Configure.Star_Systems is
       Gas     : Atmospheric_Gas;
       Partial : Unit_Real)
    is
-      Ratio : constant Unit_Real := 1.0 - Partial;
+      Current : Non_Negative_Real := 0.0;
+      New_List : Atmospheric_Component_Lists.List;
    begin
       for Item of Atm.List loop
-         Item.Partial := Item.Partial * Ratio;
+         if Item.Partial > 0.0 then
+            New_List.Append (Item);
+            Current := Current + Item.Partial;
+         end if;
       end loop;
-      Atm.List.Append ((Gas, Partial));
-      Atmospheric_Sorting.Sort (Atm.List);
+
+      for Item of New_List loop
+         Item.Partial := Item.Partial / Current;
+      end loop;
+
+      declare
+         Ratio : constant Unit_Real := 1.0 - Partial;
+      begin
+         for Item of New_List loop
+            Item.Partial := Item.Partial * Ratio;
+         end loop;
+      end;
+
+      New_List.Append ((Gas, Partial));
+      Atmospheric_Sorting.Sort (New_List);
+      Atm.List := New_List;
    end Add_Component;
 
    -------
@@ -468,6 +491,7 @@ package body Harriet.Configure.Star_Systems is
       Ada.Text_IO.Put (Harriet.Db.Spectral_Class'Image (Star.Class));
       Ada.Text_IO.Put (Character'Val (48 + Star.Subclass));
       Ada.Text_IO.Set_Col (24);
+      Put (8, Star.Age / 1.0e9);
       Put (8, Planet_Count);
 
       for D of Ds loop
@@ -564,14 +588,17 @@ package body Harriet.Configure.Star_Systems is
       Base_Temperature    : constant Non_Negative_Real :=
                               (Star.Luminosity ** 0.25) * 280.0
                               / Sqrt (Orbit);
-      Primordial_Temp     : constant Non_Negative_Real :=
-                              Real'Max
-                                (1.0,
-                                 Base_Temperature
-                                 - (case Atmospheric_Class is
-                                      when None | Trace    => 0.0,
-                                      when Thin | Standard => 5.0,
-                                      when Dense           => 20.0));
+      Initial_Temp        : constant Non_Negative_Real :=
+        Real'Max
+          (1.0,
+           Base_Temperature
+           - (case Atmospheric_Class is
+                when None | Trace    => 0.0,
+                when Thin | Standard => 5.0,
+                when Dense           => 20.0));
+
+      Primordial_Temp : constant Non_Negative_Real :=
+        Initial_Temp + Partial (Primordial_Atm, CO2) * 100.0;
 
       Life_Bearing : constant Boolean :=
                        (Primordial_Temp in 253.0 .. 323.0
@@ -599,7 +626,9 @@ package body Harriet.Configure.Star_Systems is
         and then Life_Complexity >= Plants
       then
          for Item of Current_Atm.List loop
-            if Item.Gas in CO2 | CH4 then
+            if Item.Gas = CO2 then
+               Item.Partial := Item.Partial / 100.0;
+            elsif Item.Gas = CH4 then
                Item.Partial := 0.0;
             end if;
          end loop;
@@ -700,6 +729,24 @@ package body Harriet.Configure.Star_Systems is
          return Black;
       end if;
    end Get_Zone;
+
+   -------------
+   -- Partial --
+   -------------
+
+   function Partial
+     (Atm : Atmosphere;
+      Gas : Atmospheric_Gas)
+      return Unit_Real
+   is
+   begin
+      for Item of Atm.List loop
+         if Item.Gas = Gas then
+            return Item.Partial;
+         end if;
+      end loop;
+      return 0.0;
+   end Partial;
 
    ---------
    -- Put --
