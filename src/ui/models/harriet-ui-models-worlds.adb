@@ -1,3 +1,5 @@
+with WL.Localisation;
+
 with Harriet.Color;
 --  with Harriet.Constants;
 with Harriet.Solar_System;
@@ -120,7 +122,8 @@ package body Harriet.UI.Models.Worlds is
                  Harriet.Db.Gas.Get (Atm.Gas);
                Gas_Object : Json.Json_Object;
             begin
-               Gas_Object.Set_Property ("name", Gas.Name);
+               Gas_Object.Set_Property
+                 ("name", WL.Localisation.Local_Text (Gas.Tag));
                Gas_Object.Set_Property ("formula", Gas.Formula);
                Gas_Object.Set_Property
                  ("fraction", Json.Float_Value (Float (Atm.Percentage)));

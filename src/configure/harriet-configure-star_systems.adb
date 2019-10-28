@@ -1,3 +1,4 @@
+with Ada.Characters.Handling;
 with Ada.Containers.Doubly_Linked_Lists;
 with Ada.Text_IO;
 
@@ -11,6 +12,8 @@ with Harriet.Real_Images;
 
 with Harriet.Solar_System;
 
+with Harriet.Db.Atmosphere;
+with Harriet.Db.Gas;
 with Harriet.Db.Palette;
 with Harriet.Db.Star;
 with Harriet.Db.World;
@@ -911,30 +914,53 @@ package body Harriet.Configure.Star_Systems is
 
       declare
          use Harriet.Solar_System;
+         World : constant Harriet.Db.World_Reference :=
+           Harriet.Db.World.Create
+             (Star_System      => Star.Star_System,
+              Primary          => Star.Get_Star_System_Object_Reference,
+              Radius           => Radius * Earth_Radius,
+              Density          => Density * Earth_Density,
+              Rotation_Period  => Day * 3600.0,
+              Tilt             => Tilt,
+              Surface_Gravity  => Gravity * Earth_Gravity,
+              Name             => Name,
+              Palette          =>
+                Harriet.Db.Palette.Get_Reference_By_Tag ("temperate"),
+              Primary_Massive  => Star.Get_Massive_Object_Reference,
+              Semimajor_Axis   => Orbit * Earth_Orbit,
+              Epoch            => Harriet.Calendar.To_Time
+                (-1.0 * Harriet.Random.Unit_Random
+                 * Year * Earth_Sidereal_Year),
+              Eccentricity     => 0.0,
+              Period           => Year * Earth_Sidereal_Year,
+              Mass             => Mass * Earth_Mass,
+              Composition      => Composition,
+              Climate          => Climate,
+              Gas_Giant        => Gas_Giant,
+              Habitability     => Habitability,
+              Surface_Pressure => Current_Pressure * Earth_Surface_Pressure);
       begin
-         Harriet.Db.World.Create
-           (Star_System      => Star.Star_System,
-            Primary          => Star.Get_Star_System_Object_Reference,
-            Radius           => Radius * Earth_Radius,
-            Density          => Density * Earth_Density,
-            Rotation_Period  => Day * 3600.0,
-            Tilt             => Tilt,
-            Surface_Gravity  => Gravity * Earth_Gravity,
-            Name             => Name,
-            Palette          =>
-              Harriet.Db.Palette.Get_Reference_By_Tag ("temperate"),
-            Primary_Massive  => Star.Get_Massive_Object_Reference,
-            Semimajor_Axis   => Orbit * Earth_Orbit,
-            Epoch            => Harriet.Calendar.To_Time
-              (-1.0 * Harriet.Random.Unit_Random * Year * Earth_Sidereal_Year),
-            Eccentricity     => 0.0,
-            Period           => Year * Earth_Sidereal_Year,
-            Mass             => Mass * Earth_Mass,
-            Composition      => Composition,
-            Climate          => Climate,
-            Gas_Giant        => Gas_Giant,
-            Habitability     => Habitability,
-            Surface_Pressure => Current_Pressure * Earth_Surface_Pressure);
+         if Current_Pressure > 0.0 then
+            for Item of Current_Atm.List loop
+               declare
+                  use type Harriet.Db.Gas_Reference;
+                  Gas : constant Harriet.Db.Gas_Reference :=
+                    Harriet.Db.Gas.Get_Reference_By_Tag
+                      (Ada.Characters.Handling.To_Lower
+                         (Item.Gas'Image));
+               begin
+                  if Gas = Harriet.Db.Null_Gas_Reference then
+                     raise Constraint_Error with
+                       Item.Gas'Image & ": no such gas";
+                  end if;
+
+                  Harriet.Db.Atmosphere.Create
+                    (World      => World,
+                     Gas        => Gas,
+                     Percentage => Item.Partial);
+               end;
+            end loop;
+         end if;
       end;
    end Generate_World;
 

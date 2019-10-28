@@ -1,6 +1,7 @@
 with Colors;
 with Names;
 with Knowledge;
+with Localisation;
 with Quantities;
 with Resources;
 with Star_Systems;
@@ -13,7 +14,7 @@ package Worlds is
    type World_Climate is
      (Airless, Desert, Iceball, Martian, Temperate, Venusian, Water, Jovian);
 
-    record Gas : Has_Name is
+    record Gas : Localised is
        unique key Formula   : String (16);
        key Molecular_Weight : Long_Float;
        Melting_Point        : Long_Float;
@@ -31,9 +32,6 @@ package Worlds is
       Gas_Giant                : Boolean;
       key Habitability         : Long_Float;
       Surface_Pressure         : Long_Float;
-      Water_Coverage           : Long_Float;
-      Cloud_Coverage           : Long_Float;
-      Ice_Coverage             : Long_Float;
    end World; 
 
    record Atmosphere is
