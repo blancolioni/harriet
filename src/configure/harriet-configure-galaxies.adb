@@ -315,9 +315,10 @@ package body Harriet.Configure.Galaxies is
                Volume : constant Non_Negative_Real :=
                           4.0 * Ada.Numerics.Pi * (Radius ** 3) / 3.0;
                Age    : constant Non_Negative_Real :=
-                          1.0e10
-                            * Solar_Masses
-                            / Luminosity;
+                 4.0e9
+                   * Solar_Masses
+                 / Luminosity
+                 * (Harriet.Random.Unit_Random + 0.5);
                Star : constant Harriet.Db.Star_Reference :=
                         Harriet.Db.Star.Create
                           (Star_System           => Star_System,
