@@ -5,6 +5,8 @@ package Harriet.UI.Models is
 
    type Root_Harriet_Model is abstract tagged private;
 
+   type Harriet_Model is access all Root_Harriet_Model'Class;
+
    function Name (Model : Root_Harriet_Model) return String
                   is abstract;
 
@@ -19,6 +21,15 @@ package Harriet.UI.Models is
       Arguments : String)
    is null;
 
+   function Changed
+     (Model : Root_Harriet_Model)
+      return Boolean
+      is abstract;
+
+   procedure Update
+     (Model : in out Root_Harriet_Model)
+   is null;
+
    function Handle
      (Model   : in out Root_Harriet_Model;
       State   : in out State_Interface'Class;
@@ -27,13 +38,24 @@ package Harriet.UI.Models is
       return Harriet.Json.Json_Value'Class
    is abstract;
 
+   function Get
+     (Model   : Root_Harriet_Model;
+      State   : State_Interface'Class;
+      Client  : Client_Id;
+      Request : Harriet.Json.Json_Value'Class)
+      return Harriet.Json.Json_Value'Class
+      is abstract;
+
    function Error
-     (Model   : in out Root_Harriet_Model'class;
-      State   : in out State_Interface'Class;
+     (Model   : Root_Harriet_Model'class;
+      State   : State_Interface'Class;
       Client  : Client_Id;
       Request : Harriet.Json.Json_Value'Class;
       Message : String)
       return Harriet.Json.Json_Value'Class;
+
+   procedure Close
+     (Model : in out Harriet_Model);
 
 private
 

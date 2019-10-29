@@ -43,7 +43,7 @@ private
 
    type Client_Type is
       record
-         Model   : Model_Holders.Holder;
+         Model   : Harriet.UI.Models.Harriet_Model;
          Context : Harriet.Contexts.Context_Type;
       end record;
 
@@ -74,6 +74,12 @@ private
       procedure Close_Client
         (Client_Id      : Harriet.UI.Client_Id);
 
+      procedure Scan_Clients
+        (Process : not null access
+           procedure
+             (Client : Harriet.UI.Client_Id;
+              Model  : in out Harriet.UI.Models.Root_Harriet_Model'Class));
+
       procedure Execute_Command
         (Client_Id : Harriet.UI.Client_Id;
          Writer    : in out Harriet.Writers.Writer_Interface'Class;
@@ -81,11 +87,11 @@ private
 
       function Get_Model
         (Client_Id : Harriet.UI.Client_Id)
-         return Harriet.UI.Models.Root_Harriet_Model'Class;
+         return Harriet.UI.Models.Harriet_Model;
 
       procedure Set_Model
         (Client_Id : Harriet.UI.Client_Id;
-         Model     : Harriet.UI.Models.Root_Harriet_Model'Class);
+         Model     : Harriet.UI.Models.Harriet_Model);
 
       procedure Set_Environment_Value
         (Name : String;

@@ -916,29 +916,30 @@ package body Harriet.Configure.Star_Systems is
          use Harriet.Solar_System;
          World : constant Harriet.Db.World_Reference :=
            Harriet.Db.World.Create
-             (Star_System      => Star.Star_System,
-              Primary          => Star.Get_Star_System_Object_Reference,
-              Radius           => Radius * Earth_Radius,
-              Density          => Density * Earth_Density,
-              Rotation_Period  => Day * 3600.0,
-              Tilt             => Tilt,
-              Surface_Gravity  => Gravity * Earth_Gravity,
-              Name             => Name,
-              Palette          =>
+             (Star_System         => Star.Star_System,
+              Primary             => Star.Get_Star_System_Object_Reference,
+              Radius              => Radius * Earth_Radius,
+              Density             => Density * Earth_Density,
+              Rotation_Period     => Day * 3600.0,
+              Tilt                => Tilt,
+              Surface_Gravity     => Gravity * Earth_Gravity,
+              Name                => Name,
+              Palette             =>
                 Harriet.Db.Palette.Get_Reference_By_Tag ("temperate"),
-              Primary_Massive  => Star.Get_Massive_Object_Reference,
-              Semimajor_Axis   => Orbit * Earth_Orbit,
-              Epoch            => Harriet.Calendar.To_Time
+              Primary_Massive     => Star.Get_Massive_Object_Reference,
+              Semimajor_Axis      => Orbit * Earth_Orbit,
+              Epoch               => Harriet.Calendar.To_Time
                 (-1.0 * Harriet.Random.Unit_Random
                  * Year * Earth_Sidereal_Year),
-              Eccentricity     => 0.0,
-              Period           => Year * Earth_Sidereal_Year,
-              Mass             => Mass * Earth_Mass,
-              Composition      => Composition,
-              Climate          => Climate,
-              Gas_Giant        => Gas_Giant,
-              Habitability     => Habitability,
-              Surface_Pressure => Current_Pressure * Earth_Surface_Pressure);
+              Eccentricity        => 0.0,
+              Period              => Year * Earth_Sidereal_Year,
+              Mass                => Mass * Earth_Mass,
+              Composition         => Composition,
+              Climate             => Climate,
+              Gas_Giant           => Gas_Giant,
+              Habitability        => Habitability,
+              Surface_Pressure    => Current_Pressure * Earth_Surface_Pressure,
+              Average_Temperature => Current_Temperature);
       begin
          if Current_Pressure > 0.0 then
             for Item of Current_Atm.List loop

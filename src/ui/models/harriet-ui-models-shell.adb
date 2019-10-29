@@ -23,6 +23,34 @@ package body Harriet.UI.Models.Shell is
       Request : Harriet.Json.Json_Value'Class)
       return Harriet.Json.Json_Value'Class;
 
+   overriding function Get
+     (Model   : Shell_Model_Type;
+      State   : State_Interface'Class;
+      Client  : Client_Id;
+      Request : Harriet.Json.Json_Value'Class)
+      return Harriet.Json.Json_Value'Class;
+
+   overriding function Changed
+     (Model : Shell_Model_Type)
+      return Boolean
+   is (False);
+
+   ---------
+   -- Get --
+   ---------
+
+   overriding function Get
+     (Model   : Shell_Model_Type;
+      State   : State_Interface'Class;
+      Client  : Client_Id;
+      Request : Harriet.Json.Json_Value'Class)
+      return Harriet.Json.Json_Value'Class
+   is
+      pragma Unreferenced (Model, State, Client, Request);
+   begin
+      return Json.Null_Value;
+   end Get;
+
    ------------
    -- Handle --
    ------------

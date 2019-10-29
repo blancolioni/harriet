@@ -67,6 +67,13 @@ package Harriet.UI.Models.Data_Source is
       Request : Harriet.Json.Json_Value'Class)
       return Harriet.Json.Json_Value'Class;
 
+   overriding function Get
+     (Model   : Root_Data_Source_Model;
+      State   : State_Interface'Class;
+      Client  : Client_Id;
+      Request : Harriet.Json.Json_Value'Class)
+      return Harriet.Json.Json_Value'Class;
+
    type Model_Value_Array is
      array (Positive range <>) of Values.Model_Value_Type;
 
@@ -118,6 +125,10 @@ package Harriet.UI.Models.Data_Source is
       Row         : Positive;
       Column      : Positive)
       return Values.Model_Value_Type;
+
+   procedure On_Fetched
+     (Model : in out Simple_Data_Source_Model)
+   is null;
 
 private
 

@@ -93,15 +93,14 @@ package body Harriet.Sessions is
          Last_Client := Last_Client + 1;
 
          declare
-            Model : Harriet.UI.Models.Root_Harriet_Model'Class :=
+            Model : constant Harriet.UI.Models.Harriet_Model :=
               Harriet.UI.Models.Loader.Get (Model_Name);
          begin
             Model.Start (User, Model_Argument);
             Client_Map.Insert
               (Last_Client,
                Client_Type'
-                 (Model   =>
-                      Model_Holders.To_Holder (Model),
+                 (Model   => Model,
                   Context => Context));
          end;
 
@@ -146,10 +145,10 @@ package body Harriet.Sessions is
 
       function Get_Model
         (Client_Id : Harriet.UI.Client_Id)
-         return Harriet.UI.Models.Root_Harriet_Model'Class
+         return Harriet.UI.Models.Harriet_Model
       is
       begin
-         return Client_Map.Element (Client_Id).Model.Element;
+         return Client_Map.Element (Client_Id).Model;
       end Get_Model;
 
       ---------------
@@ -160,6 +159,23 @@ package body Harriet.Sessions is
       begin
          References := References + 1;
       end Reference;
+
+      ------------------
+      -- Scan_Clients --
+      ------------------
+
+      procedure Scan_Clients
+        (Process : not null access
+           procedure
+             (Client : Harriet.UI.Client_Id;
+              Model  : in out Harriet.UI.Models.Root_Harriet_Model'Class))
+      is
+      begin
+         for Position in Client_Map.Iterate loop
+            Process (Client_Maps.Key (Position),
+                     Client_Map.Reference (Position).Model.all);
+         end loop;
+      end Scan_Clients;
 
       ---------------------------
       -- Set_Environment_Value --
@@ -183,11 +199,10 @@ package body Harriet.Sessions is
 
       procedure Set_Model
         (Client_Id : Harriet.UI.Client_Id;
-         Model     : Harriet.UI.Models.Root_Harriet_Model'Class)
+         Model     : Harriet.UI.Models.Harriet_Model)
       is
       begin
-         Client_Map (Client_Id).Model :=
-           Model_Holders.To_Holder (Model);
+         Client_Map (Client_Id).Model := Model;
       end Set_Model;
 
       -----------------
@@ -198,6 +213,13 @@ package body Harriet.Sessions is
       begin
          References := References - 1;
          Finished := References = 0;
+
+         if Finished then
+            for Client of Client_Map loop
+               Harriet.UI.Models.Close (Client.Model);
+            end loop;
+         end if;
+
       end Unreference;
 
    end Session_Data;
@@ -438,8 +460,6 @@ package body Harriet.Sessions is
          begin
             Session.Data.Unreference (Finished);
             if Finished then
-               Ada.Text_IO.Put_Line
-                 ("close session");
                Free (Session.Data);
             end if;
          end;
@@ -456,7 +476,7 @@ package body Harriet.Sessions is
       Request : Harriet.Json.Json_Value'Class)
       return Harriet.Json.Json_Value'Class
    is
-      Model : Harriet.UI.Models.Root_Harriet_Model'Class :=
+      Model : constant Harriet.UI.Models.Harriet_Model :=
         Session.Data.Get_Model (Client);
    begin
       return Model.Handle (Session, Client, Request);
@@ -588,6 +608,9 @@ package body Harriet.Sessions is
       Session    : Root_Harriet_Session'Class renames
         Root_Harriet_Session'Class (Object);
    begin
+      Ada.Text_IO.Put_Line
+        ("on-clock-tick: "
+         & Session.User_Name);
       Session.Connection.Element.Send_Message
         (Session.Status_Message);
    end On_Clock_Tick;
@@ -615,7 +638,7 @@ package body Harriet.Sessions is
       Model_Name     : String;
       Model_Argument : String)
    is
-      Model : Harriet.UI.Models.Root_Harriet_Model'Class :=
+      Model : constant Harriet.UI.Models.Harriet_Model :=
         Harriet.UI.Models.Loader.Get (Model_Name);
    begin
       Model.Start (Session.User, Model_Argument);
@@ -630,8 +653,54 @@ package body Harriet.Sessions is
      (Session : Root_Harriet_Session;
       Message : Harriet.Json.Json_Value'Class)
    is
+      Msg : Json.Json_Object;
    begin
-      Session.Connection.Element.Send_Message (Message);
+
+      Msg.Set_Property ("payload", Message);
+
+      declare
+         Clients : Json.Json_Array;
+
+         Request : constant Json.Json_Value'Class :=
+           Json.Deserialize ("""current-state""");
+
+         procedure Check_Client
+           (Client_Id : Harriet.UI.Client_Id;
+            Model     : in out Harriet.UI.Models.Root_Harriet_Model'Class);
+
+         ------------------
+         -- Check_Client --
+         ------------------
+
+         procedure Check_Client
+           (Client_Id : Harriet.UI.Client_Id;
+            Model     : in out Harriet.UI.Models.Root_Harriet_Model'Class)
+         is
+         begin
+            if Model.Changed then
+               Model.Update;
+               declare
+                  Element : Json.Json_Object;
+               begin
+                  Element.Set_Property
+                    ("clientId", Natural (Client_Id));
+                  Element.Set_Property
+                    ("update",
+                     Model.Get
+                       (State   => Session,
+                        Client  => Client_Id,
+                        Request => Request));
+                  Clients.Append (Element);
+               end;
+            end if;
+         end Check_Client;
+
+      begin
+         Session.Data.Scan_Clients (Check_Client'Access);
+         Msg.Set_Property ("clients", Clients);
+      end;
+
+      Session.Connection.Element.Send_Message (Msg);
    end Send_Message;
 
    -----------------
@@ -710,6 +779,7 @@ package body Harriet.Sessions is
          Message.Set_Property
            ("currentTimeImage",
             Harriet.Calendar.Image (Now, False));
+
       end return;
    end Status_Message;
 

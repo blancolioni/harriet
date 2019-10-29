@@ -1,6 +1,9 @@
+with Ada.Text_IO;
+
+with Harriet.Calendar;
 with Harriet.Quantities;
 
---  with Harriet.Constants;
+with Harriet.Constants;
 with Harriet.Solar_System;
 
 with Harriet.Factions;
@@ -18,8 +21,11 @@ package body Harriet.UI.Models.Star_System is
    type Star_System_Model_Type is
      new Harriet.UI.Models.Data_Source.Simple_Data_Source_Model with
       record
-         null;
+         Last_Fetch : Harriet.Calendar.Time;
       end record;
+
+   overriding procedure On_Fetched
+     (Model : in out Star_System_Model_Type);
 
    overriding procedure Start
      (Model     : in out Star_System_Model_Type;
@@ -36,9 +42,49 @@ package body Harriet.UI.Models.Star_System is
       return String
    is ("Table");
 
+   overriding function Changed
+     (Model : Star_System_Model_Type)
+      return Boolean;
+
+   -------------
+   -- Changed --
+   -------------
+
+   overriding function Changed
+     (Model : Star_System_Model_Type)
+      return Boolean
+   is
+      use type Harriet.Calendar.Time;
+   begin
+      Ada.Text_IO.Put_Line
+        ("star-system: last update "
+         & Harriet.Calendar.Image (Model.Last_Fetch, True)
+         & "; current time "
+         & Harriet.Calendar.Image (Harriet.Calendar.Clock, True));
+      return Model.Last_Fetch /= Harriet.Calendar.Clock;
+   end Changed;
+
+   ----------------
+   -- On_Fetched --
+   ----------------
+
+   overriding procedure On_Fetched
+     (Model : in out Star_System_Model_Type)
+   is
+   begin
+      Model.Last_Fetch := Harriet.Calendar.Clock;
+   end On_Fetched;
+
+   -----------------------
+   -- Star_System_Model --
+   -----------------------
+
    function Star_System_Model return Root_Harriet_Model'Class is
    begin
-      return Model : Star_System_Model_Type;
+      return Model : constant Star_System_Model_Type :=
+        Star_System_Model_Type'
+          (Harriet.UI.Models.Data_Source.Simple_Data_Source_Model with
+             Last_Fetch => Harriet.Calendar.Clock);
    end Star_System_Model;
 
    -----------
@@ -96,44 +142,16 @@ package body Harriet.UI.Models.Star_System is
          & "C)",
          Col_Type => Values.Real_Type);
       Model.Add_Column
-        (Id       => "minTemperature",
-         Label    =>
-           "Min ("
-         & Character'Val (16#C2#)
-         & Character'Val (16#B0#)
-         & "C)",
-         Col_Type => Values.Real_Type);
-      Model.Add_Column
-        (Id       => "maxTemperature",
-         Label    =>
-           "Max ("
-         & Character'Val (16#C2#)
-         & Character'Val (16#B0#)
-         & "C)",
-         Col_Type => Values.Real_Type);
-      Model.Add_Column
-        (Id       => "nightLowTemperature",
-         Label    =>
-           "Nightly low ("
-         & Character'Val (16#C2#)
-         & Character'Val (16#B0#)
-         & "C)",
-         Col_Type => Values.Real_Type);
-      Model.Add_Column
-        (Id       => "dayHighTemperature",
-         Label    =>
-           "Daily high ("
-         & Character'Val (16#C2#)
-         & Character'Val (16#B0#)
-         & "C)",
-         Col_Type => Values.Real_Type);
-      Model.Add_Column
         (Id       => "surfacePressure",
          Label    => "Surface Pressure (atm)",
         Col_Type => Values.Real_Type);
       Model.Add_Column
         (Id       => "category",
          Label    => "Category",
+         Col_Type => Values.Text_Type);
+      Model.Add_Column
+        (Id       => "climate",
+         Label    => "Climate",
          Col_Type => Values.Text_Type);
       Model.Add_Column
         (Id       => "population",
@@ -152,8 +170,9 @@ package body Harriet.UI.Models.Star_System is
          procedure Add_Row
            (World : Harriet.Db.World.World_Type)
          is
---              use Harriet.Constants, Harriet.Solar_System;
---              use Harriet.Db;
+            use Harriet.Constants, Harriet.Solar_System;
+            --              use Harriet.Db;
+
             function T (S : String) return Values.Model_Value_Type
                         renames Values.Text_Value;
             function R (X : Real) return Values.Model_Value_Type
@@ -172,15 +191,16 @@ package body Harriet.UI.Models.Star_System is
                R (World.Semimajor_Axis / Harriet.Solar_System.Earth_Orbit),
                R (World.Radius / Harriet.Solar_System.Earth_Radius),
                R (World.Surface_Gravity),
---                 R (World.Surface_Temperature - Freezing_Point_Of_Water),
+               R (World.Average_Temperature - Freezing_Point_Of_Water),
 --                 R (World.Minimum_Temperature - Freezing_Point_Of_Water),
 --                 R (World.Maximum_Temperature - Freezing_Point_Of_Water),
 --                 R (World.Night_Temperature_Low - Freezing_Point_Of_Water),
 --               R (World.Daytime_Temperature_High - Freezing_Point_Of_Water),
---                 (if World.Category in Jovian | Sub_Jovian
---                  then R (0.0)
---                  else R (World.Surface_Pressure / Earth_Surface_Pressure)),
---                 T (Harriet.Db.World_Category'Image (World.Category)),
+               (if World.Gas_Giant
+                then R (0.0)
+                else R (World.Surface_Pressure / Earth_Surface_Pressure)),
+               T (Harriet.Db.World_Composition'Image (World.Composition)),
+               T (Harriet.Db.World_Climate'Image (World.Climate)),
                Q ((if Colony.Has_Element
                  then Colony.Population else Quantities.Zero))));
          end Add_Row;
@@ -192,6 +212,8 @@ package body Harriet.UI.Models.Star_System is
             Add_Row (World);
          end loop;
       end;
+
+      Model.Last_Fetch := Harriet.Calendar.Clock;
 
    end Start;
 

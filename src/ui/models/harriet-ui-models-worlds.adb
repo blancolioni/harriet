@@ -1,7 +1,9 @@
 with WL.Localisation;
 
+with Harriet.Calendar;
 with Harriet.Color;
 --  with Harriet.Constants;
+with Harriet.Orbits;
 with Harriet.Solar_System;
 
 with Harriet.Factions;
@@ -11,6 +13,7 @@ with Harriet.Db.Atmosphere;
 with Harriet.Db.Colony;
 with Harriet.Db.Faction;
 with Harriet.Db.Gas;
+with Harriet.Db.Massive_Object;
 with Harriet.Db.Palette_Entry;
 with Harriet.Db.Ship;
 with Harriet.Db.World;
@@ -33,10 +36,22 @@ package body Harriet.UI.Models.Worlds is
       Request : Harriet.Json.Json_Value'Class)
       return Harriet.Json.Json_Value'Class;
 
+   overriding function Get
+     (Model   : World_Model_Type;
+      State   : State_Interface'Class;
+      Client  : Client_Id;
+      Request : Harriet.Json.Json_Value'Class)
+      return Harriet.Json.Json_Value'Class;
+
    overriding procedure Start
      (Model     : in out World_Model_Type;
       User      : Harriet.Db.User_Reference;
       Arguments : String);
+
+   overriding function Changed
+     (Model : World_Model_Type)
+      return Boolean
+   is (False);
 
    overriding function Name
      (Model : World_Model_Type)
@@ -47,6 +62,36 @@ package body Harriet.UI.Models.Worlds is
      (Model : World_Model_Type)
       return String
    is ("World");
+
+   ---------
+   -- Get --
+   ---------
+
+   overriding function Get
+     (Model   : World_Model_Type;
+      State   : State_Interface'Class;
+      Client  : Client_Id;
+      Request : Harriet.Json.Json_Value'Class)
+      return Harriet.Json.Json_Value'Class
+   is
+      pragma Unreferenced (State, Client, Request);
+      use type Harriet.Calendar.Time;
+      W : constant Harriet.Db.World.World_Type :=
+        Harriet.Db.World.Get (Model.World);
+      M : constant Harriet.Db.Massive_Object.Massive_Object_Type :=
+        Harriet.Db.Massive_Object.Get (W.Primary_Massive);
+   begin
+      return Result : Json.Json_Object do
+         Result.Set_Property
+           ("orbitLongitude",
+            Json.Float_Value
+              (Float
+                   (Harriet.Orbits.Calculate_Longitude
+                        (Large_Mass => M.Mass,
+                         Orbit      => W.Semimajor_Axis,
+                         Elapsed    => Harriet.Calendar.Clock - W.Epoch))));
+      end return;
+   end Get;
 
    ------------
    -- Handle --

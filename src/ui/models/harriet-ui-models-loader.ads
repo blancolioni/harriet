@@ -4,7 +4,7 @@ package Harriet.UI.Models.Loader is
 
    function Get
      (Model_Name : String)
-      return Root_Harriet_Model'Class
+      return Harriet_Model
      with Pre => Exists (Model_Name);
 
 end Harriet.UI.Models.Loader;

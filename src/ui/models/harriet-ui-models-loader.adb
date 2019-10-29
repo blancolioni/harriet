@@ -67,11 +67,13 @@ package body Harriet.UI.Models.Loader is
 
    function Get
      (Model_Name : String)
-      return Root_Harriet_Model'Class
+      return Harriet_Model
    is
    begin
       Check_Map;
-      return Map.Element (Model_Name);
+      return Model : constant Harriet_Model :=
+        new Root_Harriet_Model'Class'
+          (Map.Element (Model_Name));
    end Get;
 
 end Harriet.UI.Models.Loader;

@@ -1,3 +1,4 @@
+with Harriet.Calendar;
 with Harriet.Orbits;
 
 with Harriet.Factions;
@@ -14,13 +15,17 @@ package body Harriet.UI.Models.World_Ships is
    type World_Ship_Model_Type is
      new Harriet.UI.Models.Data_Source.Simple_Data_Source_Model with
       record
-         null;
+         Last_Fetch : Harriet.Calendar.Time;
       end record;
 
    overriding procedure Start
      (Model     : in out World_Ship_Model_Type;
       User      : Harriet.Db.User_Reference;
       Arguments : String);
+
+   overriding function Changed
+     (Model : World_Ship_Model_Type)
+      return Boolean;
 
    overriding function Name
      (Model : World_Ship_Model_Type)
@@ -31,6 +36,19 @@ package body Harriet.UI.Models.World_Ships is
      (Model : World_Ship_Model_Type)
       return String
    is ("Table");
+
+   -------------
+   -- Changed --
+   -------------
+
+   overriding function Changed
+     (Model : World_Ship_Model_Type)
+      return Boolean
+   is
+      use type Harriet.Calendar.Time;
+   begin
+      return Model.Last_Fetch /= Harriet.Calendar.Clock;
+   end Changed;
 
    -----------
    -- Start --
@@ -130,7 +148,10 @@ package body Harriet.UI.Models.World_Ships is
 
    function World_Ship_Model return Root_Harriet_Model'Class is
    begin
-      return Model : World_Ship_Model_Type;
+      return Model : constant World_Ship_Model_Type :=
+        World_Ship_Model_Type'
+          (Harriet.UI.Models.Data_Source.Simple_Data_Source_Model with
+             Last_Fetch => Harriet.Calendar.Clock);
    end World_Ship_Model;
 
 end Harriet.UI.Models.World_Ships;

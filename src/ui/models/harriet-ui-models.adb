@@ -1,14 +1,30 @@
 with Ada.Text_IO;
+with Ada.Unchecked_Deallocation;
 
 package body Harriet.UI.Models is
+
+   -----------
+   -- Close --
+   -----------
+
+   procedure Close
+     (Model : in out Harriet_Model)
+   is
+      procedure Free is
+        new Ada.Unchecked_Deallocation
+          (Root_Harriet_Model'Class, Harriet_Model);
+   begin
+      Free (Model);
+      Model := null;
+   end Close;
 
    -----------
    -- Error --
    -----------
 
    function Error
-     (Model   : in out Root_Harriet_Model'class;
-      State   : in out State_Interface'Class;
+     (Model   : Root_Harriet_Model'class;
+      State   : State_Interface'Class;
       Client  : Client_Id;
       Request : Harriet.Json.Json_Value'Class;
       Message : String)

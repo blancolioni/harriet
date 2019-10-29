@@ -222,18 +222,24 @@ package body Harriet.UI.Web_UI is
    is
       pragma Unreferenced (Object, Data);
       Now : constant Harriet.Calendar.Time := Harriet.Calendar.Clock;
-      Message : Json.Json_Object;
+      Payload : Json.Json_Object;
    begin
-      Message.Set_Property ("type", "update-state");
-      Message.Set_Property
+      Payload.Set_Property ("type", "update-state");
+      Payload.Set_Property
         ("currentTime",
          Float (Harriet.Calendar.To_Real (Now)));
-      Message.Set_Property
+      Payload.Set_Property
         ("currentTimeImage",
          Harriet.Calendar.Image (Now, False));
-      AWS.Net.WebSocket.Registry.Send
-        (To           => Broadcast_Rcp,
-         Message      => Message.Serialize);
+      declare
+         Message : Json.Json_Object;
+      begin
+         Message.Set_Property ("payload", Payload);
+         AWS.Net.WebSocket.Registry.Send
+           (To           => Broadcast_Rcp,
+            Message      => Message.Serialize);
+      end;
+
    end On_Clock_Tick;
 
    --------------
@@ -300,7 +306,7 @@ package body Harriet.UI.Web_UI is
                Harriet.UI.Sessions.Reference (Id).Set_Connection
                  (Socket_Connection'
                     (Recipient => Active_Sockets (UID).Recipient));
-               Socket.Send (Json.Serialize (Json.String_Value ("ok")));
+               --  Socket.Send (Json.Serialize (Json.String_Value ("ok")));
             else
                Socket.Close ("invalid");
                Active_Sockets.Delete (UID);

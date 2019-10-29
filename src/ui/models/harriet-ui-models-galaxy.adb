@@ -40,6 +40,11 @@ package body Harriet.UI.Models.Galaxy is
       return String
    is ("Galaxy");
 
+   overriding function Changed
+     (Model : Galaxy_Model_Type)
+      return Boolean
+   is (False);
+
    ------------------------
    -- Galaxy_Model --
    ------------------------
