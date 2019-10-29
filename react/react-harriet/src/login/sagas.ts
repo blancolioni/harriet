@@ -1,11 +1,9 @@
 import { takeEvery, put, call } from 'redux-saga/effects'
 import * as t from './actionTypes';
-import { LoginAction, authorize, loginFailed } from './actions';
-import { State } from './model';
+import { authorize, loginFailed } from './actions';
 import { userService } from '../_services/user.service';
 import { SagaParams } from '../sagas';
 import setupSocket from '../_sockets';
-import { Saga } from 'redux-saga';
 
 function* login(action : any, params : SagaParams)  {
     try {

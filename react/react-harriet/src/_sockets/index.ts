@@ -1,6 +1,7 @@
 import { Dispatch, AnyAction } from 'redux'
 
 import { logout } from '../login/actions';
+import { updateToolbar } from '../toolbar/actions';
 
 const serverUrl = 'localhost:8080/socket';
 
@@ -25,7 +26,10 @@ const setupSocket = (dispatch : Dispatch<AnyAction>, token : string) => {
 
   socket.onmessage = (event) => {
     const data = JSON.parse(event.data)
-    switch (data.type) {
+    console.log(data);
+    switch (data.payload.type) {
+      case 'update-state':
+        dispatch(updateToolbar(data.payload.currentTimeImage));
       // case types.ADD_MESSAGE:
       //   dispatch(messageReceived(data.message, data.author))
       //   break

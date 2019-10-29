@@ -1,5 +1,9 @@
+import $ from 'jquery';
+
 export const userService = {
     login,
+    postRequest,
+    getRequest
 };
 
 const serverName = 'localhost';
@@ -8,6 +12,7 @@ const port = '8080';
 const serverUrl = 'http://' + serverName + ':' + port + '/';
 
 export interface LoginData {
+    id: string
     token: string
     faction: string
 }
@@ -19,6 +24,7 @@ async function login(username : string, password : string) : Promise<LoginData> 
 
     const response = await fetch(serverUrl + 'login?user=' + username + '&password=' + password, requestOptions);
     const data = await handleResponse(response);
+    localStorage.setItem('token', data.id);
     return data;
 }
 
@@ -35,3 +41,20 @@ async function handleResponse(response : Response) : Promise<LoginData> {
     }
     return data;
 }
+
+function sendRequest(serviceName : string, requestArgs : any, fetchArgs : any) : Promise<Response> {
+    requestArgs = requestArgs || {};
+    requestArgs.id = localStorage.getItem('token');
+    fetchArgs = fetchArgs || '';
+
+    return fetch(serverUrl + serviceName + '?' + $.param(requestArgs), fetchArgs)
+}
+
+function postRequest(serviceName : string, args : any = {}) {
+    return sendRequest(serviceName, args, { method: "POST" });
+}
+
+function getRequest(serviceName : string, args : any = {}) {
+    return sendRequest(serviceName, args, { method: "GET" });
+}
+

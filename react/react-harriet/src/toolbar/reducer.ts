@@ -5,6 +5,7 @@ import { ToolbarActionTypes } from './actions';
 const initialState: State = {
     dateImage : '',
     cashImage : '0.00',
+    updateSpeed: 0,
 };
 
 export default (state = initialState, action: ToolbarActionTypes): State => {
@@ -15,6 +16,12 @@ export default (state = initialState, action: ToolbarActionTypes): State => {
             dateImage: action.dateImage || state.dateImage,
             cashImage: action.cashImage || state.cashImage,
         };
+
+    case t.SET_SPEED:
+        return {
+            ...state,
+            updateSpeed: action.newSpeed
+        }
 
     default:
         return state;

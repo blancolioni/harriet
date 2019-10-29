@@ -8,7 +8,8 @@ import './index.css'
 import App from './App'
 import { register } from './serviceWorker'
 import reducers from './rootReducer'
-import login from './login/sagas'
+import loginSaga from './login/sagas'
+import toolbarSaga from './toolbar/sagas'
 import setupSocket from './_sockets'
 
 
@@ -21,7 +22,9 @@ const store = createStore(
 
 // const socket = setupSocket(store.dispatch)  
 
-sagaMiddleware.run(login, { socket: null, dispatch: store.dispatch } );
+const sagaParams = { socket: null, dispatch: store.dispatch };
+sagaMiddleware.run(loginSaga,  sagaParams);
+sagaMiddleware.run(toolbarSaga, sagaParams);
 
 ReactDOM.render(
   <Provider store={store}>
