@@ -1,6 +1,11 @@
 import { combineReducers } from 'redux';
 import login from './login';
+import toolbar from './toolbar';
 
-export default combineReducers({
-  [login.constants.NAME]: login.reducer
+const rootReducer = combineReducers({
+  [login.constants.NAME]: login.reducer,
+  [toolbar.constants.NAME]: toolbar.reducer
 });
+
+export default rootReducer
+export type AppState = ReturnType<typeof rootReducer>

@@ -1,19 +1,31 @@
 import { Dispatch, AnyAction } from 'redux'
 
+import { logout } from '../login/actions';
+
 // import * as types from '../constants/ActionTypes'
 // import { messageReceived, populateUsersList } from '../actions'
 
 const serverUrl = 'localhost:8080/socket';
 
-const setupSocket = (dispatch : Dispatch<AnyAction>) => {
+const setupSocket = (dispatch : Dispatch<AnyAction>, token : string) => {
+
+  console.log("connecting", serverUrl);
+
   const socket = new WebSocket('ws://' + serverUrl)
 
   socket.onopen = () => {
-    // socket.send(JSON.stringify({
-    //   type: types.ADD_USER,
-    //   name: username
-    // }))
+    socket.send(JSON.stringify({ id: token }));
   }
+
+  socket.onclose = () => {
+    dispatch(logout());
+  }
+
+  socket.onerror = () => {
+    dispatch(logout());
+  }
+
+
   socket.onmessage = (event) => {
     const data = JSON.parse(event.data)
     switch (data.type) {
@@ -31,4 +43,4 @@ const setupSocket = (dispatch : Dispatch<AnyAction>) => {
   return socket
 }
 
-export default setupSocket
+export default setupSocket;

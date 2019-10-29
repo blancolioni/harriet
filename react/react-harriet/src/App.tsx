@@ -2,6 +2,7 @@ import React from 'react';
 import { connect } from 'react-redux'
 
 import Login from './login/components';
+import Toolbar from './toolbar/components';
 
 interface AppProps {
   loggedIn: boolean
@@ -10,7 +11,7 @@ interface AppProps {
 function App(props : AppProps) {
     if (props.loggedIn) {
         return (
-          <div></div>
+         <Toolbar/>
         );
     } else {
         return (<Login/>);

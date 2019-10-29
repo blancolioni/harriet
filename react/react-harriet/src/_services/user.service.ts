@@ -7,7 +7,12 @@ const port = '8080';
 
 const serverUrl = 'http://' + serverName + ':' + port + '/';
 
-async function login(username : string, password : string) : Promise<string> {
+export interface LoginData {
+    token: string
+    faction: string
+}
+
+async function login(username : string, password : string) : Promise<LoginData> {
     const requestOptions = {
         method: 'POST',
     };
@@ -17,7 +22,7 @@ async function login(username : string, password : string) : Promise<string> {
     return data;
 }
 
-async function handleResponse(response : Response) : Promise<string> {
+async function handleResponse(response : Response) : Promise<LoginData> {
     const text = await response.text();
     const data = text && JSON.parse(text);
     if (!response.ok) {
@@ -28,5 +33,5 @@ async function handleResponse(response : Response) : Promise<string> {
         console.log('handleResponse', error);
         return Promise.reject(error);
     }
-    return data.id;
+    return data;
 }

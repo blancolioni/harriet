@@ -9,6 +9,7 @@ export interface LoginAction {
 export interface AuthorizedAction {
     type: typeof t.AUTHORIZED
     userName : string
+    factionName : string
     token : string
 }
 
@@ -17,7 +18,13 @@ export interface LoginFailedAction {
     error: string,
 }
 
-export function login (userName : string, password : string) : LoginAction {
+export interface LogoutAction {
+    type: typeof t.LOGOUT
+}
+
+export type LoginActionTypes = LoginAction | AuthorizedAction | LoginFailedAction | LogoutAction
+
+export function login (userName : string, password : string) : LoginActionTypes {
     return {
         type: t.LOGIN,
         userName: userName,
@@ -25,17 +32,24 @@ export function login (userName : string, password : string) : LoginAction {
         }
 }
 
-export function authorize(userName  : string, token : string) : AuthorizedAction {
+export function authorize(userName  : string, factionName : string, token : string) : LoginActionTypes {
     return {
         type: t.AUTHORIZED,
         userName: userName,
+        factionName: factionName,
         token: token,
     }
 }
 
-export function loginFailed(error : string) : LoginFailedAction {
+export function loginFailed(error : string) : LoginActionTypes {
     return {
         type: t.LOGIN_FAILED,
         error: error,
+    }
+}
+
+export function logout() : LoginActionTypes {
+    return {
+        type: t.LOGOUT,
     }
 }

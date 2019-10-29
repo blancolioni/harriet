@@ -19,9 +19,9 @@ const store = createStore(
   applyMiddleware(sagaMiddleware)
 )
 
-const socket = setupSocket(store.dispatch)
+// const socket = setupSocket(store.dispatch)  
 
-sagaMiddleware.run(login)
+sagaMiddleware.run(login, { socket: null, dispatch: store.dispatch } );
 
 ReactDOM.render(
   <Provider store={store}>

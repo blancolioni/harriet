@@ -1,3 +1,6 @@
+import { Dispatch, AnyAction } from 'redux'
+
 export interface SagaParams {
-    socket : WebSocket,
+    socket   : WebSocket | null
+    dispatch : Dispatch<AnyAction>
 }

@@ -3,27 +3,24 @@ import { connect } from 'react-redux'
 
 import { State } from '../model';
 import { login } from '../actions';
+import { AppState } from '../../rootReducer';
 
 const allowEmptyPassword = true;
 
 interface LoginState {
     username : string;
     password : string;
-    submitted : boolean;
-    loading : boolean;
-    error?: string;
-    errorMessage?: string;
 }
 
 const initialState : LoginState = {
     username: '',
     password: '',
-    submitted: false,
-    loading: false,
 };
 
 interface LoginProps {
-    login: (id : string, username : string) => void
+    state : State,
+    login: typeof login,
+    //  login: (id : string, username : string) => void
 }
 
 class Login extends React.Component<LoginProps,LoginState> {
@@ -55,14 +52,13 @@ class Login extends React.Component<LoginProps,LoginState> {
             return;
         }
 
-        this.setState({ submitted: true, loading: true });
-
         this.props.login(username, password);
 
     }
 
     render() {
-        const { username, password, submitted, loading, error, errorMessage } = this.state;
+        const { username, password } = this.state;
+        const { submitted, loading, error } = this.props.state;
 
         return (
             <div className="jumbotron">
@@ -91,7 +87,7 @@ class Login extends React.Component<LoginProps,LoginState> {
                                 }
                             </div>
                             {error &&
-                                <div className={'alert alert-danger'}>{error} {errorMessage} </div>
+                                <div className={'alert alert-danger'}>{error} </div>
                             }
                         </form>
                     </div>
@@ -101,7 +97,13 @@ class Login extends React.Component<LoginProps,LoginState> {
     }
 }
 
+function mapStateToProps(state: AppState) {
+    return {
+        state : state.login,
+    };
+  }
+
 export default connect(
-    null,
+    mapStateToProps,
     { login }
 )(Login)
