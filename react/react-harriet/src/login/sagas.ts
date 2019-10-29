@@ -4,7 +4,7 @@ import { LoginAction, authorize, loginFailed } from './actions';
 import { State } from './model';
 import { userService } from '../_services/user.service';
 import { SagaParams } from '../sagas';
-import setupSocket from '../sockets';
+import setupSocket from '../_sockets';
 import { Saga } from 'redux-saga';
 
 function* login(action : any, params : SagaParams)  {

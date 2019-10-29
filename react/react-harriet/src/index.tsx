@@ -9,7 +9,7 @@ import App from './App'
 import { register } from './serviceWorker'
 import reducers from './rootReducer'
 import login from './login/sagas'
-import setupSocket from './sockets'
+import setupSocket from './_sockets'
 
 
 const sagaMiddleware = createSagaMiddleware()

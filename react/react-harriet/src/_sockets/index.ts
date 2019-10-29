@@ -2,9 +2,6 @@ import { Dispatch, AnyAction } from 'redux'
 
 import { logout } from '../login/actions';
 
-// import * as types from '../constants/ActionTypes'
-// import { messageReceived, populateUsersList } from '../actions'
-
 const serverUrl = 'localhost:8080/socket';
 
 const setupSocket = (dispatch : Dispatch<AnyAction>, token : string) => {

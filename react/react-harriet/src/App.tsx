@@ -3,6 +3,7 @@ import { connect } from 'react-redux'
 
 import Login from './login/components';
 import Toolbar from './toolbar/components';
+import Dashboard from './dashboard/components';
 
 interface AppProps {
   loggedIn: boolean
@@ -11,7 +12,10 @@ interface AppProps {
 function App(props : AppProps) {
     if (props.loggedIn) {
         return (
-         <Toolbar/>
+            <div>
+             <Toolbar/>
+             <Dashboard />
+            </div>
         );
     } else {
         return (<Login/>);
