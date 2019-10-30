@@ -273,7 +273,9 @@ package body Harriet.Json is
                         return Arr;
                      else
                         Arr.Append (Parse_Value (Tok));
-                        if Tok /= "," then
+                        if Tok = "]" then
+                           return Arr;
+                        elsif Tok /= "," then
                            raise Constraint_Error
                              with "invalid array";
                         end if;
