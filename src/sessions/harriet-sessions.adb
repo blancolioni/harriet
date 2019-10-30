@@ -59,6 +59,8 @@ package body Harriet.Sessions is
            return Harriet.UI.Client_Id)
       return Harriet.Json.Json_Value'Class;
 
+   function Return_Error (Message : String) return Json.Json_Value'Class;
+
    ------------------
    -- Session_Data --
    ------------------
@@ -544,11 +546,29 @@ package body Harriet.Sessions is
       end if;
    end Finalize;
 
-   ---------------------------
-   -- Handle_Client_Request --
-   ---------------------------
+   -----------------------
+   -- Handle_Client_Get --
+   -----------------------
 
-   overriding function Handle_Client_Request
+   overriding function Handle_Client_Get
+     (Session : Root_Harriet_Session;
+      Client  : Harriet.UI.Client_Id;
+      Request : Harriet.Json.Json_Value'Class)
+      return Harriet.Json.Json_Value'Class
+   is
+   begin
+      declare
+         Model : constant Harriet.UI.Models.Harriet_Model :=
+           Session.Data.Get_Model (Client);
+      begin
+         return Model.Get (Session, Client, Request);
+      end;
+   exception
+      when E : others =>
+         return Return_Error (Ada.Exceptions.Exception_Message (E));
+   end Handle_Client_Get;
+
+   overriding function Handle_Client_Post
      (Session : in out Root_Harriet_Session;
       Client  : Harriet.UI.Client_Id;
       Request : Harriet.Json.Json_Value'Class)
@@ -563,17 +583,8 @@ package body Harriet.Sessions is
       end;
    exception
       when E : others =>
-         declare
-            Stdout, Stderr : Json.Json_Array;
-            Resp           : Json.Json_Object;
-         begin
-            Stderr.Append
-              (Json.String_Value (Ada.Exceptions.Exception_Message (E)));
-            Resp.Set_Property ("standardOutput", Stdout);
-            Resp.Set_Property ("standardError", Stderr);
-            return Resp;
-         end;
-   end Handle_Client_Request;
+         return Return_Error (Ada.Exceptions.Exception_Message (E));
+   end Handle_Client_Post;
 
    --------------------
    -- Handle_Message --
@@ -746,6 +757,21 @@ package body Harriet.Sessions is
       Model.Start (Session.User, Model_Argument);
       Session.Data.Set_Model (Client, Model);
    end Replace_Model;
+
+   ------------------
+   -- Return_Error --
+   ------------------
+
+   function Return_Error (Message : String) return Json.Json_Value'Class is
+      Stdout, Stderr : Json.Json_Array;
+      Resp           : Json.Json_Object;
+   begin
+      Stderr.Append
+        (Json.String_Value (Message));
+      Resp.Set_Property ("standardOutput", Stdout);
+      Resp.Set_Property ("standardError", Stderr);
+      return Resp;
+   end Return_Error;
 
    ------------------
    -- Send_Message --

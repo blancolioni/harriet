@@ -108,12 +108,19 @@ package Harriet.UI is
       return Harriet.Json.Json_Value'Class
    is abstract;
 
-   function Handle_Client_Request
+   function Handle_Client_Post
      (State   : in out State_Interface;
       Client  : Client_Id;
       Request : Harriet.Json.Json_Value'Class)
       return Harriet.Json.Json_Value'Class
    is abstract;
+
+   function Handle_Client_Get
+     (State   : State_Interface;
+      Client  : Client_Id;
+      Request : Harriet.Json.Json_Value'Class)
+      return Harriet.Json.Json_Value'Class
+      is abstract;
 
    function Status_Value
      (State : State_Interface;

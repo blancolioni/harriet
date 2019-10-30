@@ -28,4 +28,10 @@ private
       Parameters : Routes.Parameter_Container'Class)
       return Harriet.Json.Json_Value'Class;
 
+   overriding function Handle_Get
+     (Handler    : Client_Request_Handler;
+      State      : State_Interface'Class;
+      Parameters : Routes.Parameter_Container'Class)
+      return Harriet.Json.Json_Value'Class;
+
 end Harriet.UI.Web_UI.Handlers.Clients;

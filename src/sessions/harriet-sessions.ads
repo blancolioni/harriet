@@ -177,7 +177,13 @@ private
       Command : String)
       return Harriet.Json.Json_Value'Class;
 
-   overriding function Handle_Client_Request
+   overriding function Handle_Client_Get
+     (Session : Root_Harriet_Session;
+      Client  : Harriet.UI.Client_Id;
+      Request : Harriet.Json.Json_Value'Class)
+      return Harriet.Json.Json_Value'Class;
+
+   overriding function Handle_Client_Post
      (Session : in out Root_Harriet_Session;
       Client  : Harriet.UI.Client_Id;
       Request : Harriet.Json.Json_Value'Class)

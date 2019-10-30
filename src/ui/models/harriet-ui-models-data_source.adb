@@ -37,6 +37,10 @@ package body Harriet.UI.Models.Data_Source is
       Model.Data.Append (New_Row);
    end Add_Row;
 
+   ---------
+   -- Get --
+   ---------
+
    overriding function Get
      (Model   : Root_Data_Source_Model;
       State   : State_Interface'Class;
@@ -46,7 +50,6 @@ package body Harriet.UI.Models.Data_Source is
    is
       M           : Root_Data_Source_Model'Class renames
         Root_Data_Source_Model'Class (Model);
-      Response    : Harriet.Json.Json_Object;
       Table       : Harriet.Json.Json_Object;
       Headings    : Harriet.Json.Json_Array;
       Rows        : Harriet.Json.Json_Array;
@@ -110,19 +113,24 @@ package body Harriet.UI.Models.Data_Source is
                   Json_Value : constant Harriet.Json.Json_Value'Class :=
                     M.Column_Renderer (Col_Index).To_Json
                     (Prop_Value);
+                  Cell_Value : Json.Json_Object;
                begin
+                  Cell_Value.Set_Property ("value", Json_Value);
+                  Cell_Value.Set_Property
+                    ("display",
+                     M.Column_Renderer (Col_Index).To_String
+                     (Prop_Value));
                   Row.Set_Property
                     (Name  => M.Column_Heading_Id (Col_Index),
-                     Value => Json_Value);
+                     Value => Cell_Value);
                end;
             end loop;
             Rows.Append (Row);
          end;
       end loop;
-      Table.Set_Property ("data", Rows);
+      Table.Set_Property ("tableData", Rows);
 
-      Response.Set_Property ("table", Table);
-      return Response;
+      return Table;
 
    exception
       when E : others =>
@@ -150,7 +158,6 @@ package body Harriet.UI.Models.Data_Source is
 
       M : Root_Data_Source_Model'Class renames
         Root_Data_Source_Model'Class (Model);
-      Response  : Harriet.Json.Json_Object;
       Table     : Harriet.Json.Json_Object;
       Headings  : Harriet.Json.Json_Array;
       Rows      : Harriet.Json.Json_Array;
@@ -225,8 +232,7 @@ package body Harriet.UI.Models.Data_Source is
       end loop;
       Table.Set_Property ("data", Rows);
 
-      Response.Set_Property ("table", Table);
-      return Response;
+      return Table;
 
    exception
       when E : others =>

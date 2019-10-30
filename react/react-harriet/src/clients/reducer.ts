@@ -24,7 +24,7 @@ export default (clientReducers: ClientReducer[]) => {
             title: action.viewTitle,
             modelName: action.modelName,
         };
-        newClients.push(clientInitialState(action.modelName, baseState));
+        newClients.push(clientInitialState(action.viewName, baseState));
         return {
             ...state,
             clients: newClients,

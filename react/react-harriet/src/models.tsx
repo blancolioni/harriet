@@ -1,5 +1,6 @@
 import { ClientState } from './clients/model'
 import { shellInitialState } from './shell/model'
+import { tableInitialState } from './table/model';
 
 interface Model {
     create   : (baseState : ClientState) => ClientState
@@ -10,9 +11,12 @@ interface ModelTable {
 }
 
 const modelTable : ModelTable = {
-    shell: {
+    Shell: {
         create: shellInitialState,
-    }
+    },
+    Table: {
+        create: tableInitialState,
+    },
 }
 
 export function initialState (modelName : string, baseState : ClientState) : ClientState {

@@ -1,5 +1,22 @@
 package body Harriet.UI.Web_UI.Handlers.Clients is
 
+   ----------------
+   -- Handle_Get --
+   ----------------
+
+   overriding function Handle_Get
+     (Handler    : Client_Request_Handler;
+      State      : State_Interface'Class;
+      Parameters : Routes.Parameter_Container'Class)
+      return Harriet.Json.Json_Value'Class
+   is
+      pragma Unreferenced (Handler);
+   begin
+      return State.Handle_Client_Get
+        (Client  => Client_Id'Value (Parameters.Parameter ("client")),
+         Request => Parameters.To_Json);
+   end Handle_Get;
+
    -----------------
    -- Handle_Post --
    -----------------
@@ -45,7 +62,7 @@ package body Harriet.UI.Web_UI.Handlers.Clients is
    is
       pragma Unreferenced (Handler);
    begin
-      return State.Handle_Client_Request
+      return State.Handle_Client_Post
         (Client  => Client_Id'Value (Parameters.Parameter ("client")),
          Request => Parameters.To_Json);
    end Handle_Post;

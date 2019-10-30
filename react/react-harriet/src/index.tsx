@@ -11,6 +11,7 @@ import reducers from './rootReducer'
 import loginSaga from './login/sagas'
 import shellSaga from './shell/sagas'
 import toolbarSaga from './toolbar/sagas'
+import clientSaga from './clients/sagas'
 
 
 const sagaMiddleware = createSagaMiddleware()
@@ -24,6 +25,7 @@ const store = createStore(
 
 const sagaParams = { socket: null, dispatch: store.dispatch };
 sagaMiddleware.run(loginSaga,  sagaParams);
+sagaMiddleware.run(clientSaga, sagaParams);
 sagaMiddleware.run(shellSaga, sagaParams);
 sagaMiddleware.run(toolbarSaga, sagaParams);
 

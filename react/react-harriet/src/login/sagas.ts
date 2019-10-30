@@ -13,9 +13,7 @@ function* login(action : any, params : SagaParams)  {
         if (params.socket) { params.socket.close() }
         params.socket = setupSocket(params.dispatch, id);
         yield put(authorize(action.userName, faction, id));
-        const layoutResp = yield call(userService.getRequest, 'environment/DASHBOARD');
-        const layoutText = yield layoutResp.text();
-        const layout = JSON.parse(layoutText);
+        const layout = yield call(userService.getRequest, 'environment/DASHBOARD');
         for (const client of layout.clients) {
             yield put(newClient(client.clientId,client.viewName, client.title, client.modelName, client.modelArgs));
         }

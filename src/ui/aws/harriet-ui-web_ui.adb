@@ -184,6 +184,10 @@ package body Harriet.UI.Web_UI is
          Path    => "/client/:client",
          Handler => Handlers.Handle_Client_Request);
       Routes.Add_Route
+        (Method  => AWS.Status.GET,
+         Path    => "/client/:client",
+         Handler => Handlers.Handle_Client_Request);
+      Routes.Add_Route
         (Method  => AWS.Status.POST,
          Path    => "/status/:setting/:value",
          Handler => Handlers.Handle_Status_Request);

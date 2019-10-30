@@ -42,19 +42,20 @@ async function handleResponse(response : Response) : Promise<LoginData> {
     return data;
 }
 
-function sendRequest(serviceName : string, requestArgs : any, fetchArgs : any) : Promise<Response> {
+function sendRequest(serviceName : string, requestArgs : any, fetchArgs : any) : Promise<any> {
     requestArgs = requestArgs || {};
     requestArgs.id = localStorage.getItem('token');
     fetchArgs = fetchArgs || '';
 
     return fetch(serverUrl + serviceName + '?' + $.param(requestArgs), fetchArgs)
+    .then((response) => response.json());
 }
 
-function postRequest(serviceName : string, args : any = {}) {
+function postRequest(serviceName : string, args : any = {}) : Promise<any> {
     return sendRequest(serviceName, args, { method: "POST" });
 }
 
-function getRequest(serviceName : string, args : any = {}) {
+function getRequest(serviceName : string, args : any = {}) : Promise<any> {
     return sendRequest(serviceName, args, { method: "GET" });
 }
 

@@ -3,6 +3,7 @@ import { connect } from 'react-redux'
 
 import { ClientState, ClientDispatch } from '../model';
 import Shell from '../../shell/components/Shell';
+import Table from '../../table/components/Table';
 
 interface ViewTable {
     [key : string] : any
@@ -10,6 +11,7 @@ interface ViewTable {
 
 const viewTable : ViewTable = {
     Shell: Shell,
+    Table: Table,
 }
 
 interface ClientProps {

@@ -6,8 +6,7 @@ import { SagaParams } from '../sagas';
 
 function* executeCommand(action : CommandAction, params : SagaParams)  {
     try {
-        const response = yield call(userService.postRequest, 'client/' + action.clientId, {data: action.command})
-        const result = yield response.json();
+        const result = yield call(userService.postRequest, 'client/' + action.clientId, {data: action.command})
         yield put(addToOutput(action.clientId, result.standardOutput.concat (result.standardError)))
     } catch(error) {
     }
