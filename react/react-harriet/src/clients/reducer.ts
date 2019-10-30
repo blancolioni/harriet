@@ -1,13 +1,13 @@
 import * as t from './actionTypes';
 import * as auth from '../login/actionTypes';
 
-import { State, ClientState } from './model';
+import { State, clientInitialState as emptyZeroClient } from './model';
 import { ClientAction, ClientActionTypes } from './actions';
 import { initialState as clientInitialState } from '../models'
 import { LoginActionTypes } from '../login/actions';
 
 export const initialState: State = {
-    clients: [],
+    clients: [emptyZeroClient],
 };
 
 type ClientReducer = (state : any, action : any) => any;
