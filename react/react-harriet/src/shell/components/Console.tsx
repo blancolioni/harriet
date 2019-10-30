@@ -5,7 +5,6 @@ interface Props {
 }
 
 const ConsoleText = (props : Props) => {
-    console.log('ConsoleText', props.lines)
     return (
         <div className="concorde-shell-output">
             <table className="concorde-shell-table">

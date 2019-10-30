@@ -47,7 +47,6 @@ export default class Client extends React.Component<ClientProps,ClientState> {
 
     render() {
         const View = viewTable[this.props.clientState.viewName];
-        console.log('client-render', this.props.clientState.viewName, this.props.clientState)
         return (
             <div className="concorde-dashboard-item">
                 <ClientTitleBar title={this.props.clientState.title} split={(h) => {}} close={() => {}}></ClientTitleBar>

@@ -18,7 +18,6 @@ interface Props {
 export default class Shell extends React.Component<Props,State> {
     
     render() {
-        console.log('shell', 'render', this.props.clientState.output)
         return (
             <div>
                 <Console lines={this.props.clientState.output}></Console>

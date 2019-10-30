@@ -8,7 +8,6 @@ function* executeCommand(action : CommandAction, params : SagaParams)  {
     try {
         const response = yield call(userService.postRequest, 'client/' + action.clientId, {data: action.command})
         const result = yield response.json();
-        console.log('executeCommand', action.clientId, result);
         yield put(addToOutput(action.clientId, result.standardOutput.concat (result.standardError)))
     } catch(error) {
     }

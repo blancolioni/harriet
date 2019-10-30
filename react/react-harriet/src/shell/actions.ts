@@ -27,7 +27,6 @@ export function execute(clientId : number, command : string) : ShellActionTypes 
 }
 
 export function addToOutput(clientId : number, lines : string[]) : ShellActionTypes {
-  console.log('addToOutput', clientId, lines)
   return {
     type: t.OUTPUT,
     clientId,

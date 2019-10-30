@@ -15,7 +15,6 @@ interface DashboardProps {
 
 class Dashboard extends React.Component<DashboardProps,State> {
     render() {
-        console.log('dashboard', this.props.state.boxes);
         let boxes = this.props.state.boxes;
         let top = boxes[0];
         return (
