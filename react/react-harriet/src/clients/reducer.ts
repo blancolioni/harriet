@@ -1,8 +1,9 @@
 import * as t from './actionTypes';
 import { State } from './model';
 import { ClientActionTypes } from './actions';
+import { initialState as clientInitialState } from '../models'
 
-const initialState: State = {
+export const initialState: State = {
     clients: [],
 };
 
@@ -10,13 +11,13 @@ export default (state = initialState, action: ClientActionTypes): State => {
   switch (action.type) {
     case t.NEW_CLIENT:
         let newClients = state.clients.slice();
-        newClients.push({
+        let baseState = {
             loading: true,
             viewName: action.viewName,
-            title: action.viewName + ' loading ...',
+            title: action.viewTitle,
             modelName: action.modelName,
-           // modelArgs : action.modelArgs,
-        });
+        };
+        newClients.push(clientInitialState(action.modelName, baseState));
         return {
             ...state,
             clients: newClients,

@@ -5,6 +5,7 @@ import { string } from 'prop-types';
 export interface NewClientAction {
     type: typeof t.NEW_CLIENT,
     viewName: string,
+    viewTitle : string,
     modelName: string,
     modelArgs: string,
   }
@@ -22,10 +23,11 @@ export interface CloseClientAction {
 
 export type ClientActionTypes = NewClientAction | UpdateClientAction | CloseClientAction
 
-export function newClient (viewName : string, modelName: string, modelArgs: string) : ClientActionTypes {
+export function newClient (viewName : string, viewTitle : string, modelName: string, modelArgs: string) : ClientActionTypes {
   return {
       type: t.NEW_CLIENT,
       viewName,
+      viewTitle,
       modelName,
       modelArgs,
       }

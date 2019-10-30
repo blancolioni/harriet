@@ -4,11 +4,12 @@ import { connect } from 'react-redux'
 import { logout } from '../../login/actions';
 
 import { State } from '../model';
-import { AppState } from '../../rootReducer';
 
+import Console from './Console';
 import LineInput from './LineInput';
 
 interface Props {
+    clientState : State,
 }
 
 class Component extends React.Component<Props,State> {
@@ -16,18 +17,14 @@ class Component extends React.Component<Props,State> {
     render() {
         return (
             <div>
+                <Console lines={this.props.clientState.output}></Console>
                 <LineInput></LineInput>
             </div>
         );
     }
 }
 
-function mapStateToProps(state: AppState) : Props {
-    return {
-    };
-  }
-
 export default connect(
-    mapStateToProps,
+    null,
     { logout }
 )(Component)

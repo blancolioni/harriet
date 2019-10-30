@@ -299,14 +299,22 @@ package body Harriet.Sessions is
 
    function Default_Dashboard return Harriet.Json.Json_Value'Class is
 
-      Boxes : Harriet.Json.Json_Array;
+      Boxes   : Harriet.Json.Json_Array;
+      Clients : Harriet.Json.Json_Array;
 
       procedure Add_Box
         (Id : Natural;
          Left, Top : Positive;
          Right, Bottom : Positive;
          Child_1       : Natural := 0;
-         Child_2       : Natural := 0);
+         Child_2       : Natural := 0;
+         Client_Id     : Integer := -1);
+
+      procedure Add_Client
+        (Title      : String;
+         Model_Name : String;
+         Model_Args : String;
+         View_Name  : String);
 
       -------------
       -- Add_Box --
@@ -317,7 +325,8 @@ package body Harriet.Sessions is
          Left, Top     : Positive;
          Right, Bottom : Positive;
          Child_1       : Natural := 0;
-         Child_2       : Natural := 0)
+         Child_2       : Natural := 0;
+         Client_Id     : Integer := -1)
       is
          Box    : Harriet.Json.Json_Object;
       begin
@@ -332,6 +341,7 @@ package body Harriet.Sessions is
             Anchor.Set_Property ("right", Right);
             Anchor.Set_Property ("bottom", Bottom);
             Box.Set_Property ("anchor", Anchor);
+            Box.Set_Property ("clientId", Client_Id);
          end;
 
          if Child_1 > 0 then
@@ -347,7 +357,27 @@ package body Harriet.Sessions is
          Boxes.Append (Box);
       end Add_Box;
 
-      Next_Id : Natural := 0;
+      ----------------
+      -- Add_Client --
+      ----------------
+
+      procedure Add_Client
+        (Title      : String;
+         Model_Name : String;
+         Model_Args : String;
+         View_Name  : String)
+      is
+         Client : Json.Json_Object;
+      begin
+         Client.Set_Property ("viewName", View_Name);
+         Client.Set_Property ("modelName", Model_Name);
+         Client.Set_Property ("modelArgs", Model_Args);
+         Client.Set_Property ("title", Title);
+         Clients.Append (Client);
+      end Add_Client;
+
+      Next_Id      : Natural := 0;
+      Client_Count : Natural := 0;
 
    begin
       for Config of
@@ -363,21 +393,49 @@ package body Harriet.Sessions is
             is (if Config.Contains ("childBoxes")
                 then Config.Child ("childBoxes").Get (Index)
                 else 0);
+
+            Client_Id : Integer := -1;
+
          begin
+
+            if Config.Contains ("client")
+              or else Child (1) = 0
+            then
+               declare
+                  Client : constant Tropos.Configuration :=
+                    Config.Child ("client");
+                  Model  : constant String :=
+                    Client.Get ("model", "shell");
+                  View   : constant String :=
+                    Client.Get ("view",
+                                Harriet.UI.Models.Loader.Get (Model)
+                                .Default_View_Name);
+               begin
+                  Add_Client
+                    (Title      => Client.Get ("title", Model),
+                     Model_Name => Model,
+                     Model_Args => Client.Get ("arguments", ""),
+                     View_Name  => View);
+                  Client_Id := Client_Count;
+                  Client_Count := Client_Count + 1;
+               end;
+            end if;
+
             Add_Box
-              (Id      => Next_Id,
-               Left    => Anchor ("left"),
-               Top     => Anchor ("top"),
-               Right   => Anchor ("right"),
-               Bottom  => Anchor ("bottom"),
-               Child_1 => Child (1),
-               Child_2 => Child (2));
+              (Id        => Next_Id,
+               Left      => Anchor ("left"),
+               Top       => Anchor ("top"),
+               Right     => Anchor ("right"),
+               Bottom    => Anchor ("bottom"),
+               Child_1   => Child (1),
+               Child_2   => Child (2),
+               Client_Id => Client_Id);
          end;
          Next_Id := Next_Id + 1;
       end loop;
 
       return Dashboard : Harriet.Json.Json_Object do
-         Dashboard.Set_Property ("nextId", Next_Id);
+         Dashboard.Set_Property ("clients", Clients);
          Dashboard.Set_Property ("boxes", Boxes);
       end return;
    exception

@@ -27,7 +27,7 @@ export default (state = initialState, action: DashboardActionTypes): State => {
         return {
             ...state,
             boxes : action.boxes.map((box,index) => {
-                return new Box(index, box.anchor, box.children);
+                return new Box(index, box.anchor, box.children, box.clientId);
                }),
         }
 

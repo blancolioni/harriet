@@ -26,12 +26,12 @@ export class Box {
   children : number[]
   clientId: number
 
-  constructor(id : number, anchor : Anchor, children : number[] = []) {
+  constructor(id : number, anchor : Anchor, children : number[] = [], clientId : number = -1) {
       this.id = id;
 
       this.anchor = anchor;
       this.children = children;
-      this.clientId = -1;
+      this.clientId = clientId;
 
       this.createContainerBox = this.createContainerBox.bind(this);
       this.splitVertical = this.splitVertical.bind(this);

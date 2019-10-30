@@ -2,8 +2,10 @@ import * as t from './actionTypes';
 import { State } from './model';
 import { ShellActionTypes } from './actions';
 import version from '../version';
+import { clientInitialState } from '../clients/model';
 
 const initialState: State = {
+    ...clientInitialState,
     output: ['Harriet ' + version]
 };
 
