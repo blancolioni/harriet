@@ -1,17 +1,14 @@
 import React from 'react';
-import { connect } from 'react-redux'
-
-import { execute } from '../actions';
 
 interface Props {
-    execute: typeof execute;
+    execute: (command : string) => void
 }
 
 interface State {
     input: string,
 }
 
-class Component extends React.Component<Props,State> {
+export default class Component extends React.Component<Props,State> {
 
     constructor(props : Props) {
         super(props);
@@ -22,7 +19,7 @@ class Component extends React.Component<Props,State> {
 
     handleTextChange(e : React.ChangeEvent<HTMLInputElement>) {
         this.setState({
-                input: e.target.value,
+            input: e.target.value,
         });
     }
 
@@ -42,13 +39,8 @@ class Component extends React.Component<Props,State> {
                 <div className="input-group-prepend">
                     <span className="input-group-text">{localStorage.getItem('admin') ? '&gt;' : '#'}</span>
                 </div>
-            <input type="text" className="form-control" aria-label="Command" onKeyPress={this.handleKeyPress} onChange={this.handleTextChange} />
+            <input type="text" className="form-control" aria-label="Command" value={this.state.input} onKeyPress={this.handleKeyPress} onChange={this.handleTextChange} />
             </div>
         );
      }
 }
-
-export default connect(
-    null,
-    { execute }
-)(Component)

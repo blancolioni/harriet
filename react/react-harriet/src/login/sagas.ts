@@ -17,11 +17,11 @@ function* login(action : any, params : SagaParams)  {
         const layoutText = yield layoutResp.text();
         const layout = JSON.parse(layoutText);
         for (const client of layout.clients) {
-            yield put(newClient(client.viewName, client.title, client.modelName, client.modelArgs));
+            yield put(newClient(client.clientId,client.viewName, client.title, client.modelName, client.modelArgs));
         }
         yield put(setLayout(layout.boxes));
     } catch(error) {
-        yield put(loginFailed(error));
+        yield put(loginFailed(error.message));
     }
 }
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux'
 
-import { ClientState } from '../model';
+import { ClientState, ClientDispatch } from '../model';
 import Shell from '../../shell/components/Shell';
 
 interface ViewTable {
@@ -13,7 +13,8 @@ const viewTable : ViewTable = {
 }
 
 interface ClientProps {
-    clientState: ClientState
+    clientState    : ClientState
+    clientDispatch : ClientDispatch
 }
 
 interface TitleBarProps {
@@ -42,25 +43,17 @@ function ClientTitleBar(props : TitleBarProps) {
     );
 }
 
-class Client extends React.Component<ClientProps,ClientState> {
-
-    constructor(props : ClientProps) {
-        super(props);
-    }
+export default class Client extends React.Component<ClientProps,ClientState> {
 
     render() {
         const View = viewTable[this.props.clientState.viewName];
+        console.log('client-render', this.props.clientState.viewName, this.props.clientState)
         return (
             <div className="concorde-dashboard-item">
                 <ClientTitleBar title={this.props.clientState.title} split={(h) => {}} close={() => {}}></ClientTitleBar>
-                <View clientState={this.props.clientState}>
+                <View clientState={this.props.clientState} clientDispatch={this.props.clientDispatch}>
                 </View>
             </div>
             );
      }
 }
-
-export default connect(
-    null,
-    null
-)(Client)

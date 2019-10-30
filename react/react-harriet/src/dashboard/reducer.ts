@@ -1,12 +1,14 @@
 import * as t from './actionTypes';
+import * as auth from '../login/actionTypes';
 import { State, Box } from './model';
 import { DashboardActionTypes } from './actions';
+import { LoginActionTypes } from '../login/actions';
 
 const initialState: State = {
     boxes : [new Box(0,{left:1, right: 13, top: 1, bottom: 13})],  //.splitVertical(1, 2),
 };
 
-export default (state = initialState, action: DashboardActionTypes): State => {
+export default (state = initialState, action: DashboardActionTypes | LoginActionTypes): State => {
   switch (action.type) {
     case t.SPLIT_BOX:
         let newArray = state.boxes.slice();
@@ -22,6 +24,9 @@ export default (state = initialState, action: DashboardActionTypes): State => {
             ...state,
             boxes : newArray,
         };
+
+    case auth.LOGOUT:
+        return initialState;
 
     case t.SET_LAYOUT:
         return {

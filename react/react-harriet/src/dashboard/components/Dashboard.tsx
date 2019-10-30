@@ -5,11 +5,12 @@ import { State } from '../model';
 import { AppState } from '../../rootReducer';
 import { ClientState } from '../../clients/model'
 import Client from '../../clients/components';
-import Shell from '../../shell/components';
+import { execute } from '../../shell/actions';
 
 interface DashboardProps {
     state : State,
     clients: ClientState[],
+    execute: (clientId : number, command: string) => void,
 }
 
 class Dashboard extends React.Component<DashboardProps,State> {
@@ -33,7 +34,7 @@ class Dashboard extends React.Component<DashboardProps,State> {
                             let clientState = this.props.clients[box.clientId];
                             return (
                                 <div className="concorde-dashboard-cell" style={cellStyle} key={box.id}>
-                                    <Client clientState={clientState}></Client>
+                                    <Client clientState={clientState} clientDispatch={{execute: (command : string) => this.props.execute(box.clientId, command)}}></Client>
                                 </div>
                                 );
                             } else {
@@ -49,7 +50,7 @@ class Dashboard extends React.Component<DashboardProps,State> {
     }
 }
 
-function mapStateToProps(state: AppState) : DashboardProps {
+function mapStateToProps(state : AppState) {
     return {
         state: state.dashboard,
         clients: state.clients.clients,
@@ -58,5 +59,5 @@ function mapStateToProps(state: AppState) : DashboardProps {
 
 export default connect(
     mapStateToProps,
-    { }
+    { execute },
 )(Dashboard)

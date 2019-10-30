@@ -1,30 +1,29 @@
 import React from 'react';
-import { connect } from 'react-redux'
-
-import { logout } from '../../login/actions';
 
 import { State } from '../model';
 
 import Console from './Console';
 import LineInput from './LineInput';
+import { ClientDispatch } from '../../clients/model';
+
+interface ShellDispatch extends ClientDispatch {
+    execute : (command : string) => void
+}
 
 interface Props {
     clientState : State,
+    clientDispatch : ShellDispatch
 }
 
-class Component extends React.Component<Props,State> {
-
+export default class Shell extends React.Component<Props,State> {
+    
     render() {
+        console.log('shell', 'render', this.props.clientState.output)
         return (
             <div>
                 <Console lines={this.props.clientState.output}></Console>
-                <LineInput></LineInput>
+                <LineInput execute={this.props.clientDispatch.execute}></LineInput>
             </div>
         );
     }
 }
-
-export default connect(
-    null,
-    { logout }
-)(Component)

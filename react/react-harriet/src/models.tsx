@@ -2,7 +2,7 @@ import { ClientState } from './clients/model'
 import { shellInitialState } from './shell/model'
 
 interface Model {
-    create : (baseState : ClientState) => ClientState
+    create   : (baseState : ClientState) => ClientState
 }
 
 interface ModelTable {

@@ -9,8 +9,8 @@ import App from './App'
 import { register } from './serviceWorker'
 import reducers from './rootReducer'
 import loginSaga from './login/sagas'
+import shellSaga from './shell/sagas'
 import toolbarSaga from './toolbar/sagas'
-import setupSocket from './_sockets'
 
 
 const sagaMiddleware = createSagaMiddleware()
@@ -24,6 +24,7 @@ const store = createStore(
 
 const sagaParams = { socket: null, dispatch: store.dispatch };
 sagaMiddleware.run(loginSaga,  sagaParams);
+sagaMiddleware.run(shellSaga, sagaParams);
 sagaMiddleware.run(toolbarSaga, sagaParams);
 
 ReactDOM.render(
