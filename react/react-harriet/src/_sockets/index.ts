@@ -30,12 +30,10 @@ const setupSocket = (dispatch : Dispatch<AnyAction>, token : string) => {
     switch (data.payload.type) {
       case 'update-state':
         dispatch(updateToolbar(data.payload.currentTimeImage));
-      // case types.ADD_MESSAGE:
-      //   dispatch(messageReceived(data.message, data.author))
-      //   break
-      // case types.USERS_LIST:
-      //   dispatch(populateUsersList(data.users))
-      //   break
+        break;
+      case 'update-faction':
+          dispatch(updateToolbar(undefined, data.payload.cash));
+          break;
       default:
         break
     }

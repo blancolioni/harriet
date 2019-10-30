@@ -1,6 +1,7 @@
 import { takeEvery, put, call } from 'redux-saga/effects'
 import * as t from './actionTypes';
 import { authorize, loginFailed } from './actions';
+import { splitBox, setLayout } from '../dashboard/actions'
 import { userService } from '../_services/user.service';
 import { SagaParams } from '../sagas';
 import setupSocket from '../_sockets';
@@ -11,6 +12,9 @@ function* login(action : any, params : SagaParams)  {
         if (params.socket) { params.socket.close() }
         params.socket = setupSocket(params.dispatch, id);
         yield put(authorize(action.userName, faction, id));
+        const layoutResp = yield call(userService.getRequest, 'environment/DASHBOARD');
+        const layout = yield layoutResp.text();
+        yield put(setLayout(JSON.parse(layout).boxes));
     } catch(error) {
         yield put(loginFailed(error));
     }

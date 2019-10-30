@@ -1,15 +1,18 @@
 import * as t from './actionTypes';
-import { State } from './model';
+import { ClientState } from './model';
+import { string } from 'prop-types';
 
 export interface NewClientAction {
     type: typeof t.NEW_CLIENT,
     viewName: string,
+    modelName: string,
+    modelArgs: string,
   }
   
 export interface UpdateClientAction {
   type: typeof t.UPDATE_CLIENT
   clientId : number
-  newState : State
+  newState : ClientState
 }
 
 export interface CloseClientAction {
@@ -19,14 +22,16 @@ export interface CloseClientAction {
 
 export type ClientActionTypes = NewClientAction | UpdateClientAction | CloseClientAction
 
-export function newClient (viewName : string) : ClientActionTypes {
+export function newClient (viewName : string, modelName: string, modelArgs: string) : ClientActionTypes {
   return {
       type: t.NEW_CLIENT,
-      viewName: viewName,
+      viewName,
+      modelName,
+      modelArgs,
       }
 }
 
-export function updateClient (clientId : number, newState : State) : ClientActionTypes {
+export function updateClient (clientId : number, newState : ClientState) : ClientActionTypes {
   return {
       type: t.UPDATE_CLIENT,
       clientId,

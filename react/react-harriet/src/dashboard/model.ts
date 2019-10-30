@@ -26,11 +26,11 @@ export class Box {
   children : number[]
   clientId: number
 
-  constructor(id : number, anchor : Anchor) {
+  constructor(id : number, anchor : Anchor, children : number[] = []) {
       this.id = id;
 
       this.anchor = anchor;
-      this.children = [];
+      this.children = children;
       this.clientId = -1;
 
       this.createContainerBox = this.createContainerBox.bind(this);
@@ -67,6 +67,7 @@ export class Box {
   }
 
   concatLeaves(get : (id : number) => Box) : Box[] {
+
     if (this.children.length > 0) {
         let acc : Box[] = []
         for (const child of this.children) {

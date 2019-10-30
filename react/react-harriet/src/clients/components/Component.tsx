@@ -1,10 +1,10 @@
 import React from 'react';
 import { connect } from 'react-redux'
 
-interface ClientProps {
-}
+import { ClientState } from '../model';
 
-interface ClientState {
+interface ClientProps {
+    clientState: ClientState
 }
 
 class Client extends React.Component<ClientProps,ClientState> {
@@ -22,11 +22,7 @@ class Client extends React.Component<ClientProps,ClientState> {
      }
 }
 
-class ClientList extends React.Component<ClientProps[], ClientState[]> {
-
-}
-
 export default connect(
     null,
     null
-)(ClientList)
+)(Client)

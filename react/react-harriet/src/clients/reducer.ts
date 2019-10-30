@@ -14,6 +14,8 @@ export default (state = initialState, action: ClientActionTypes): State => {
             loading: true,
             viewName: action.viewName,
             title: action.viewName + ' loading ...',
+            modelName: action.modelName,
+           // modelArgs : action.modelArgs,
         });
         return {
             ...state,

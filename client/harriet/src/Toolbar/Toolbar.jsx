@@ -24,7 +24,6 @@ class Toolbar extends React.Component {
     }
 
     changeSpeed = newSpeed => {
-        console.log("update speed", newSpeed);
         userService.postRequest('status/updateSpeed/' + newSpeed)
             .then((result) => result.json())   
             .then((resp) => {

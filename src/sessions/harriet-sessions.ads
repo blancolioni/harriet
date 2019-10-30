@@ -36,11 +36,6 @@ package Harriet.Sessions is
 
 private
 
-   package Model_Holders is
-     new Ada.Containers.Indefinite_Holders
-       (Harriet.UI.Models.Root_Harriet_Model'Class,
-        Harriet.UI.Models."=");
-
    type Client_Type is
       record
          Model   : Harriet.UI.Models.Harriet_Model;

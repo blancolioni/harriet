@@ -340,7 +340,7 @@ package body Harriet.Sessions is
             begin
                Child_Boxes.Append (Json.Integer_Value (Child_1));
                Child_Boxes.Append (Json.Integer_Value (Child_2));
-               Box.Set_Property ("childBoxes", Child_Boxes);
+               Box.Set_Property ("children", Child_Boxes);
             end;
          end if;
 
