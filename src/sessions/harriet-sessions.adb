@@ -52,7 +52,12 @@ package body Harriet.Sessions is
      (Object : Harriet.Signals.Signaler'Class;
       Data   : Harriet.Signals.Signal_Data_Interface'Class);
 
-   function Default_Dashboard return Harriet.Json.Json_Value'Class;
+   function Default_Dashboard
+     (New_Client : not null access
+        function (Model_Name : String;
+                  Model_Args : String)
+           return Harriet.UI.Client_Id)
+      return Harriet.Json.Json_Value'Class;
 
    ------------------
    -- Session_Data --
@@ -121,6 +126,10 @@ package body Harriet.Sessions is
            (Line    => Command,
             Context => Client_Map (Client_Id).Context,
             Writer  => Writer);
+      exception
+         when E : others =>
+            Writer.Put_Error
+              (Ada.Exceptions.Exception_Message (E));
       end Execute_Command;
 
       ---------------------------
@@ -297,7 +306,13 @@ package body Harriet.Sessions is
    -- Default_Dashboard --
    -----------------------
 
-   function Default_Dashboard return Harriet.Json.Json_Value'Class is
+   function Default_Dashboard
+     (New_Client : not null access
+        function (Model_Name : String;
+                  Model_Args : String)
+      return Harriet.UI.Client_Id)
+      return Harriet.Json.Json_Value'Class
+   is
 
       Boxes   : Harriet.Json.Json_Array;
       Clients : Harriet.Json.Json_Array;
@@ -310,11 +325,12 @@ package body Harriet.Sessions is
          Child_2       : Natural := 0;
          Client_Id     : Integer := -1);
 
-      procedure Add_Client
+      function Add_Client
         (Title      : String;
          Model_Name : String;
          Model_Args : String;
-         View_Name  : String);
+         View_Name  : String)
+         return Harriet.UI.Client_Id;
 
       -------------
       -- Add_Box --
@@ -361,23 +377,27 @@ package body Harriet.Sessions is
       -- Add_Client --
       ----------------
 
-      procedure Add_Client
+      function Add_Client
         (Title      : String;
          Model_Name : String;
          Model_Args : String;
          View_Name  : String)
+         return Harriet.UI.Client_Id
       is
          Client : Json.Json_Object;
+         Id     : constant Harriet.UI.Client_Id :=
+           New_Client (Model_Name, Model_Args);
       begin
+         Client.Set_Property ("clientId", Natural (Id));
          Client.Set_Property ("viewName", View_Name);
          Client.Set_Property ("modelName", Model_Name);
          Client.Set_Property ("modelArgs", Model_Args);
          Client.Set_Property ("title", Title);
          Clients.Append (Client);
+         return Id;
       end Add_Client;
 
       Next_Id      : Natural := 0;
-      Client_Count : Natural := 0;
 
    begin
       for Config of
@@ -410,14 +430,14 @@ package body Harriet.Sessions is
                     Client.Get ("view",
                                 Harriet.UI.Models.Loader.Get (Model)
                                 .Default_View_Name);
+                  This_Id : constant Harriet.UI.Client_Id :=
+                    Add_Client
+                      (Title      => Client.Get ("title", Model),
+                       Model_Name => Model,
+                       Model_Args => Client.Get ("arguments", ""),
+                       View_Name  => View);
                begin
-                  Add_Client
-                    (Title      => Client.Get ("title", Model),
-                     Model_Name => Model,
-                     Model_Args => Client.Get ("arguments", ""),
-                     View_Name  => View);
-                  Client_Id := Client_Count;
-                  Client_Count := Client_Count + 1;
+                  Client_Id := Natural (This_Id);
                end;
             end if;
 
@@ -534,10 +554,25 @@ package body Harriet.Sessions is
       Request : Harriet.Json.Json_Value'Class)
       return Harriet.Json.Json_Value'Class
    is
-      Model : constant Harriet.UI.Models.Harriet_Model :=
-        Session.Data.Get_Model (Client);
    begin
-      return Model.Handle (Session, Client, Request);
+      declare
+         Model : constant Harriet.UI.Models.Harriet_Model :=
+           Session.Data.Get_Model (Client);
+      begin
+         return Model.Handle (Session, Client, Request);
+      end;
+   exception
+      when E : others =>
+         declare
+            Stdout, Stderr : Json.Json_Array;
+            Resp           : Json.Json_Object;
+         begin
+            Stderr.Append
+              (Json.String_Value (Ada.Exceptions.Exception_Message (E)));
+            Resp.Set_Property ("standardOutput", Stdout);
+            Resp.Set_Property ("standardError", Stderr);
+            return Resp;
+         end;
    end Handle_Client_Request;
 
    --------------------
@@ -638,8 +673,17 @@ package body Harriet.Sessions is
                Session.Data := new Session_Data;
                Session.Data.Set_Environment_Value
                  ("HOME", Harriet.Json.String_Value (Home));
-               Session.Data.Set_Environment_Value
-                 ("DASHBOARD", Default_Dashboard);
+
+               declare
+                  function New_Client
+                    (Model_Name, Model_Args : String)
+                     return Harriet.UI.Client_Id
+                  is (Session.New_Client (Model_Name, Model_Args));
+               begin
+                  Session.Data.Set_Environment_Value
+                    ("DASHBOARD", Default_Dashboard (New_Client'Access));
+               end;
+
                Session.On_Clock_Tick_Id :=
                  Session.Add_Handler
                    (Signal     => Harriet.UI.Signal_Clock_Tick,
