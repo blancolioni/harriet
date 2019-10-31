@@ -148,9 +148,6 @@ class World extends React.Component {
     });
     renderer.setSize(width, height);
     this.mount.appendChild( renderer.domElement );
-    // var renderer = new THREE.WebGLRenderer();
-    // renderer.setSize( window.innerWidth, window.innerHeight );
-    // this.mount.appendChild( renderer.domElement );
 
     var textureLoader = new THREE.TextureLoader();
     var cloudTexture = textureLoader.load('gas_giant_jovian.png');
@@ -160,7 +157,7 @@ class World extends React.Component {
     light.position.set(0, 0, 10);
     scene.add(light);
 
-    var geometry = new THREE.SphereGeometry(1, 40, 20);
+    var geometry = new THREE.IcosahedronBufferGeometry(1, 4);
     var material = new THREE.ShaderMaterial({
       vertexShader: this.vertexShader(),
       fragmentShader: this.fragmentShader(),
@@ -172,9 +169,9 @@ class World extends React.Component {
 
     var rotation = 0;
     var planet = new THREE.Mesh(geometry, material);
-    //planet.rotateZ(-Math.PI / 2.0);
+
     scene.add( planet );
-    camera.position.z = 3;
+    camera.position.z = 2;
     var animate = function () {
       requestAnimationFrame( animate );
       //planet.rotateY(rotation);
