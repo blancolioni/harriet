@@ -9,7 +9,6 @@ export default (state = systemInitialState(clientInitialState), action: SystemAc
   switch (action.type) {
 
     case clients.UPDATE_CLIENT:
-        console.log('update-client', action.newState);
         return {
             ...state,
             ...action.newState,

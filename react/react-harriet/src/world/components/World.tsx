@@ -198,7 +198,6 @@ class World extends React.Component<Props,WorldSceneState> {
   }
 
   render() {
-    console.log('world-render', this.props.clientState)
     if (this.props.clientState.world) {
       this.updateScene(this.props.clientState.world);
     }

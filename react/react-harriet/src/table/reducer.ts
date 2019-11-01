@@ -15,7 +15,6 @@ export default (state = tableInitialState(clientInitialState), action: TableActi
         };
 
     case clients.UPDATE_CLIENT:
-        console.log('update-client', action.newState);
         return {
             ...state,
             ...action.newState,

@@ -9,7 +9,6 @@ const initialState: State = {
 };
 
 export default (state = initialState, action: LoginActionTypes): State => {
-    console.log (action.type, action);
   switch (action.type) {
     case t.AUTHORIZED:
         return {
