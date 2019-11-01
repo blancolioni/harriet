@@ -14,12 +14,15 @@ package Harriet.Stars is
      (Star : Star_Type'Class)
       return Harriet.Color.Harriet_Color;
 
+   function Temperature
+     (Star : Star_Type'Class)
+      return Non_Negative_Real;
+
    function Name (Star : Harriet.Db.Star_Reference) return String;
    function Mass (Star : Harriet.Db.Star_Reference) return Non_Negative_Real;
    function Solar_Masses
      (Star : Harriet.Db.Star_Reference)
       return Non_Negative_Real;
-
    function Spectral_Type
      (Star : Harriet.Db.Star_Reference)
       return String;

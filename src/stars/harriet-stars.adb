@@ -74,4 +74,16 @@ package body Harriet.Stars is
         & Character'Val (Rec.Subclass + 48);
    end Spectral_Type;
 
+   -----------------
+   -- Temperature --
+   -----------------
+
+   function Temperature
+     (Star : Star_Type'Class)
+      return Non_Negative_Real
+   is
+   begin
+      return Harriet.Db.Star.Get (Star.Reference).Temperature;
+   end Temperature;
+
 end Harriet.Stars;
