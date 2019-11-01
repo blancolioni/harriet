@@ -8,6 +8,10 @@ package body Harriet.Orbits is
    function Sqrt (X : Non_Negative_Real) return Non_Negative_Real
                   renames Harriet.Elementary_Functions.Sqrt;
 
+   -------------------------
+   -- Calculate_Longitude --
+   -------------------------
+
    function Calculate_Longitude
      (Large_Mass : Non_Negative_Real;
       Orbit      : Non_Negative_Real;
@@ -16,9 +20,9 @@ package body Harriet.Orbits is
    is
       Period      : constant Non_Negative_Real :=
         Harriet.Orbits.Period (Large_Mass, Orbit);
-      Orbit_Count : constant Non_Negative_Real := Real (Elapsed) / Period;
+      Orbit_Count : constant Real := Real (Elapsed) / Period;
       Partial     : constant Unit_Real :=
-        Orbit_Count - Real'Truncation (Orbit_Count);
+        Orbit_Count - Real'Floor (Orbit_Count);
       Longitude   : Real := Partial * 360.0;
    begin
       Longitude := Partial * 360.0;
