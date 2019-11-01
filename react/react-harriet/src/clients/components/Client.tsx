@@ -5,6 +5,7 @@ import { ClientState, ClientDispatch } from '../model';
 import Shell from '../../shell/components/Shell';
 import Table from '../../table/components/Table';
 import World from '../../world/components/World';
+import System from '../../system/components';
 
 interface ViewTable {
     [key : string] : any
@@ -12,6 +13,7 @@ interface ViewTable {
 
 const viewTable : ViewTable = {
     Shell: Shell,
+    System: System,
     Table: Table,
     World: World,
 }

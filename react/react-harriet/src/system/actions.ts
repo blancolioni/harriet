@@ -6,9 +6,9 @@ export interface ZoomAction extends ClientAction {
     type: typeof t.ZOOM
   }
   
-export type TableActionTypes = ZoomAction
+export type SystemActionTypes = ZoomAction
 
-export function zoom(clientId : number) : TableActionTypes {
+export function zoom(clientId : number) : SystemActionTypes {
     return {
         type: t.ZOOM,
         clientId,

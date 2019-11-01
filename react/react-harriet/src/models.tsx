@@ -2,6 +2,7 @@ import { ClientState } from './clients/model'
 import { shellInitialState } from './shell/model'
 import { tableInitialState } from './table/model';
 import { worldInitialState } from './world/model';
+import { systemInitialState } from './system/model';
 
 interface Model {
     create   : (baseState : ClientState) => ClientState
@@ -20,7 +21,10 @@ const modelTable : ModelTable = {
     },
     World: {
         create: worldInitialState,
-    }
+    },
+    System: {
+        create: systemInitialState,
+    },
 }
 
 export function initialState (modelName : string, baseState : ClientState) : ClientState {
