@@ -4,6 +4,7 @@ with Tropos.Reader;
 with Tropos.Writer;
 
 with Harriet.Paths;
+with Harriet.Solar_System;
 
 package body Harriet.Stars.Tables is
 
@@ -105,7 +106,7 @@ package body Harriet.Stars.Tables is
       begin
          Class := Info.Class;
          Subclass := Info.Subclass;
-         Radius := Info.Radius;
+         Radius := Info.Radius * Harriet.Solar_System.Solar_Radius;
          Luminosity := Info.Luminosity;
          R := Info.Color.Red;
          G := Info.Color.Green;
