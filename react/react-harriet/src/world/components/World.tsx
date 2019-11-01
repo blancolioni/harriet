@@ -104,7 +104,7 @@ const worldTextureName = (world : WorldObject) : string => {
   const { climate, composition, mass } = world;
   let textureName : string = '';
   
-  if (composition === Composition.Hydrogen) {
+  if (climate == Climate.Jovian) {
     if (mass >= 100) {
       textureName = 'gas_giant_jovian'
     } else if (mass >= 50) {
@@ -123,15 +123,15 @@ const worldTextureName = (world : WorldObject) : string => {
 
 export function worldMesh(
   model : Model3D,
-  world : WorldObject | null,
+  world : WorldObject,
   detail : number,
   lightFrom : THREE.Vector3,
 ) : THREE.Mesh
 {
   const vertexShader = standardVertexShader;
 
-  const fragmentShader = world && world.climate === Climate.Jovian ? gasGiantFragmentShader : rockWorldFragmentShader;
-  const textureName = world ? worldTextureName(world) : 'temperate';
+  const fragmentShader = world.climate == Climate.Jovian ? gasGiantFragmentShader : rockWorldFragmentShader;
+  const textureName = worldTextureName(world);
   const texture =  model.textureLoader.load(textureName + '.png');
 
   const geometry = new THREE.IcosahedronBufferGeometry(1, detail);
@@ -141,7 +141,7 @@ export function worldMesh(
     uniforms: {
       textureSampler: { type: 't', value: texture },
       unTime: { type: 'f', value: 0},
-      starLight: { type: 'v', value: lightFrom }
+      starLight: { value: lightFrom }
     },
   });
 
@@ -180,16 +180,28 @@ class World extends React.Component<Props,WorldSceneState> {
   }
 
   addCustomSceneObjects = () => {
-    this.planet = worldMesh(this.model!, this.state.world, 6, new THREE.Vector3(-5, 0, 3));
-    this.model!.scene.add(this.planet);
   }
 
   beforeRender() {
-    (this.planet!.material as THREE.ShaderMaterial).uniforms.unTime.value = this.renderCount;
+    if (this.planet) {
+      (this.planet!.material as THREE.ShaderMaterial).uniforms.unTime.value = this.renderCount;
+    }
+    
     this.renderCount += 0.0002;
   }
 
+  updateScene = (world : WorldObject) => {
+    if (!this.planet) {
+      this.planet = worldMesh(this.model!, world, 6, new THREE.Vector3(-5, 0, 3));
+      this.model!.scene.add(this.planet);
+    }
+  }
+
   render() {
+    console.log('world-render', this.props.clientState)
+    if (this.props.clientState.world) {
+      this.updateScene(this.props.clientState.world);
+    }
     return (
       <div ref={ref => (this.mount = ref)} />
     )

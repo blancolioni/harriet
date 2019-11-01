@@ -917,7 +917,7 @@ package body Harriet.Configure.Star_Systems is
          World : constant Harriet.Db.World_Reference :=
            Harriet.Db.World.Create
              (Star_System         => Star.Star_System,
-              Primary             => Star.Get_Star_System_Object_Reference,
+              Primary             => Star.Get_Massive_Object_Reference,
               Radius              => Radius * Earth_Radius,
               Density             => Density * Earth_Density,
               Rotation_Period     => Day * 3600.0,

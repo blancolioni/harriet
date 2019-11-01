@@ -11,11 +11,13 @@ package Star_Systems is
        Claimed       : Boolean;
    end Star_System;
    
+   record Serializable : Has_Name;
+   
    record Massive_Object is
       Mass : Long_Float;
    end Massive_Object;
    
-   record Orbiting_Object : Massive_Object is
+   record Orbiting_Object : Massive_Object, Serializable is
       key Primary_Massive : Massive_Object;
 	  Semimajor_Axis  : Long_Float;
 	  Epoch           : Time;
@@ -23,14 +25,14 @@ package Star_Systems is
 	  Period          : Long_Float;
    end Orbiting_Object;
    
-   record Star_System_Object : Has_Name, Knowable, Orbiting_Object is
+   record Star_System_Object : Knowable, Orbiting_Object is
       key Star_System;
-      key Primary : Star_System_Object;
+      key Primary     : Massive_Object;
       Radius          : Long_Float;
       Density         : Long_Float;
       Rotation_Period : Long_Float;
       Tilt            : Long_Float;
-      Surface_Gravity      : Long_Float;
+      Surface_Gravity : Long_Float;
    end Star_System_Object;
    
    record Star_Gate is

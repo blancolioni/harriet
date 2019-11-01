@@ -326,7 +326,7 @@ package body Harriet.Configure.Galaxies is
                         Harriet.Db.Star.Create
                           (Star_System           => Star_System,
                            Primary               =>
-                             Harriet.Db.Null_Star_System_Object_Reference,
+                             Harriet.Db.Null_Massive_Object_Reference,
                            Mass                  => Mass,
                            Radius                => Radius,
                            Density               => Mass / Volume,

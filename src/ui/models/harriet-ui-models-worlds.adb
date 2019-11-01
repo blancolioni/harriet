@@ -1,9 +1,9 @@
 with WL.Localisation;
 
-with Harriet.Calendar;
+--  with Harriet.Calendar;
 with Harriet.Color;
 --  with Harriet.Constants;
-with Harriet.Orbits;
+--  with Harriet.Orbits;
 with Harriet.Solar_System;
 
 with Harriet.Factions;
@@ -13,7 +13,7 @@ with Harriet.Db.Atmosphere;
 with Harriet.Db.Colony;
 with Harriet.Db.Faction;
 with Harriet.Db.Gas;
-with Harriet.Db.Massive_Object;
+--  with Harriet.Db.Massive_Object;
 with Harriet.Db.Palette_Entry;
 with Harriet.Db.Ship;
 with Harriet.Db.World;
@@ -75,22 +75,15 @@ package body Harriet.UI.Models.Worlds is
       return Harriet.Json.Json_Value'Class
    is
       pragma Unreferenced (State, Client, Request);
-      use type Harriet.Calendar.Time;
       W : constant Harriet.Db.World.World_Type :=
         Harriet.Db.World.Get (Model.World);
-      M : constant Harriet.Db.Massive_Object.Massive_Object_Type :=
-        Harriet.Db.Massive_Object.Get (W.Primary_Massive);
+
+      Result : Json.Json_Object;
+
    begin
-      return Result : Json.Json_Object do
-         Result.Set_Property
-           ("orbitLongitude",
-            Json.Float_Value
-              (Float
-                   (Harriet.Orbits.Calculate_Longitude
-                        (Large_Mass => M.Mass,
-                         Orbit      => W.Semimajor_Axis,
-                         Elapsed    => Harriet.Calendar.Clock - W.Epoch))));
-      end return;
+      Result.Set_Property ("title", W.Name);
+      Result.Set_Property ("world", Serialize (W));
+      return Result;
    end Get;
 
    ------------

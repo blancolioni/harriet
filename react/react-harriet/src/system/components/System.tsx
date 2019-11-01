@@ -5,6 +5,7 @@ import { State, SystemObject, SystemObjectType, StarObject, WorldObject } from '
 import { ClientDispatch } from '../../clients/model';
 import Model3D from '../../_3d/Model3D';
 import { worldMesh } from "../../world/components/World";
+import { CSS2DObject } from "three/examples/jsm/renderers/CSS2DRenderer";
 
 interface Dispatch extends ClientDispatch {
 }
@@ -135,7 +136,7 @@ class Component extends React.Component<Props,State> {
   }
 
   addCustomSceneObjects = () => {
-    this.model!.camera.position.z = 10;
+    this.model!.camera.position.z = 15;
   }
 
   starMesh = (star : StarObject) : THREE.Mesh => {
@@ -174,9 +175,22 @@ class Component extends React.Component<Props,State> {
     mesh.scale.set(scale, scale, scale);
     mesh.name = obj.name;
     this.model!.scene.add( mesh );
+
+    var labelDiv = document.createElement( 'div' );
+    labelDiv.className = 'concorde-star-label';
+    labelDiv.textContent = obj.name;
+    labelDiv.style.marginTop = '-1em';
+    var labelObject = new CSS2DObject( labelDiv );
+    labelObject.position.set( 0.5, -0.1, 0 );
+    mesh.add( labelObject );
+
   }
 
-  updateScene = (obj : SystemObject) => {
+  updateScene = (obj : SystemObject, origin : THREE.Vector3) => {
+    const x = origin.x + 5.0 * obj.orbit * Math.cos(obj.longitude);
+    const y = 0;
+    const z = origin.z + 5.0 * obj.orbit * Math.sin(obj.longitude);
+
     if (!this.model!.scene.getObjectByName(obj.name)) {
       switch (obj.type) {
         case SystemObjectType.Star:
@@ -184,25 +198,23 @@ class Component extends React.Component<Props,State> {
           break;
 
         case SystemObjectType.World:
-          this.addObject(obj, worldMesh(this.model!, obj as WorldObject))
+          this.addObject(obj, worldMesh(this.model!, obj as WorldObject, 2, new THREE.Vector3(-x, -y, -z)));
           break;
       }
     }
 
     const mesh = this.model!.scene.getObjectByName(obj.name)!;
-    mesh.position.set(5.0 * obj.orbit * Math.cos(obj.longitude), 0.0, 5.0 * obj.orbit * Math.sin(obj.longitude));
-    console.log('updateScene', mesh.name, mesh.position);
+    mesh.position.set(x, y, z);
 
     for (const dep of obj.dependents) {
-      this.updateScene(dep)
+      this.updateScene(dep, mesh.position)
     }
   }
 
   render() {
-    console.log('star-system', 'render', this.props.clientState)
 
     if (this.props.clientState.primary) {
-      this.updateScene(this.props.clientState.primary);
+      this.updateScene(this.props.clientState.primary, new THREE.Vector3(0,0,0));
     }
 
     return (

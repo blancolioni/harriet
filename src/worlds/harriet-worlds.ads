@@ -1,5 +1,7 @@
 private with Ada.Containers.Doubly_Linked_Lists;
 
+with Harriet.Json;
+
 with Harriet.Db;
 
 package Harriet.Worlds is

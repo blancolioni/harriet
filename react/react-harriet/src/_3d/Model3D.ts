@@ -16,7 +16,6 @@ export default class Model3D {
     constructor(mount : any) {
         this.scene = new THREE.Scene();
         const itemElement = mount.closest(".concorde-dashboard-item");
-        console.log("model3d", itemElement.clientWidth, itemElement.clientHeight);
   
         const width = itemElement.clientWidth; 
         const height = itemElement.clientHeight - 30;

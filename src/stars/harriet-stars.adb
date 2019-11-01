@@ -47,6 +47,18 @@ package body Harriet.Stars is
       return Harriet.Db.Star.Get (Star).Name;
    end Name;
 
+   ------------
+   -- Radius --
+   ------------
+
+   function Radius
+     (Star : Star_Type'Class)
+      return Non_Negative_Real
+   is
+   begin
+      return Harriet.Db.Star.Get (Star.Reference).Radius;
+   end Radius;
+
    ------------------
    -- Solar_Masses --
    ------------------

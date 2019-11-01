@@ -14,6 +14,10 @@ package Harriet.Stars is
      (Star : Star_Type'Class)
       return Harriet.Color.Harriet_Color;
 
+   function Radius
+     (Star : Star_Type'Class)
+      return Non_Negative_Real;
+
    function Temperature
      (Star : Star_Type'Class)
       return Non_Negative_Real;
