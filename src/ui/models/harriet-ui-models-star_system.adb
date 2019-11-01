@@ -1,5 +1,8 @@
+with Ada.Containers.Vectors;
 with Ada.Exceptions;
 with Ada.Numerics;
+
+with WL.Images.Bitmaps;
 
 with Harriet.Calendar;
 with Harriet.Color;
@@ -16,6 +19,8 @@ with Harriet.Db.Star;
 with Harriet.Db.Star_System;
 with Harriet.Db.Star_System_Object;
 with Harriet.Db.World;
+
+with Harriet.Paths;
 
 package body Harriet.UI.Models.Star_System is
 
@@ -58,6 +63,14 @@ package body Harriet.UI.Models.Star_System is
       Client  : Client_Id;
       Request : Harriet.Json.Json_Value'Class)
       return Harriet.Json.Json_Value'Class;
+
+   package Palette_Vectors is
+     new Ada.Containers.Vectors (Natural, Harriet.Color.Harriet_Color,
+                                 Harriet.Color."=");
+
+   Star_Spectrum_Palette : Palette_Vectors.Vector;
+
+   procedure Load_Spectrum_Palette;
 
    -------------
    -- Changed --
@@ -187,7 +200,11 @@ package body Harriet.UI.Models.Star_System is
                    (Harriet.Db.Star.Get_Star
                       (Object.Get_Star_System_Object_Reference));
                Color : constant Harriet.Color.Harriet_Color :=
-                 Star.Color;
+                 Star_Spectrum_Palette.Element
+                   (Natural'Min
+                      (Natural (Real'Max (Star.Temperature - 800.0, 0.0)
+                       / 29200.0),
+                       Star_Spectrum_Palette.Last_Index));
             begin
                Set ("type", "STAR");
                Set ("mass", Object.Mass / Harriet.Solar_System.Solar_Mass);
@@ -260,6 +277,35 @@ package body Harriet.UI.Models.Star_System is
       return Model.Get (State, Client, Request);
    end Handle;
 
+   ---------------------------
+   -- Load_Spectrum_Palette --
+   ---------------------------
+
+   procedure Load_Spectrum_Palette is
+      Tag               : constant String := "star_spectrum";
+      Palette_File_Name : constant String :=
+        Harriet.Paths.Config_File
+          ("star-systems/palettes/" & Tag & ".bmp");
+      Reader            : WL.Images.Bitmaps.Bitmap_Image_Reader;
+      Image             : WL.Images.Image_Type;
+   begin
+      Reader.Read (Palette_File_Name, Image);
+
+      for X in 1 .. Image.Width loop
+         declare
+            Color : constant WL.Images.Image_Color :=
+              Image.Color (X, 1);
+         begin
+            Star_Spectrum_Palette.Append
+              (Harriet.Color.Harriet_Color'
+                 (Red   => Real (Color.Red) / 255.0,
+                  Green => Real (Color.Green) / 255.0,
+                  Blue  => Real (Color.Blue) / 255.0,
+                  Alpha => 1.0));
+         end;
+      end loop;
+   end Load_Spectrum_Palette;
+
    -----------------------
    -- Star_System_Model --
    -----------------------
@@ -282,6 +328,10 @@ package body Harriet.UI.Models.Star_System is
         Harriet.Factions.Get_User_Faction (User);
 
    begin
+      if Star_Spectrum_Palette.Is_Empty then
+         Load_Spectrum_Palette;
+      end if;
+
       if Arguments = "" then
          Model.Star_System := Faction.Capital_System;
       else
