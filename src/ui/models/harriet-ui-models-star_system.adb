@@ -232,6 +232,8 @@ package body Harriet.UI.Models.Star_System is
 
    begin
       Result.Set_Property
+        ("title", Harriet.Db.Star_System.Get (Model.Star_System).Name);
+      Result.Set_Property
         ("systemName", Harriet.Db.Star_System.Get (Model.Star_System).Name);
       Result.Set_Property
         ("primary",
