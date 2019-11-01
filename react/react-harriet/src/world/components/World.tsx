@@ -4,6 +4,7 @@ import { noise3d } from '../../_3d/Noise';
 import { State, Composition, Climate } from '../model';
 import { ClientDispatch } from '../../clients/model';
 import { WorldObject } from "../../system/model";
+import Model3D from '../../_3d/Model3D';
 
 interface Dispatch extends ClientDispatch {
 }
@@ -191,13 +192,10 @@ export function worldMesh(
 class World extends React.Component<Props,WorldSceneState> {
 
   mount: any;
-  scene: THREE.Scene | null;
-  camera: THREE.Camera | null;
-  renderer: THREE.Renderer | null;
-  textureLoader: THREE.TextureLoader | null;
 
+  model  : Model3D | null;
   planet : THREE.Mesh | null;
-  requestID : number
+  renderCount : number
 
   constructor(props : Props) {
     super (props);
@@ -206,96 +204,33 @@ class World extends React.Component<Props,WorldSceneState> {
       world: null,
     }
 
-    this.scene = null;
-    this.camera = null;
-    this.renderer = null;
-    this.textureLoader = null;
+    this.renderCount = 0;
     this.planet = null;
-    this.requestID = 0;
+    this.model = null;
+    this.beforeRender = this.beforeRender.bind(this);
   }
 
   componentDidMount() {
-    this.sceneSetup();
+    this.model = new Model3D(this.mount);
     this.addCustomSceneObjects();
-    this.startAnimationLoop();
+    this.model.startAnimationLoop(this.beforeRender);
   }
 
   componentWillUnmount() {
-    window.cancelAnimationFrame(this.requestID);
-  }
-
-  sceneSetup = () => {
-    const itemElement = this.mount.closest(".concorde-dashboard-item");
-    console.log("model3d", itemElement.clientWidth, itemElement.clientHeight);
-
-    const width = itemElement.clientWidth; 
-    const height = itemElement.clientHeight - 30;
-
-    this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera( 75, width / height, 0.1, 10 );
-    this.camera.position.z = 3;
-
-    this.renderer = new THREE.WebGLRenderer({ 
-      antialias: true,
-    });
-    this.renderer.setSize(width, height);
-    this.mount.appendChild( this.renderer.domElement );
-
-    this.textureLoader = new THREE.TextureLoader();
-
+    this.model!.stopAnimationLoop();
   }
 
   addCustomSceneObjects = () => {
-    this.planet = worldMesh(this.textureLoader!, this.state.world);
-    this.scene!.add(this.planet);
+    this.planet = worldMesh(this.model!.textureLoader, this.state.world);
+    this.model!.scene.add(this.planet);
   }
 
-  startAnimationLoop = () => {
-    let renderCount = 0;
-    
-    (this.planet!.material as THREE.ShaderMaterial).uniforms.unTime.value = renderCount;
-    this.renderer!.render( this.scene!, this.camera! );
-    renderCount += 0.0002;
-    this.requestID = requestAnimationFrame( this.startAnimationLoop );
-}
-
-  //   let textureLoader = new THREE.TextureLoader;
-  //   let scene = new THREE.Scene();
-  //   let itemElement = this.mount.closest(".concorde-dashboard-item");
-  //   console.log("model3d", itemElement.clientWidth, itemElement.clientHeight);
-
-  //   let width = itemElement.clientWidth; 
-  //   let height = itemElement.clientHeight - 30;
-
-  //   const camera = new THREE.PerspectiveCamera( 75, width / height, 0.1, 10 );
-  //   const renderer = new THREE.WebGLRenderer({ 
-  //     antialias: true,
-  //   });
-  //   renderer.setSize(width, height);
-  //   this.mount.appendChild( renderer.domElement );
-
-  //   var light = new THREE.DirectionalLight(0xffffff);
-  //   light.position.set(0, 0, 10);
-  //   scene.add(light);
-
-  //   camera.position.z = 2;
-    
-  //   let planet = worldMesh(textureLoader, this.state.world);
-  //   scene.add(planet);
-
-  //   let renderCount = 0;
-   
-  //   var animate = function () {
-  //     requestAnimationFrame( animate );
-  //     (planet.material as THREE.ShaderMaterial).uniforms.unTime.value = renderCount;
-  //     renderer.render( scene, camera );
-  //     renderCount += 0.0002;
-  //   };
-  //   animate();
-  // }
+  beforeRender() {
+    (this.planet!.material as THREE.ShaderMaterial).uniforms.unTime.value = this.renderCount;
+    this.renderCount += 0.0002;
+  }
 
   render() {
-    console.log('World', 'render', this.props);
     return (
       <div ref={ref => (this.mount = ref)} />
     )

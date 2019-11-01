@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { noise4d } from '../../_3d/Noise';
 import { State } from '../model';
 import { ClientDispatch } from '../../clients/model';
+import Model3D from '../../_3d/Model3D';
 
 interface Dispatch extends ClientDispatch {
 }
@@ -109,57 +110,52 @@ class Component extends React.Component<Props,State> {
     `
   }
 
+  model  : Model3D | null;
+  star : THREE.Mesh | null;
+  renderCount : number
+
+  constructor(props : Props) {
+    super (props);
+
+    this.renderCount = 0;
+    this.star = null;
+    this.model = null;
+    this.beforeRender = this.beforeRender.bind(this);
+  }
+
   componentDidMount() {
+    this.model = new Model3D(this.mount);
+    this.addCustomSceneObjects();
+    this.model.startAnimationLoop(this.beforeRender);
+  }
 
-    const scene = new THREE.Scene();
-    let itemElement = this.mount.closest(".concorde-dashboard-item");
-    console.log("model3d", itemElement.clientWidth, itemElement.clientHeight);
+  componentWillUnmount() {
+    this.model!.stopAnimationLoop();
+  }
 
-    let width = itemElement.clientWidth; 
-    let height = itemElement.clientHeight - 30;
-
-    const camera = new THREE.PerspectiveCamera( 75, width / height, 0.1, 20 );
-    const renderer = new THREE.WebGLRenderer({ 
-      antialias: true,
-    });
-    renderer.setSize(width, height);
-    this.mount.appendChild( renderer.domElement );
-
-    console.log('star-system-mount', this.props.clientState);
-
-    // var textureLoader = new THREE.TextureLoader();
-    // var cloudTexture = textureLoader.load('gas_giant_jovian.png');
-    
-    var renderCount = 0;
-
-    // var light = new THREE.DirectionalLight(0xffffff);
-    // light.position.set(0, 0, 10);
-    // scene.add(light);
-
-    var geometry = new THREE.IcosahedronBufferGeometry(1, 4);
-    var material = new THREE.ShaderMaterial({
+  addCustomSceneObjects = () => {
+    let geometry = new THREE.IcosahedronBufferGeometry(1, 4);
+    let material = new THREE.ShaderMaterial({
       vertexShader: this.vertexShader(),
       fragmentShader: this.fragmentShader(),
       uniforms: {
 //        textureSampler: { type: 't', value: cloudTexture },
-        unTime: { type: 'f', value: renderCount },
+        unTime: { type: 'f', value: 0 },
       },
     });
 
-    var star = new THREE.Mesh(geometry, material);
+    this.star = new THREE.Mesh(geometry, material);
 
-    scene.add( star );
-    camera.position.z = 2;
-    var animate = function () {
-      requestAnimationFrame( animate );
-      material.uniforms.unTime.value = renderCount;
-      renderer.render( scene, camera );
-      renderCount += 0.0002;
-    };
-    animate();
+    this.model!.scene.add( this.star );
+  }
+
+  beforeRender() {
+    (this.star!.material as THREE.ShaderMaterial).uniforms.unTime.value = this.renderCount;
+    this.renderCount += 0.0002;
   }
 
   render() {
+    console.log('star-system', 'render', this.props.clientState)
     return (
       <div ref={ref => (this.mount = ref)} />
     )
