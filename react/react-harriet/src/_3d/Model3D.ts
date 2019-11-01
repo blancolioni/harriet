@@ -56,6 +56,7 @@ export default class Model3D {
             this.requestID = requestAnimationFrame(animate);
             beforeRender();
             this.renderer!.render(this.scene!, this.camera!);
+            this.labelRenderer!.render(this.scene!, this.camera!);
         }
         animate();
     }
