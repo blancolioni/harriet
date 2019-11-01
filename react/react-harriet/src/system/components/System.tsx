@@ -126,7 +126,7 @@ class Component extends React.Component<Props,State> {
   }
 
   componentDidMount() {
-    this.model = new Model3D(this.mount);
+    this.model = new Model3D(this.mount, true);
     this.addCustomSceneObjects();
     this.model.startAnimationLoop(this.beforeRender);
   }
@@ -190,8 +190,10 @@ class Component extends React.Component<Props,State> {
     const x = origin.x + 5.0 * obj.orbit * Math.cos(obj.longitude);
     const y = 0;
     const z = origin.z + 5.0 * obj.orbit * Math.sin(obj.longitude);
+    let newObject = false;
 
     if (!this.model!.scene.getObjectByName(obj.name)) {
+      newObject = true;
       switch (obj.type) {
         case SystemObjectType.Star:
           this.addObject(obj, this.starMesh(obj as StarObject))
@@ -200,11 +202,19 @@ class Component extends React.Component<Props,State> {
         case SystemObjectType.World:
           this.addObject(obj, worldMesh(this.model!, obj as WorldObject, 2, new THREE.Vector3(-x, -y, -z)));
           break;
-      }
+      }  
+  
     }
 
     const mesh = this.model!.scene.getObjectByName(obj.name)!;
     mesh.position.set(x, y, z);
+
+    if (newObject) {
+      const wp = new THREE.Vector3 (x, y, z + mesh.scale.z * 2.5);
+      console.log('add waypoint', x, y, z, mesh.scale.z, wp)
+      this.model!.addWaypoint(wp, new THREE.Vector3 (0, 0, 1), 5.0);
+      this.model!.addWaypoint(new THREE.Vector3 (x, y, z + mesh.scale.z * 2), new THREE.Vector3 (0, 0, 1), 5.0);
+    }
 
     for (const dep of obj.dependents) {
       this.updateScene(dep, mesh.position)

@@ -17,6 +17,7 @@ with Harriet.Stars;
 with Harriet.UI.Models.Data_Source;
 
 with Harriet.Db.Massive_Object;
+with Harriet.Db.Ship;
 with Harriet.Db.Star;
 with Harriet.Db.Star_System_Object;
 with Harriet.Db.World;
@@ -249,6 +250,14 @@ package body Harriet.UI.Models is
             Set ("day", World.Rotation_Period / 3600.0);
          end;
 
+      elsif Object.Top_Record = R_Ship then
+         declare
+            Ship : constant Harriet.Db.Ship.Ship_Type :=
+              Harriet.Db.Ship.Get_Ship (Object.Get_Orbiting_Object_Reference);
+         begin
+            Set ("type", "SHIP");
+            Set ("mass", Ship.Mass);
+         end;
       end if;
 
       return Result;

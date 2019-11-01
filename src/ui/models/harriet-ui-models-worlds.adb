@@ -51,7 +51,7 @@ package body Harriet.UI.Models.Worlds is
    overriding function Changed
      (Model : World_Model_Type)
       return Boolean
-   is (False);
+   is (True);
 
    overriding function Name
      (Model : World_Model_Type)

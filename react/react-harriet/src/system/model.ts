@@ -1,8 +1,9 @@
 import { ClientState } from '../clients/model';
 
 export enum SystemObjectType {
-  World = 'WORLD',
+  Ship = 'SHIP',
   Star = 'STAR',
+  World = 'WORLD',
 }
 
 export interface SystemObject {
@@ -27,6 +28,9 @@ export interface StarObject extends SystemObject {
 export interface WorldObject extends SystemObject {
   composition : string,
   climate     : string,
+}
+
+export interface ShipObject extends SystemObject {
 }
 
 export interface State extends ClientState {
