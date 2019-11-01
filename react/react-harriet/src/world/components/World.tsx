@@ -85,17 +85,18 @@ void main() {
 const rockWorldFragmentShader = `
   varying vec2 vUv;
   varying vec3 vNormal;
+  uniform sampler2D textureSampler;
+  uniform vec3 starLight;
   ` +
   noise3d +
   fractalNoise3d +
   `
   void main() {
-    vec3 light = vec3(0.1, 0.0, 5.0);
-    light = normalize(light);
-    float n = noise(vNormal, 8, 1.0, 0.5) / 2.0 + 0.5;
+    vec3 light = normalize(starLight);
+    float n = noise(vNormal, 16, 1.5, 0.4) / 2.0 + 0.5;
     float dProd = max(0.0, dot(vNormal, light));
-  
-    gl_FragColor = vec4(n, n, n, 1.0) * vec4(dProd, dProd, dProd, 1.0);
+    vec4 texColor = texture2D(textureSampler, vec2(n, 0.0));
+    gl_FragColor = texColor * vec4(dProd, dProd, dProd, 1.0);
   }
 `
 
@@ -114,7 +115,7 @@ const worldTextureName = (world : WorldObject) : string => {
       textureName = 'gas_giant_cyan'
     }
   } else {
-    textureName = 'logo512'
+    textureName = 'temperate'
   }
 
   return textureName;
@@ -123,21 +124,24 @@ const worldTextureName = (world : WorldObject) : string => {
 export function worldMesh(
   model : Model3D,
   world : WorldObject | null,
+  detail : number,
+  lightFrom : THREE.Vector3,
 ) : THREE.Mesh
 {
   const vertexShader = standardVertexShader;
 
   const fragmentShader = world && world.climate === Climate.Jovian ? gasGiantFragmentShader : rockWorldFragmentShader;
-  const textureName = world ? worldTextureName(world) : 'logo512';
+  const textureName = world ? worldTextureName(world) : 'temperate';
   const texture =  model.textureLoader.load(textureName + '.png');
 
-  const geometry = new THREE.IcosahedronBufferGeometry(1, 4);
+  const geometry = new THREE.IcosahedronBufferGeometry(1, detail);
   const material = new THREE.ShaderMaterial({
     vertexShader,
     fragmentShader,
     uniforms: {
       textureSampler: { type: 't', value: texture },
       unTime: { type: 'f', value: 0},
+      starLight: { type: 'v', value: lightFrom }
     },
   });
 
@@ -176,7 +180,7 @@ class World extends React.Component<Props,WorldSceneState> {
   }
 
   addCustomSceneObjects = () => {
-    this.planet = worldMesh(this.model!, this.state.world);
+    this.planet = worldMesh(this.model!, this.state.world, 6, new THREE.Vector3(-5, 0, 3));
     this.model!.scene.add(this.planet);
   }
 
