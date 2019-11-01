@@ -2,6 +2,7 @@ import { Dispatch, AnyAction } from 'redux'
 
 import { logout } from '../login/actions';
 import { updateToolbar } from '../toolbar/actions';
+import { updateClient } from '../clients/actions';
 
 const serverUrl = 'localhost:8080/socket';
 
@@ -26,7 +27,12 @@ const setupSocket = (dispatch : Dispatch<AnyAction>, token : string) => {
 
   socket.onmessage = (event) => {
     const data = JSON.parse(event.data)
-    console.log(data);
+    if (data.clients) {
+      for (const client of data.clients) {
+        dispatch(updateClient(client.clientId, client.update));
+      }
+    }
+    console.log('onmessage', data)
     switch (data.payload.type) {
       case 'update-state':
         dispatch(updateToolbar(data.payload.currentTimeImage));
