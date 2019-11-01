@@ -1,9 +1,10 @@
 import React from "react";
 import * as THREE from "three";
 import { noise4d } from '../../_3d/Noise';
-import { State } from '../model';
+import { State, SystemObject, SystemObjectType, StarObject, WorldObject } from '../model';
 import { ClientDispatch } from '../../clients/model';
 import Model3D from '../../_3d/Model3D';
+import { worldMesh } from "../../world/components/World";
 
 interface Dispatch extends ClientDispatch {
 }
@@ -111,14 +112,14 @@ class Component extends React.Component<Props,State> {
   }
 
   model  : Model3D | null;
-  star : THREE.Mesh | null;
   renderCount : number
+  unTimeMaterial : THREE.ShaderMaterial[];
 
   constructor(props : Props) {
     super (props);
 
     this.renderCount = 0;
-    this.star = null;
+    this.unTimeMaterial = [];
     this.model = null;
     this.beforeRender = this.beforeRender.bind(this);
   }
@@ -134,6 +135,10 @@ class Component extends React.Component<Props,State> {
   }
 
   addCustomSceneObjects = () => {
+    this.model!.camera.position.z = 10;
+  }
+
+  starMesh = (star : StarObject) : THREE.Mesh => {
     let geometry = new THREE.IcosahedronBufferGeometry(1, 4);
     let material = new THREE.ShaderMaterial({
       vertexShader: this.vertexShader(),
@@ -144,18 +149,62 @@ class Component extends React.Component<Props,State> {
       },
     });
 
-    this.star = new THREE.Mesh(geometry, material);
-
-    this.model!.scene.add( this.star );
+    this.unTimeMaterial.push(material);
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.name = star.name;
+    return mesh;
   }
 
   beforeRender() {
-    (this.star!.material as THREE.ShaderMaterial).uniforms.unTime.value = this.renderCount;
+    for (const mat of this.unTimeMaterial) {
+      mat.uniforms.unTime.value = this.renderCount;
+    }
+    
     this.renderCount += 0.0002;
+  }
+
+  addObject = (obj : SystemObject, mesh : THREE.Mesh) => {
+    let scale = obj.radius;    
+    if (obj.type === SystemObjectType.World) {
+      scale /= 10;
+    } else {
+      scale /= 2
+    }
+
+    mesh.scale.set(scale, scale, scale);
+    mesh.name = obj.name;
+    this.model!.scene.add( mesh );
+  }
+
+  updateScene = (obj : SystemObject) => {
+    if (!this.model!.scene.getObjectByName(obj.name)) {
+      switch (obj.type) {
+        case SystemObjectType.Star:
+          this.addObject(obj, this.starMesh(obj as StarObject))
+          break;
+
+        case SystemObjectType.World:
+          this.addObject(obj, worldMesh(this.model!, obj as WorldObject))
+          break;
+      }
+    }
+
+    const mesh = this.model!.scene.getObjectByName(obj.name)!;
+    mesh.position.set(5.0 * obj.orbit * Math.cos(obj.longitude), 0.0, 5.0 * obj.orbit * Math.sin(obj.longitude));
+    console.log('updateScene', mesh.name, mesh.position);
+
+    for (const dep of obj.dependents) {
+      this.updateScene(dep)
+    }
   }
 
   render() {
     console.log('star-system', 'render', this.props.clientState)
+
+    if (this.props.clientState.primary) {
+      this.updateScene(this.props.clientState.primary);
+    }
+
     return (
       <div ref={ref => (this.mount = ref)} />
     )

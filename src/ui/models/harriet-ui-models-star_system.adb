@@ -1,4 +1,5 @@
 with Ada.Exceptions;
+with Ada.Numerics;
 
 with Harriet.Calendar;
 with Harriet.Color;
@@ -172,7 +173,8 @@ package body Harriet.UI.Models.Star_System is
                else Harriet.Orbits.Calculate_Longitude
                  (Massive_Object.Get (Object.Primary_Massive).Mass,
                   Object.Semimajor_Axis,
-                  Harriet.Calendar.Clock - Object.Epoch)));
+                  Harriet.Calendar.Clock - Object.Epoch))
+              * Ada.Numerics.Pi / 180.0);
          Set ("day", Object.Period);
          Set ("axisTilt", Object.Tilt);
          Set ("dependents",
@@ -187,6 +189,7 @@ package body Harriet.UI.Models.Star_System is
                Color : constant Harriet.Color.Harriet_Color :=
                  Star.Color;
             begin
+               Set ("type", "STAR");
                Set ("mass", Object.Mass / Harriet.Solar_System.Solar_Mass);
                Set ("radius",
                     Object.Radius / Harriet.Solar_System.Solar_Radius);
@@ -201,6 +204,7 @@ package body Harriet.UI.Models.Star_System is
                  Harriet.Db.World.Get_World
                    (Object.Get_Star_System_Object_Reference);
             begin
+               Set ("type", "WORLD");
                Set ("mass", Object.Mass / Harriet.Solar_System.Earth_Mass);
                Set ("radius",
                     Object.Radius / Harriet.Solar_System.Earth_Radius);

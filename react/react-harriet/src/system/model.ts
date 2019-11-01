@@ -1,6 +1,12 @@
 import { ClientState } from '../clients/model';
 
+export enum SystemObjectType {
+  World = 'WORLD',
+  Star = 'STAR',
+}
+
 export interface SystemObject {
+  type: SystemObjectType,
   name: string,
   mass: number,
   orbit: number,

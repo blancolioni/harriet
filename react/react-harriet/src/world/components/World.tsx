@@ -166,15 +166,15 @@ const worldTextureName = (world : WorldObject) : string => {
 }
 
 export function worldMesh(
-  textureLoader : THREE.TextureLoader,
-  world         : WorldObject | null,
+  model : Model3D,
+  world : WorldObject | null,
 ) : THREE.Mesh
 {
   const vertexShader = standardVertexShader;
 
   const fragmentShader = world && world.climate === Climate.Jovian ? gasGiantFragmentShader : rockWorldFragmentShader;
   const textureName = world ? worldTextureName(world) : 'logo512';
-  const texture =  textureLoader.load(textureName + '.png');
+  const texture =  model.textureLoader.load(textureName + '.png');
 
   const geometry = new THREE.IcosahedronBufferGeometry(1, 4);
   const material = new THREE.ShaderMaterial({
@@ -221,7 +221,7 @@ class World extends React.Component<Props,WorldSceneState> {
   }
 
   addCustomSceneObjects = () => {
-    this.planet = worldMesh(this.model!.textureLoader, this.state.world);
+    this.planet = worldMesh(this.model!, this.state.world);
     this.model!.scene.add(this.planet);
   }
 
