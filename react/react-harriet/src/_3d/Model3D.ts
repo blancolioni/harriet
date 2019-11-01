@@ -16,7 +16,7 @@ export default class Model3D {
         const width = itemElement.clientWidth; 
         const height = itemElement.clientHeight - 30;
   
-        this.camera = new THREE.PerspectiveCamera( 75, width / height, 0.1, 10 );
+        this.camera = new THREE.PerspectiveCamera( 75, width / height, 0.1, 1000 );
   
         this.renderer = new THREE.WebGLRenderer({ 
             antialias: true,

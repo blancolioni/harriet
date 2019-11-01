@@ -1,6 +1,6 @@
 import React from "react";
 import * as THREE from "three";
-import { noise3d } from '../../_3d/Noise';
+import { noise3d, fractalNoise3d, ridgedNoise3d } from '../../_3d/Noise';
 import { State, Composition, Climate } from '../model';
 import { ClientDispatch } from '../../clients/model';
 import { WorldObject } from "../../system/model";
@@ -40,60 +40,11 @@ uniform float unTime;
 
 + noise3d
 
++ fractalNoise3d
+
++ ridgedNoise3d
+
 + `
-
-float noise(vec3 position, int octaves, float frequency, float persistence) {
-  float total = 0.0; // Total value so far
-  float maxAmplitude = 0.0; // Accumulates highest theoretical amplitude
-  float amplitude = 1.0;
-  for (int i = 0; i < 20; i++) {
-
-    if (i >= octaves) return total / maxAmplitude;
-
-      // Get the noise sample
-      total += snoise(position * frequency) * amplitude;
-
-      // Make the wavelength twice as small
-      frequency *= 2.0;
-
-      // Add to our maximum possible amplitude
-      maxAmplitude += amplitude;
-
-      // Reduce amplitude according to persistence for the next octave
-      amplitude *= persistence;
-
-  }
-
-  // Scale the result by the maximum amplitude
-  return total / maxAmplitude;
-}
-
-float ridgedNoise(vec3 position, int octaves, float frequency, float persistence) {
-float total = 0.0; // Total value so far
-float maxAmplitude = 0.0; // Accumulates highest theoretical amplitude
-float amplitude = 1.0;
-for (int i = 0; i < 20; i++) {
-
-  if (i >= octaves) return total / maxAmplitude;
-
-    // Get the noise sample
-    total += ((1.0 - abs(snoise(position * frequency))) * 2.0 - 1.0) * amplitude;
-
-    // Make the wavelength twice as small
-    frequency *= 2.0;
-
-    // Add to our maximum possible amplitude
-    maxAmplitude += amplitude;
-
-    // Reduce amplitude according to persistence for the next octave
-    amplitude *= persistence;
-
-}
-
-// Scale the result by the maximum amplitude
-return total / maxAmplitude;
-}
-
 float computeDiffuse(vec3 normal) {
   return clamp( dot( normal, vec3(0.1, 0.0, 5.0) ), 0.0, 1.0 );
 }
@@ -134,13 +85,17 @@ void main() {
 const rockWorldFragmentShader = `
   varying vec2 vUv;
   varying vec3 vNormal;
+  ` +
+  noise3d +
+  fractalNoise3d +
+  `
   void main() {
     vec3 light = vec3(0.1, 0.0, 5.0);
     light = normalize(light);
-  
+    float n = noise(vNormal, 8, 1.0, 0.5) / 2.0 + 0.5;
     float dProd = max(0.0, dot(vNormal, light));
   
-    gl_FragColor = (0.5, 0.1, 0.5, 1.0) * vec4(dProd, dProd, dProd, 1.0);
+    gl_FragColor = vec4(n, n, n, 1.0) * vec4(dProd, dProd, dProd, 1.0);
   }
 `
 

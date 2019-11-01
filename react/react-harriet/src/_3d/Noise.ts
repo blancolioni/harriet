@@ -237,3 +237,59 @@ float snoise(vec4 v)
   }
 
 `
+
+export const fractalNoise3d = `
+float noise(vec3 position, int octaves, float frequency, float persistence) {
+  float total = 0.0; // Total value so far
+  float maxAmplitude = 0.0; // Accumulates highest theoretical amplitude
+  float amplitude = 1.0;
+  for (int i = 0; i < 20; i++) {
+
+    if (i >= octaves) return total / maxAmplitude;
+
+      // Get the noise sample
+      total += snoise(position * frequency) * amplitude;
+
+      // Make the wavelength twice as small
+      frequency *= 2.0;
+
+      // Add to our maximum possible amplitude
+      maxAmplitude += amplitude;
+
+      // Reduce amplitude according to persistence for the next octave
+      amplitude *= persistence;
+
+  }
+
+  // Scale the result by the maximum amplitude
+  return total / maxAmplitude;
+}
+`;
+
+export const ridgedNoise3d = `
+float ridgedNoise(vec3 position, int octaves, float frequency, float persistence) {
+  float total = 0.0; // Total value so far
+  float maxAmplitude = 0.0; // Accumulates highest theoretical amplitude
+  float amplitude = 1.0;
+  for (int i = 0; i < 20; i++) {
+  
+    if (i >= octaves) return total / maxAmplitude;
+  
+      // Get the noise sample
+      total += ((1.0 - abs(snoise(position * frequency))) * 2.0 - 1.0) * amplitude;
+  
+      // Make the wavelength twice as small
+      frequency *= 2.0;
+  
+      // Add to our maximum possible amplitude
+      maxAmplitude += amplitude;
+  
+      // Reduce amplitude according to persistence for the next octave
+      amplitude *= persistence;
+  
+  }
+  
+  // Scale the result by the maximum amplitude
+  return total / maxAmplitude;
+  }
+  `
