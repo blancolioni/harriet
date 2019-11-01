@@ -9,6 +9,7 @@ package Harriet.Solar_System is
    Earth_Radius               : constant := 6_371_000.0;
    Earth_Orbit                : constant := 149_598_261_000.0;
 
+   Solar_Surface_Temperature  : constant := 5772.0;
    Earth_Exospheric_Temp      : constant := 1273.0;
    Earth_Effective_Temp       : constant := 250.0;
    Earth_Average_Kelvin       : constant := 287.15;
