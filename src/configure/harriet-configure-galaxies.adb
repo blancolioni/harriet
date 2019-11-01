@@ -319,6 +319,9 @@ package body Harriet.Configure.Galaxies is
                    * Solar_Masses
                  / Luminosity
                  * (Harriet.Random.Unit_Random + 0.5);
+               Temperature : constant Non_Negative_Real :=
+                 (Luminosity ** 0.25)
+                 * Harriet.Solar_System.Solar_Surface_Temperature;
                Star : constant Harriet.Db.Star_Reference :=
                         Harriet.Db.Star.Create
                           (Star_System           => Star_System,
@@ -343,6 +346,7 @@ package body Harriet.Configure.Galaxies is
                            Class                 => Class,
                            Subclass              => Subclass,
                            Luminosity            => Luminosity,
+                           Temperature           => Temperature,
                            Age                   => Age,
                            Ecosphere             =>
                              Harriet.Elementary_Functions.Sqrt
