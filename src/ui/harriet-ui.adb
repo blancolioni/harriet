@@ -72,4 +72,31 @@ package body Harriet.UI is
       end if;
    end Send_Message;
 
+   ----------------
+   -- Send_State --
+   ----------------
+
+   procedure Send_State is
+
+      procedure Send_Session_State
+        (State : State_Interface'Class);
+
+      ------------------------
+      -- Send_Session_State --
+      ------------------------
+
+      procedure Send_Session_State
+        (State : State_Interface'Class)
+      is
+         Message : constant Faction_Message :=
+           New_Message (State.Faction).Cash_Changed;
+      begin
+         Send_Message (Message);
+      end Send_Session_State;
+
+   begin
+      Harriet.UI.Sessions.Scan_Active_Sessions
+        (Send_Session_State'Access);
+   end Send_State;
+
 end Harriet.UI;

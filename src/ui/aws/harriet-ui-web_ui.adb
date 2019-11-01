@@ -244,6 +244,8 @@ package body Harriet.UI.Web_UI is
             Message      => Message.Serialize);
       end;
 
+      Send_State;
+
    end On_Clock_Tick;
 
    --------------

@@ -506,6 +506,18 @@ package body Harriet.Sessions is
 
    end Execute_Command;
 
+   -------------
+   -- Faction --
+   -------------
+
+   overriding function Faction
+     (Session   : Root_Harriet_Session)
+      return Harriet.Db.Faction_Reference
+   is
+   begin
+      return Harriet.Db.Faction.First_Reference_By_User (Session.User);
+   end Faction;
+
    ------------------
    -- Faction_Name --
    ------------------
@@ -567,6 +579,10 @@ package body Harriet.Sessions is
       when E : others =>
          return Return_Error (Ada.Exceptions.Exception_Message (E));
    end Handle_Client_Get;
+
+   ------------------------
+   -- Handle_Client_Post --
+   ------------------------
 
    overriding function Handle_Client_Post
      (Session : in out Root_Harriet_Session;

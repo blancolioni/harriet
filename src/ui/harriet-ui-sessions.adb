@@ -114,4 +114,18 @@ package body Harriet.UI.Sessions is
       return States.Element (Id);
    end Reference;
 
+   --------------------------
+   -- Scan_Active_Sessions --
+   --------------------------
+
+   procedure Scan_Active_Sessions
+     (Process : not null access
+        procedure (State : State_Interface'Class))
+   is
+   begin
+      for State of States loop
+         Process (State.all);
+      end loop;
+   end Scan_Active_Sessions;
+
 end Harriet.UI.Sessions;

@@ -138,6 +138,10 @@ private
      (Session   : Root_Harriet_Session)
       return String;
 
+   overriding function Faction
+     (Session   : Root_Harriet_Session)
+      return Harriet.Db.Faction_Reference;
+
    overriding function Faction_Name
      (Session   : Root_Harriet_Session)
       return String;

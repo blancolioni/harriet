@@ -54,6 +54,12 @@ package Harriet.UI is
    is abstract
      with Pre'Class => State.Valid;
 
+   function Faction
+     (State : State_Interface)
+      return Harriet.Db.Faction_Reference
+      is abstract
+     with Pre'Class => State.Valid;
+
    function Faction_Name
      (State : State_Interface)
       return String
@@ -147,6 +153,7 @@ package Harriet.UI is
    is (State.Environment_Value (Name).Image);
 
    procedure Broadcast (Signal : Harriet.Signals.Signal_Type);
+   procedure Send_State;
 
    type Faction_Message is tagged private;
 

@@ -13,6 +13,10 @@ private package Harriet.UI.Sessions is
 
    procedure Close_All_Sessions;
 
+   procedure Scan_Active_Sessions
+     (Process : not null access
+        procedure (State : State_Interface'Class));
+
    function Reference
      (Id : String)
       return access State_Interface'Class
