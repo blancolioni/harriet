@@ -150,7 +150,6 @@ class Component extends React.Component<Props,State> {
       },
     });
 
-    this.unTimeMaterial.push(material);
     const mesh = new THREE.Mesh(geometry, material);
     mesh.name = star.name;
     return mesh;
@@ -183,6 +182,12 @@ class Component extends React.Component<Props,State> {
     var labelObject = new CSS2DObject( labelDiv );
     labelObject.position.set( 0.5, -0.1, 0 );
     mesh.add( labelObject );
+    const mat = mesh.material;
+
+    if ('uniforms' in mat) {
+      this.unTimeMaterial.push(mat);
+    }
+
 
   }
 
