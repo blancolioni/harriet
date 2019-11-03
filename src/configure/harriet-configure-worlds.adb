@@ -10,6 +10,7 @@ with Harriet.Configure.Resources;
 
 with Harriet.Db.Climate_Terrain;
 with Harriet.Db.Sector_Neighbour;
+with Harriet.Db.Sector_Vertex;
 with Harriet.Db.Star_System;
 with Harriet.Db.Terrain;
 with Harriet.Db.World;
@@ -256,9 +257,18 @@ package body Harriet.Configure.Worlds is
                           Sector_Use          =>
                             Harriet.Db.Null_Sector_Use_Reference,
                           Average_Temperature => Base_Temperature (I));
+            S      : constant Harriet.Db.Sector_Reference :=
+                       Harriet.Db.World_Sector.Get (Sector)
+                       .Get_Sector_Reference;
          begin
-            Tile_Refs (I) :=
-              Harriet.Db.World_Sector.Get (Sector).Get_Sector_Reference;
+            Tile_Refs (I) := S;
+            for V of Surface.Tile_Boundary (I) loop
+               Harriet.Db.Sector_Vertex.Create
+                 (Sector => S,
+                  X      => V (1),
+                  Y      => V (2),
+                  Z      => V (3));
+            end loop;
          end;
       end loop;
 
