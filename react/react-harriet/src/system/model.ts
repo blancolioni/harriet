@@ -25,9 +25,23 @@ export interface StarObject extends SystemObject {
   blue  : number,
 }
 
+export interface WorldPoint {
+  x : number
+  y : number
+  z : number
+}
+export interface WorldSector {
+  red    : number,
+  green  : number,
+  blue   : number,
+  normal : WorldPoint,
+  border : WorldPoint[],
+}
+
 export interface WorldObject extends SystemObject {
   composition : string,
   climate     : string,
+  surface     : WorldSector[],
 }
 
 export interface ShipObject extends SystemObject {
