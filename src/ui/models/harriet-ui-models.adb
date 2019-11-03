@@ -317,6 +317,7 @@ package body Harriet.UI.Models is
                      Harriet.Worlds.Scan_Surface
                        (World.Get_World_Reference,
                         Add_Sector'Access);
+                     Set ("surface", Sectors);
                   end;
                end if;
             end if;
