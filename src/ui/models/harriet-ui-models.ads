@@ -67,7 +67,8 @@ private
       end record;
 
    function Serialize
-     (Object : Harriet.Db.Orbiting_Object.Orbiting_Object_Type)
+     (Object : Harriet.Db.Orbiting_Object.Orbiting_Object_Type;
+      Full   : Boolean)
       return Json.Json_Value'Class;
 
 end Harriet.UI.Models;

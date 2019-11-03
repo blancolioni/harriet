@@ -205,7 +205,7 @@ class Component extends React.Component<Props,State> {
           break;
 
         case SystemObjectType.World:
-          this.addObject(obj, worldMesh(this.model!, obj as WorldObject, 2, new THREE.Vector3(-x, -y, -z)));
+          this.addObject(obj, worldMesh(this.model!, obj as WorldObject, 3, new THREE.Vector3(-x, -y, -z)));
           break;
       }  
   
@@ -214,13 +214,15 @@ class Component extends React.Component<Props,State> {
     const mesh = this.model!.scene.getObjectByName(obj.name)!;
     mesh.position.set(x, y, z);
 
-    if (newObject) {
-      const wp = new THREE.Vector3 (x, y, z + mesh.scale.z * 2.5);
-      console.log('add waypoint', x, y, z, mesh.scale.z, wp)
-      this.model!.addWaypoint(wp, new THREE.Vector3 (0, 0, 1), 5.0);
-      this.model!.addWaypoint(new THREE.Vector3 (x, y, z + mesh.scale.z * 2), new THREE.Vector3 (0, 0, 1), 5.0);
+    if (false) {
+      if (newObject) {
+        const wp = new THREE.Vector3 (x, y, z + mesh.scale.z * 2.5);
+        console.log('add waypoint', x, y, z, mesh.scale.z, wp)
+        this.model!.addWaypoint(wp, new THREE.Vector3 (0, 0, 1), 5.0);
+        this.model!.addWaypoint(new THREE.Vector3 (x, y, z + mesh.scale.z * 2), new THREE.Vector3 (0, 0, 1), 5.0);
+      }
     }
-
+    
     for (const dep of obj.dependents) {
       this.updateScene(dep, mesh.position)
     }

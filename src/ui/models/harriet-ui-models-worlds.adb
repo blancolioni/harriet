@@ -74,7 +74,7 @@ package body Harriet.UI.Models.Worlds is
       Request : Harriet.Json.Json_Value'Class)
       return Harriet.Json.Json_Value'Class
    is
-      pragma Unreferenced (State, Client, Request);
+      pragma Unreferenced (State, Client);
       W : constant Harriet.Db.World.World_Type :=
         Harriet.Db.World.Get (Model.World);
 
@@ -82,7 +82,10 @@ package body Harriet.UI.Models.Worlds is
 
    begin
       Result.Set_Property ("title", W.Name);
-      Result.Set_Property ("world", Serialize (W));
+      Result.Set_Property
+        ("world",
+         Serialize (W,
+           Full => Request.Image /= "changes"));
       return Result;
    end Get;
 

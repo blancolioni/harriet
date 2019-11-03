@@ -806,7 +806,7 @@ package body Harriet.Sessions is
          Clients : Json.Json_Array;
 
          Request : constant Json.Json_Value'Class :=
-           Json.Deserialize ("""current-state""");
+           Json.Deserialize ("""changes""");
 
          procedure Check_Client
            (Client_Id : Harriet.UI.Client_Id;

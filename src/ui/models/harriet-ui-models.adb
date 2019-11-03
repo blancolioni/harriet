@@ -109,7 +109,8 @@ package body Harriet.UI.Models is
    ---------------
 
    function Serialize
-     (Object : Harriet.Db.Orbiting_Object.Orbiting_Object_Type)
+     (Object : Harriet.Db.Orbiting_Object.Orbiting_Object_Type;
+      Full   : Boolean)
       return Json.Json_Value'Class
    is
 
@@ -142,7 +143,7 @@ package body Harriet.UI.Models is
               Harriet.Db.Star_System_Object.Select_By_Primary
                 (Primary)
             loop
-               Arr.Append (Serialize (Item));
+               Arr.Append (Serialize (Item, Full));
             end loop;
          end return;
       end Orbiting_Objects;
@@ -196,17 +197,19 @@ package body Harriet.UI.Models is
                Object.Semimajor_Axis,
                Harriet.Calendar.Clock - Object.Epoch))
            * Ada.Numerics.Pi / 180.0);
-      Set ("year", Object.Period);
-
-      if Object.Top_Record in R_Star | R_World then
-         Set ("axisTilt",
-              Harriet.Db.Star_System_Object.Get_Star_System_Object
-                (Object.Get_Orbiting_Object_Reference)
-              .Tilt);
-      end if;
-
       Set ("dependents",
            Orbiting_Objects (Object.Get_Massive_Object_Reference));
+
+      if Full then
+         Set ("year", Object.Period);
+
+         if Object.Top_Record in R_Star | R_World then
+            Set ("axisTilt",
+                 Harriet.Db.Star_System_Object.Get_Star_System_Object
+                   (Object.Get_Orbiting_Object_Reference)
+                 .Tilt);
+         end if;
+      end if;
 
       if Object.Top_Record = R_Star then
          declare
@@ -222,13 +225,15 @@ package body Harriet.UI.Models is
                     Star_Spectrum_Palette.Last_Index));
          begin
             Set ("type", "STAR");
-            Set ("mass", Object.Mass / Harriet.Solar_System.Solar_Mass);
-            Set ("radius",
-                 Star.Radius / Harriet.Solar_System.Solar_Radius);
-            Set ("temperature", Star.Temperature);
-            Set ("red", Color.Red);
-            Set ("green", Color.Green);
-            Set ("blue", Color.Blue);
+            if Full then
+               Set ("mass", Object.Mass / Harriet.Solar_System.Solar_Mass);
+               Set ("radius",
+                    Star.Radius / Harriet.Solar_System.Solar_Radius);
+               Set ("temperature", Star.Temperature);
+               Set ("red", Color.Red);
+               Set ("green", Color.Green);
+               Set ("blue", Color.Blue);
+            end if;
          end;
       elsif Object.Top_Record = R_World then
          declare
@@ -237,17 +242,19 @@ package body Harriet.UI.Models is
                 (Object.Get_Orbiting_Object_Reference);
          begin
             Set ("type", "WORLD");
-            Set ("mass", Object.Mass / Harriet.Solar_System.Earth_Mass);
-            Set ("radius",
-                 World.Radius / Harriet.Solar_System.Earth_Radius);
-            Set ("temperature", World.Average_Temperature);
-            Set ("composition",
-                 Harriet.Db.World_Composition'Image
-                   (World.Composition));
-            Set ("climate",
-                 Harriet.Db.World_Climate'Image
-                   (World.Climate));
-            Set ("day", World.Rotation_Period / 3600.0);
+            if Full then
+               Set ("mass", Object.Mass / Harriet.Solar_System.Earth_Mass);
+               Set ("radius",
+                    World.Radius / Harriet.Solar_System.Earth_Radius);
+               Set ("temperature", World.Average_Temperature);
+               Set ("composition",
+                    Harriet.Db.World_Composition'Image
+                      (World.Composition));
+               Set ("climate",
+                    Harriet.Db.World_Climate'Image
+                      (World.Climate));
+               Set ("day", World.Rotation_Period / 3600.0);
+            end if;
          end;
 
       elsif Object.Top_Record = R_Ship then

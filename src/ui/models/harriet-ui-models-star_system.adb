@@ -71,7 +71,7 @@ package body Harriet.UI.Models.Star_System is
       Request : Harriet.Json.Json_Value'Class)
       return Harriet.Json.Json_Value'Class
    is
-      pragma Unreferenced (State, Client, Request);
+      pragma Unreferenced (State, Client);
 
       Result : Json.Json_Object;
 
@@ -83,7 +83,8 @@ package body Harriet.UI.Models.Star_System is
       Result.Set_Property
         ("primary",
          Serialize
-           (Harriet.Db.Star.First_By_Star_System (Model.Star_System)));
+           (Harriet.Db.Star.First_By_Star_System (Model.Star_System),
+            Full => Request.Image /= "changes"));
       return Result;
 
    end Get;
