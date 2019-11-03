@@ -13,6 +13,7 @@ with Harriet.Orbits;
 with Harriet.Solar_System;
 
 with Harriet.Stars;
+with Harriet.Worlds;
 
 with Harriet.UI.Models.Data_Source;
 
@@ -20,6 +21,7 @@ with Harriet.Db.Massive_Object;
 with Harriet.Db.Ship;
 with Harriet.Db.Star;
 with Harriet.Db.Star_System_Object;
+with Harriet.Db.Terrain;
 with Harriet.Db.World;
 
 with Harriet.Paths;
@@ -254,6 +256,69 @@ package body Harriet.UI.Models is
                     Harriet.Db.World_Climate'Image
                       (World.Climate));
                Set ("day", World.Rotation_Period / 3600.0);
+
+               if not World.Gas_Giant then
+                  declare
+                     Sectors : Json.Json_Array;
+
+                     function Serialize
+                       (Vertex : Harriet.Worlds.Sector_Vertex)
+                     return Json.Json_Object;
+
+                     procedure Add_Sector
+                       (Sector : Harriet.Db.World_Sector_Reference);
+
+                     ----------------
+                     -- Add_Sector --
+                     ----------------
+
+                     procedure Add_Sector
+                       (Sector : Harriet.Db.World_Sector_Reference)
+                     is
+                        use Harriet.Worlds;
+                        Vertices : constant Sector_Vertex_Array :=
+                                     Get_Vertices (Sector);
+                        Centre   : constant Sector_Vertex :=
+                                     Get_Centre (Sector);
+                        Terrain  : constant Harriet.Db.Terrain.Terrain_Type :=
+                                     Harriet.Db.Terrain.Get
+                                       (Get_Terrain (Sector));
+                        Arr      : Json.Json_Array;
+                        Obj      : Json.Json_Object;
+                     begin
+                        for Vertex of Vertices loop
+                           Arr.Append (Serialize (Vertex));
+                        end loop;
+                        Obj.Set_Property ("border", Arr);
+                        Obj.Set_Property ("normal", Serialize (Centre));
+                        Obj.Set_Property ("red", Float (Terrain.Red));
+                        Obj.Set_Property ("green", Float (Terrain.Green));
+                        Obj.Set_Property ("blue", Float (Terrain.Blue));
+                        Sectors.Append (Obj);
+                     end Add_Sector;
+
+                     ---------------
+                     -- Serialize --
+                     ---------------
+
+                     function Serialize
+                       (Vertex : Harriet.Worlds.Sector_Vertex)
+                        return Json.Json_Object
+                     is
+                     begin
+                        return Obj : Json.Json_Object do
+                           Obj.Set_Property ("x", Float (Vertex.X));
+                           Obj.Set_Property ("y", Float (Vertex.Y));
+                           Obj.Set_Property ("z", Float (Vertex.Z));
+                        end return;
+                     end Serialize;
+
+                  begin
+                     Harriet.Worlds.Scan_Surface
+                       (World.Get_World_Reference,
+                        Add_Sector'Access);
+                  end;
+               end if;
             end if;
          end;
 
