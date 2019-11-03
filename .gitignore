@@ -22,3 +22,7 @@ harriet-init.marlowe
 # log files
 log/*.log
 test.txt
+config/voronoi.txt
+config/delauny.txt
+config/voronoi.txt
+galaxy.txt
