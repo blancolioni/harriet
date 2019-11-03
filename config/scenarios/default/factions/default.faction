@@ -16,7 +16,6 @@ home-colony = {
 	  
    facilities = {
 	  small-admin-centre = 1
-      mine = 20
 	  strip-mine = 1
       industry = 10
       research-lab = 2

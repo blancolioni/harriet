@@ -1,10 +1,12 @@
 with Colors;
+with Generated;
 with Names;
 with Knowledge;
 with Localisation;
 with Quantities;
 with Resources;
 with Star_Systems;
+with Surfaces;
 
 package Worlds is
 
@@ -26,13 +28,34 @@ package Worlds is
        Max_IPP              : Long_Float;
     end Gas;
 
-   record World : Star_System_Object, Has_Name, Knowable, Has_Palette is
-      Composition              : World_Composition;
-      Climate                  : World_Climate;
-      Gas_Giant                : Boolean;
-      key Habitability         : Long_Float;
-      Surface_Pressure         : Long_Float;
-	  Average_Temperature      : Long_Float;
+   record Terrain : Localised, Has_Color is
+      Hazard   : Long_Float;
+      Is_Water : Boolean;   
+   end Terrain;
+
+   record Climate_Terrain is
+      key Climate : World_Climate;
+      Terrain;
+      Frequency : Natural;
+      key Climate_Terrain with Climate, Terrain;
+   end Climate_Terrain;
+   
+   record Transport_Method : Localised;
+   
+   record Movement_Cost is
+      key Transport_Method;
+	  key Terrain;
+	  Cost : Long_Float;
+   end Movement_Cost;
+   
+   record World : Star_System_Object, Has_Name, Knowable, Has_Palette, Surface, Is_Generated is
+      Composition         : World_Composition;
+      Climate             : World_Climate;
+      Gas_Giant           : Boolean;
+      key Habitability    : Long_Float;
+      Surface_Pressure    : Long_Float;
+	  Average_Temperature : Long_Float;
+      Hydrosphere         : Long_Float;
    end World; 
 
    record Atmosphere is
@@ -43,12 +66,29 @@ package Worlds is
       key World_Gas with World, Gas;
    end Atmosphere;
 
-   record Deposit : Knowable is
-      key World;
-	  Resource;
-	  Concentration : Long_Float;
-	  Available     : Quantity_Type;
-	  unique key Deposit with World, Resource;
-   end Deposit;
+record Sector_Use : Localised;
+   
+record Zone : Commodity is
+   key Sector_Use;
+end Zone;
+
+record World_Sector : Sector is
+   key World;
+   Terrain;
+   Sector_Use;
+   Average_Temperature : Long_Float;
+   key World_Sector_Use with World, Sector_Use;
+end World_Sector;
+   
+record Deposit : Knowable is
+    key World;
+    unique key World_Sector;
+    Resource;
+    Concentration : Long_Float;
+    Difficulty    : Long_Float;
+    Available     : Quantity_Type;
+    unique key Deposit with World_Sector, Resource;
+    key Accessible_Deposits with World, Difficulty;
+end Deposit;
    
 end Worlds;

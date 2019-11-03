@@ -4,6 +4,8 @@ with Harriet.Json;
 
 with Harriet.Db;
 
+with Harriet.Db.World_Sector;
+
 package Harriet.Worlds is
 
    type World_Selection is tagged private;
@@ -53,6 +55,59 @@ package Harriet.Worlds is
    function Distance
      (From, To : Harriet.Db.World_Reference)
       return Non_Negative_Real;
+
+   type World_Sector_Array is
+     array (Positive range <>) of Harriet.Db.World_Sector_Reference;
+
+   function Get_Neighbours
+     (Sector : Harriet.Db.World_Sector_Reference)
+      return World_Sector_Array;
+
+   procedure Scan_Surface
+     (World : Harriet.Db.World_Reference;
+      Process : not null access
+        procedure (Sector : Harriet.Db.World_Sector_Reference));
+
+   function Best_Sector
+     (World : Harriet.Db.World_Reference;
+      Score : not null access
+        function (Sector : Harriet.Db.World_Sector.World_Sector_Type)
+      return Real)
+      return Harriet.Db.World_Sector_Reference;
+
+   function Find_Sector
+     (World : Harriet.Db.World_Reference;
+      Test : not null access
+        function (Sector : Harriet.Db.World_Sector.World_Sector_Type)
+      return Boolean)
+      return Harriet.Db.World_Sector_Reference;
+
+   function Get_World
+     (Sector : Harriet.Db.World_Sector_Reference)
+      return Harriet.Db.World_Reference;
+
+   type Sector_Vertex is
+      record
+         X, Y, Z : Signed_Unit_Real;
+      end record;
+
+   function Get_Centre
+     (Sector : Harriet.Db.World_Sector_Reference)
+      return Sector_Vertex;
+
+   function Get_Terrain
+     (Sector : Harriet.Db.World_Sector_Reference)
+      return Harriet.Db.Terrain_Reference;
+
+   function Get_Average_Temperature
+     (Sector : Harriet.Db.World_Sector_Reference)
+      return Non_Negative_Real;
+
+   type Sector_Vertex_Array is array (Positive range <>) of Sector_Vertex;
+
+   function Get_Vertices
+     (Sector : Harriet.Db.World_Sector_Reference)
+      return Sector_Vertex_Array;
 
 private
 

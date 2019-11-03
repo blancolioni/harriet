@@ -1,12 +1,2 @@
-terrain = {
-   mountain = 5
-   plain = 5
-   volcanic = 5
-   forest = 5
-   jungle = 5
-   swamp = 10
-   marsh = 10
-}
-
-default-terrain = water
+terrain = { coast = 5 plain = 30 hills = 20 mountains = 5 }
 habitability = 75

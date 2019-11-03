@@ -22,6 +22,10 @@ package Facilities is
 	  Free_Installations : Natural;
    end Facility;
    
+   record Mining_Facility : Facility is
+      key Resource;
+   end Mining_Facility;
+   
    record Facility_Input is
       key Facility;
 	  key Commodity;
@@ -37,6 +41,7 @@ package Facilities is
    record Installation : Managed, Updated is
       key World;
       key Colony;
+      key World_Sector;
       Facility;
       Efficiency : Long_Float;
       Commodity;

@@ -80,7 +80,7 @@ package body Harriet.Installations.Updates is
         and then Installation.Resource /= Null_Resource_Reference
       then
          Harriet.Worlds.Updates.Mine_Resource
-           (World         => Installation.World,
+           (Sector        => Installation.World_Sector,
             Resource      => Installation.Resource,
             Effectiveness =>
               Real (Facility.Mining) * Installation.Efficiency,
@@ -101,7 +101,7 @@ package body Harriet.Installations.Updates is
 
       if Facility.Strip_Mining > 0 then
          Harriet.Worlds.Updates.Mine_Resource
-           (World         => Installation.World,
+           (Sector        => Installation.World_Sector,
             Resource      => Harriet.Db.Null_Resource_Reference,
             Effectiveness =>
               Real (Facility.Strip_Mining) * Installation.Efficiency,

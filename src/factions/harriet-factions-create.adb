@@ -7,10 +7,10 @@ with Harriet.Configure.Commodities;
 
 with Harriet.Calendar;
 with Harriet.Configure;
+with Harriet.Constants;
 with Harriet.Money;
 with Harriet.Quantities;
 with Harriet.Random;
-with Harriet.Real_Images;
 
 with Harriet.Ships;
 with Harriet.Star_Systems;
@@ -21,16 +21,18 @@ with Harriet.Db.Deposit;
 with Harriet.Db.Facility;
 with Harriet.Db.Faction;
 with Harriet.Db.Installation;
-with Harriet.Db.Resource;
+with Harriet.Db.Mining_Facility;
 with Harriet.Db.Script;
 with Harriet.Db.Script_Line;
 with Harriet.Db.Ship_Design;
 with Harriet.Db.Star_Gate;
 with Harriet.Db.Star_System;
 with Harriet.Db.System_Knowledge;
+with Harriet.Db.Terrain;
 with Harriet.Db.User;
 with Harriet.Db.World;
 with Harriet.Db.World_Knowledge;
+with Harriet.Db.World_Sector;
 
 package body Harriet.Factions.Create is
 
@@ -45,7 +47,13 @@ package body Harriet.Factions.Create is
    procedure Initial_Facilities
      (Config  : Tropos.Configuration;
       Colony  : Harriet.Db.Colony_Reference;
-      World   : Harriet.Db.World_Reference);
+      World    : Harriet.Db.World_Reference;
+      Sector   : Harriet.Db.World_Sector_Reference);
+
+   procedure Initial_Mines
+     (Colony  : Harriet.Db.Colony_Reference;
+      World   : Harriet.Db.World_Reference;
+      Capital : Harriet.Db.World_Sector_Reference);
 
    procedure Initial_Ships
      (Config  : Tropos.Configuration;
@@ -56,7 +64,8 @@ package body Harriet.Factions.Create is
      (Count    : Natural;
       Facility : Harriet.Db.Facility_Reference;
       Colony   : Harriet.Db.Colony_Reference;
-      World    : Harriet.Db.World_Reference);
+      World    : Harriet.Db.World_Reference;
+      Sector   : Harriet.Db.World_Sector_Reference);
 
    --------------------
    -- Create_Faction --
@@ -327,52 +336,41 @@ package body Harriet.Factions.Create is
                     Tax_Evasion      => Get ("tax-rate") / 10.0,
                     Economy          => Get ("economy"));
 
+      function Evaluate_Sector
+        (Sector : Harriet.Db.World_Sector.World_Sector_Type)
+         return Real;
+
+      ---------------------
+      -- Evaluate_Sector --
+      ---------------------
+
+      function Evaluate_Sector
+        (Sector : Harriet.Db.World_Sector.World_Sector_Type)
+         return Real
+      is
+         Temp_C : constant Real :=
+                    Harriet.Constants.To_Celsius (Sector.Average_Temperature);
+         Terrain : constant Harriet.Db.Terrain_Reference :=
+                     Harriet.Worlds.Get_Terrain
+                       (Sector.Get_World_Sector_Reference);
+      begin
+         if Temp_C <= -20.0 or else Temp_C >= 50.0 then
+            return 0.0;
+         elsif Harriet.Db.Terrain.Get (Terrain).Is_Water then
+            return 0.0;
+         elsif Temp_C < 0.0 then
+            return 60.0 + Temp_C * 3.0;
+         elsif Temp_C >= 20.0 then
+            return 60.0 - (Temp_C - 20.0) * 2.0;
+         else
+            return 100.0;
+         end if;
+      end Evaluate_Sector;
+
+      Capital_Sector : constant Harriet.Db.World_Sector_Reference :=
+                         Harriet.Worlds.Best_Sector
+                           (World, Evaluate_Sector'Access);
    begin
-
-      for Deposit_Config of Config.Child ("deposits") loop
-         declare
-            use Harriet.Db;
-            Resource      : constant Resource_Reference :=
-              Harriet.Db.Resource.Get_Reference_By_Tag
-                (Deposit_Config.Config_Name);
-            Size          : constant Harriet.Quantities.Quantity_Type :=
-              Harriet.Quantities.To_Quantity (Deposit_Config.Get ("size"));
-            Concentration : constant Unit_Real :=
-              Unit_Clamp (Deposit_Config.Get ("concentration"));
-            Deposit       : constant Deposit_Reference :=
-              Harriet.Db.Deposit.Get_Reference_By_Deposit
-                (World, Resource);
-         begin
-            if Resource = Null_Resource_Reference then
-               raise Constraint_Error with
-                 "unknown resource: " & Deposit_Config.Config_Name;
-            end if;
-
-            if Deposit = Null_Deposit_Reference then
-               Ada.Text_IO.Put_Line
-                 ("creating " & Deposit_Config.Config_Name
-                  & " size " & Harriet.Quantities.Show (Size)
-                  & " concentration "
-                  & Harriet.Real_Images.Approximate_Image (Concentration));
-
-               Harriet.Db.Deposit.Create
-                 (World         => World,
-                  Resource      => Resource,
-                  Concentration => Concentration,
-                  Available     => Size);
-            else
-               Ada.Text_IO.Put_Line
-                 ("updating " & Deposit_Config.Config_Name
-                  & " size " & Harriet.Quantities.Show (Size)
-                  & " concentration "
-                  & Harriet.Real_Images.Approximate_Image (Concentration));
-               Harriet.Db.Deposit.Update_Deposit (Deposit)
-                 .Set_Concentration (Concentration)
-                 .Set_Available (Size)
-                 .Done;
-            end if;
-         end;
-      end loop;
 
       Harriet.Configure.Commodities.Configure_Stock
         (Has_Stock => Harriet.Db.Colony.Get (Colony).Get_Has_Stock_Reference,
@@ -381,7 +379,13 @@ package body Harriet.Factions.Create is
       Initial_Facilities
         (Config => Config.Child ("facilities"),
          Colony => Colony,
-         World  => World);
+         World  => World,
+         Sector => Capital_Sector);
+
+      Initial_Mines
+        (Colony  => Colony,
+         World   => World,
+         Capital => Capital_Sector);
 
       Initial_Ships
         (Config  => Config.Child ("ships"),
@@ -397,7 +401,8 @@ package body Harriet.Factions.Create is
    procedure Initial_Facilities
      (Config  : Tropos.Configuration;
       Colony  : Harriet.Db.Colony_Reference;
-      World   : Harriet.Db.World_Reference)
+      World    : Harriet.Db.World_Reference;
+      Sector   : Harriet.Db.World_Sector_Reference)
    is
    begin
       for Installation_Config of Config loop
@@ -416,7 +421,8 @@ package body Harriet.Factions.Create is
               (Count    => Installation_Config.Value,
                Facility => Facility,
                Colony   => Colony,
-               World    => World);
+               World    => World,
+               Sector   => Sector);
          end;
       end loop;
    end Initial_Facilities;
@@ -429,7 +435,8 @@ package body Harriet.Factions.Create is
      (Count    : Natural;
       Facility : Harriet.Db.Facility_Reference;
       Colony   : Harriet.Db.Colony_Reference;
-      World    : Harriet.Db.World_Reference)
+      World    : Harriet.Db.World_Reference;
+      Sector   : Harriet.Db.World_Sector_Reference)
    is
       use type Harriet.Calendar.Time;
    begin
@@ -437,6 +444,7 @@ package body Harriet.Factions.Create is
          Harriet.Db.Installation.Create
            (Facility   => Facility,
             World      => World,
+            World_Sector => Sector,
             Colony     => Colony,
             Efficiency => 1.0,
             Active     => True,
@@ -454,6 +462,89 @@ package body Harriet.Factions.Create is
             Technology => Harriet.Db.Null_Technology_Reference);
       end loop;
    end Initial_Installations;
+
+   -------------------
+   -- Initial_Mines --
+   -------------------
+
+   procedure Initial_Mines
+     (Colony  : Harriet.Db.Colony_Reference;
+      World   : Harriet.Db.World_Reference;
+      Capital : Harriet.Db.World_Sector_Reference)
+   is
+      use Harriet.Db;
+      Max_Mine_Types : constant := 10;
+      Max_Mine_Type_Count : constant := 5;
+
+      type Mine_And_Count is
+         record
+            Resource : Harriet.Db.Resource_Reference;
+            Count    : Natural;
+         end record;
+
+      Resource_Count : array (1 .. Max_Mine_Types) of Mine_And_Count;
+      Mine_Type_Count : Natural := 0;
+
+   begin
+      for Deposit of
+        Harriet.Db.Deposit.Select_Accessible_Deposits_Bounded_By_Difficulty
+          (World             => World,
+           Start_Difficulty  => 0.0,
+           Finish_Difficulty => 1.0)
+      loop
+         declare
+            Current_Count : Natural := 0;
+            Build         : Boolean := True;
+         begin
+            for Item of Resource_Count (1 .. Mine_Type_Count) loop
+               if Item.Resource = Deposit.Resource then
+                  if Item.Count >= Max_Mine_Type_Count then
+                     Build := False;
+                  else
+                     Item.Count := Item.Count + 1;
+                     Current_Count := Item.Count;
+                     exit;
+                  end if;
+               end if;
+            end loop;
+
+            if Build and then Current_Count = 0 then
+               Mine_Type_Count := Mine_Type_Count + 1;
+               Resource_Count (Mine_Type_Count) := (Deposit.Resource, 1);
+            end if;
+
+            if Build
+              and then Deposit.World_Sector /= Capital
+            then
+               declare
+                  use type Harriet.Calendar.Time;
+                  Facility : constant Mining_Facility.Mining_Facility_Type
+                    := Harriet.Db.Mining_Facility.First_By_Resource
+                      (Deposit.Resource);
+               begin
+                  Harriet.Db.Installation.Create
+                    (Active          => True,
+                     Scheduled       => False,
+                     Next_Event      =>
+                       Harriet.Calendar.Clock,
+                     Manager         => "default-mine",
+                     Updates_Started => False,
+                     Next_Update     =>
+                       Harriet.Calendar.Clock
+                     + Harriet.Calendar.Days (Harriet.Random.Unit_Random),
+                     World           => World,
+                     Colony          => Colony,
+                     World_Sector    => Deposit.World_Sector,
+                     Facility        => Facility.Get_Facility_Reference,
+                     Efficiency      => 1.0,
+                     Commodity       => Harriet.Db.Null_Commodity_Reference,
+                     Resource        => Deposit.Resource,
+                     Technology      => Harriet.Db.Null_Technology_Reference);
+               end;
+            end if;
+         end;
+      end loop;
+   end Initial_Mines;
 
    -------------------
    -- Initial_Ships --

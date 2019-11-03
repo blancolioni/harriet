@@ -2,10 +2,82 @@ with Harriet.Calendar;
 with Harriet.Elementary_Functions;
 with Harriet.Orbits;
 
+with Harriet.Configure.Worlds;
+
+with Harriet.Db.Generation;
 with Harriet.Db.Massive_Object;
+with Harriet.Db.Sector_Neighbour;
+with Harriet.Db.Sector_Vertex;
 with Harriet.Db.World;
 
 package body Harriet.Worlds is
+
+   package World_Sector_Lists is
+     new Ada.Containers.Doubly_Linked_Lists
+       (Harriet.Db.World_Sector_Reference,
+        Harriet.Db."=");
+
+   procedure Check_Surface
+     (World : Harriet.Db.World_Reference);
+
+   -----------------
+   -- Best_Sector --
+   -----------------
+
+   function Best_Sector
+     (World : Harriet.Db.World_Reference;
+      Score : not null access
+        function (Sector : Harriet.Db.World_Sector.World_Sector_Type)
+      return Real)
+      return Harriet.Db.World_Sector_Reference
+   is
+      Best_Reference : Harriet.Db.World_Sector_Reference :=
+                         Harriet.Db.Null_World_Sector_Reference;
+      Best_Score     : Real := Real'First;
+   begin
+      Check_Surface (World);
+      for Sector of
+        Harriet.Db.World_Sector.Select_By_World
+          (World)
+      loop
+         declare
+            This_Score : constant Real :=
+                           Score (Sector);
+         begin
+            if This_Score > Best_Score then
+               Best_Score := This_Score;
+               Best_Reference := Sector.Get_World_Sector_Reference;
+            end if;
+         end;
+      end loop;
+      return Best_Reference;
+   end Best_Sector;
+
+   -------------------
+   -- Check_Surface --
+   -------------------
+
+   procedure Check_Surface
+     (World : Harriet.Db.World_Reference)
+   is
+      Is_Gen : constant Harriet.Db.Is_Generated_Reference :=
+                 Harriet.Db.World.Get (World).Get_Is_Generated_Reference;
+      Gen    : constant Harriet.Db.Generation.Generation_Type :=
+                 Harriet.Db.Generation.Get_By_Is_Generated
+                   (Is_Gen);
+   begin
+      if not Gen.Has_Element or else not Gen.Ready then
+         Harriet.Configure.Worlds.Generate_Surface (World);
+         if Gen.Has_Element then
+            Harriet.Db.Generation.Update_Generation
+              (Gen.Get_Generation_Reference)
+              .Set_Ready (True)
+              .Done;
+         else
+            Harriet.Db.Generation.Create (Is_Gen, True);
+         end if;
+      end if;
+   end Check_Surface;
 
    -----------
    -- Clear --
@@ -80,6 +152,132 @@ package body Harriet.Worlds is
          Selection.List := New_List;
       end if;
    end Filter;
+
+   -----------------
+   -- Find_Sector --
+   -----------------
+
+   function Find_Sector
+     (World : Harriet.Db.World_Reference;
+      Test  : not null access
+        function (Sector : Harriet.Db.World_Sector.World_Sector_Type)
+      return Boolean)
+      return Harriet.Db.World_Sector_Reference
+   is
+   begin
+      for Sector of
+        Harriet.Db.World_Sector.Select_By_World
+          (World)
+      loop
+         if Test (Sector) then
+            return Sector.Get_World_Sector_Reference;
+         end if;
+      end loop;
+      return Harriet.Db.Null_World_Sector_Reference;
+   end Find_Sector;
+
+   -----------------------------
+   -- Get_Average_Temperature --
+   -----------------------------
+
+   function Get_Average_Temperature
+     (Sector : Harriet.Db.World_Sector_Reference)
+      return Non_Negative_Real
+   is
+   begin
+      return Harriet.Db.World_Sector.Get (Sector).Average_Temperature;
+   end Get_Average_Temperature;
+
+   ----------------
+   -- Get_Centre --
+   ----------------
+
+   function Get_Centre
+     (Sector : Harriet.Db.World_Sector_Reference)
+      return Sector_Vertex
+   is
+      Rec : constant Harriet.Db.World_Sector.World_Sector_Type :=
+              Harriet.Db.World_Sector.Get (Sector);
+   begin
+      return Sector_Vertex'
+        (Rec.X, Rec.Y, Rec.Z);
+   end Get_Centre;
+
+   --------------------
+   -- Get_Neighbours --
+   --------------------
+
+   function Get_Neighbours
+     (Sector : Harriet.Db.World_Sector_Reference)
+      return World_Sector_Array
+   is
+      Result : World_Sector_Array (1 .. 20);
+      Count  : Natural := 0;
+   begin
+      for Neighbour of
+        Harriet.Db.Sector_Neighbour.Select_By_Sector
+          (Harriet.Db.World_Sector.Get (Sector).Get_Sector_Reference)
+      loop
+         Count := Count + 1;
+         declare
+            Neighbour_Ref : constant Db.Sector_Reference :=
+                              Neighbour.Neighbour;
+            Neighbour_Sec : constant Db.World_Sector.World_Sector_Type :=
+                              Db.World_Sector.Get_World_Sector
+                                (Neighbour_Ref);
+            World_Sec_Ref : constant Db.World_Sector_Reference :=
+                              Neighbour_Sec.Get_World_Sector_Reference;
+         begin
+            Result (Count) := World_Sec_Ref;
+         end;
+      end loop;
+      return Result (1 .. Count);
+   end Get_Neighbours;
+
+   -----------------
+   -- Get_Terrain --
+   -----------------
+
+   function Get_Terrain
+     (Sector : Harriet.Db.World_Sector_Reference)
+      return Harriet.Db.Terrain_Reference
+   is
+   begin
+      return Harriet.Db.World_Sector.Get (Sector).Terrain;
+   end Get_Terrain;
+
+   ------------------
+   -- Get_Vertices --
+   ------------------
+
+   function Get_Vertices
+     (Sector : Harriet.Db.World_Sector_Reference)
+      return Sector_Vertex_Array
+   is
+      Count  : Natural := 0;
+      Result : Sector_Vertex_Array (1 .. 10);
+   begin
+      for Vertex of
+        Harriet.Db.Sector_Vertex.Select_By_Sector
+          (Harriet.Db.World_Sector.Get (Sector).Get_Sector_Reference)
+      loop
+         Count := Count + 1;
+         Result (Count) := (Vertex.X, Vertex.Y, Vertex.Z);
+      end loop;
+      return Result (1 .. Count);
+   end Get_Vertices;
+
+   ---------------
+   -- Get_World --
+   ---------------
+
+   function Get_World
+     (Sector : Harriet.Db.World_Sector_Reference)
+      return Harriet.Db.World_Reference
+   is
+   begin
+      return Harriet.Db.World_Sector.Get (Sector).World;
+   end Get_World;
 
    ----------------
    -- Get_Worlds --
@@ -181,6 +379,28 @@ package body Harriet.Worlds is
    begin
       return Harriet.Db.World.Get (World).Radius;
    end Radius;
+
+   ------------------
+   -- Scan_Surface --
+   ------------------
+
+   procedure Scan_Surface
+     (World   : Harriet.Db.World_Reference;
+      Process : not null access
+        procedure (Sector : Harriet.Db.World_Sector_Reference))
+   is
+      List : World_Sector_Lists.List;
+   begin
+      Check_Surface (World);
+      for Sector of Harriet.Db.World_Sector.Select_By_World (World) loop
+         List.Append (Sector.Get_World_Sector_Reference);
+      end loop;
+
+      for Sector of List loop
+         Process (Sector);
+      end loop;
+
+   end Scan_Surface;
 
    -----------------
    -- Star_System --

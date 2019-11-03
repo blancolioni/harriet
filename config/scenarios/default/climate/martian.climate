@@ -1,8 +1,6 @@
 terrain = {
-   desert = 25
-   mountain = 15
-   plain = 20
-   volcanic = 5
+   mountains = 15
+   hills = 20
+   plain = 25
 }
-default-terrain = desert
 habitability = 5

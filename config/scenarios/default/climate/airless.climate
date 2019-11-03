@@ -1,8 +1,2 @@
-terrain = {
-   desert = 5
-   mountain = 20
-   ice = 10
-}
-
-default-terrain = desert
+terrain = { plain = 30 hills = 20 mountains = 5 }
 habitability = 0

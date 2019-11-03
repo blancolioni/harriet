@@ -11,4 +11,7 @@ package Harriet.Constants is
    Greenhouse_Trigger_Albedo : constant := 0.2;
    Gas_Retention_Threshold   : constant := 6.0;
 
+   function To_Celsius (Kelvin : Non_Negative_Real) return Real
+   is (Kelvin - Freezing_Point_Of_Water);
+
 end Harriet.Constants;

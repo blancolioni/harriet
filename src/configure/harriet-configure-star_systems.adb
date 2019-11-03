@@ -939,7 +939,8 @@ package body Harriet.Configure.Star_Systems is
               Gas_Giant           => Gas_Giant,
               Habitability        => Habitability,
               Surface_Pressure    => Current_Pressure * Earth_Surface_Pressure,
-              Average_Temperature => Current_Temperature);
+              Average_Temperature => Current_Temperature,
+              Hydrosphere         => Hydrosphere);
       begin
          if Current_Pressure > 0.0 then
             for Item of Current_Atm.List loop

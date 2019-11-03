@@ -4,6 +4,7 @@ with Harriet.Configure.Commodities;
 with Harriet.Configure.Facilities;
 with Harriet.Configure.Galaxies;
 with Harriet.Configure.Ships;
+with Harriet.Configure.Terrain;
 
 with Harriet.Db.Scenario;
 
@@ -24,6 +25,8 @@ package body Harriet.Configure.Scenarios is
    begin
       Harriet.Db.Scenario.Create
         (Scenario_Name, True, Harriet.Db.Null_Star_System_Reference);
+
+      Harriet.Configure.Terrain.Configure_Terrain (Scenario_Name);
 
       Harriet.Configure.Commodities.Configure_Commodities
         (Scenario_Name);

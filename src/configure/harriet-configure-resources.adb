@@ -1,5 +1,7 @@
 with Ada.Characters.Handling;
 
+with WL.Random;
+
 with Harriet.Elementary_Functions;
 with Harriet.Random;
 with Harriet.Solar_System;
@@ -7,6 +9,7 @@ with Harriet.Solar_System;
 with Harriet.Db.Deposit;
 with Harriet.Db.Gas;
 with Harriet.Db.Resource_Sphere;
+with Harriet.Db.World_Sector;
 
 package body Harriet.Configure.Resources is
 
@@ -71,9 +74,25 @@ package body Harriet.Configure.Resources is
         (0.4 + Harriet.Random.Unit_Random / 2.0)
         ** (World.Radius
             / Harriet.Solar_System.Earth_Radius);
-      Concentration         : Unit_Real :=
-        Initial_Concentration;
+      Concentration         : Unit_Real := Initial_Concentration;
+      Deposit_Count         : Positive;
+      package Sector_Vectors is
+        new Ada.Containers.Vectors
+          (Positive, Harriet.Db.World_Sector_Reference,
+           Harriet.Db."=");
+
+      Sector_Refs           : Sector_Vectors.Vector;
+
    begin
+
+      for World_Sector of
+        Harriet.Db.World_Sector.Select_By_World
+          (World.Get_World_Reference)
+      loop
+         Sector_Refs.Append (World_Sector.Get_World_Sector_Reference);
+      end loop;
+
+      Deposit_Count := Sector_Refs.Last_Index / 20;
 
       while Concentration > Initial_Concentration / 20.0 loop
          declare
@@ -86,17 +105,36 @@ package body Harriet.Configure.Resources is
                Choice := Choice + 1;
             end loop;
 
-            Harriet.Db.Deposit.Create
-              (World         => World.Get_World_Reference,
-               Resource      => Gen.Resources (Choice).Reference,
-               Concentration =>
-                 Harriet.Random.About (Concentration, Concentration / 10.0),
-               Available     =>
-                 Harriet.Quantities.To_Quantity
-                   (Harriet.Random.About
-                        ((2.0e5
-                         + Gen.Resources (Choice).Strength * 1.0E6),
-                         1.0e5)));
+            for I in 1 .. Deposit_Count loop
+               declare
+                  Sector_Index : constant Positive :=
+                                   WL.Random.Random_Number
+                                     (1, Sector_Refs.Last_Index);
+                  This_Concentration : constant Unit_Real :=
+                                         Unit_Clamp
+                                           ((Harriet.Random.Normal_Random (0.1)
+                                            + 1.0)
+                                            * Concentration);
+               begin
+                  Harriet.Db.Deposit.Create
+                    (World         => World.Get_World_Reference,
+                     World_Sector  =>
+                       Sector_Refs.Element (Sector_Index),
+                     Resource      => Gen.Resources (Choice).Reference,
+                     Concentration => This_Concentration,
+                     Difficulty    => 1.0 - This_Concentration,
+                     Available     =>
+                       Harriet.Quantities.To_Quantity
+                         (Harriet.Random.About
+                              ((2.0e5
+                               + Gen.Resources (Choice).Strength * 1.0E6),
+                               1.0e5)));
+                  Sector_Refs (Sector_Index) :=
+                    Sector_Refs.Element (Sector_Refs.Last_Index);
+                  Sector_Refs.Delete_Last;
+               end;
+            end loop;
+
             Gen.Total_Strength :=
               Gen.Total_Strength - Gen.Resources (Choice).Strength;
             exit when Gen.Resources.Is_Empty;
@@ -104,6 +142,7 @@ package body Harriet.Configure.Resources is
             Gen.Resources.Delete_Last;
             Concentration := Concentration
               * (Harriet.Random.Unit_Random / 4.0 + 0.25);
+            Deposit_Count := Natural'Max (Deposit_Count - 1, 1);
          end;
       end loop;
    end Create_Deposits;

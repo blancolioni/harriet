@@ -1,24 +1,40 @@
+with Ada.Containers.Vectors;
 with Ada.Text_IO;
 
-with Harriet.Random;
+with WL.Random.Height_Maps;
 
-with Harriet.Climates;
 with Harriet.Solar_System;
 with Harriet.Surfaces;
 
+with Harriet.Configure.Resources;
+
 with Harriet.Db.Climate_Terrain;
-with Harriet.Db.Deposit;
 with Harriet.Db.Sector_Neighbour;
-with Harriet.Db.Sector_Vertex;
-with Harriet.Db.Terrain_Resource;
+with Harriet.Db.Star_System;
+with Harriet.Db.Terrain;
 with Harriet.Db.World;
 with Harriet.Db.World_Sector;
 
 package body Harriet.Configure.Worlds is
 
+   package Heights renames WL.Random.Height_Maps;
+
+   package Terrain_Vectors is
+     new Ada.Containers.Vectors
+       (Positive, Harriet.Db.Terrain_Reference, Harriet.Db."=");
+
+   Terrain     : Terrain_Vectors.Vector;
+   Water       : Harriet.Db.Terrain_Reference :=
+                   Harriet.Db.Null_Terrain_Reference;
+   Water_Index : Natural := 0;
+
    procedure Save_Surface
      (Surface : Harriet.Surfaces.Surface_Type;
       World   : Harriet.Db.World.World_Type);
+
+   function Get_Frequencies
+     (World : Harriet.Db.World.World_Type)
+      return Heights.Frequency_Map;
 
    ----------------------
    -- Generate_Surface --
@@ -36,10 +52,20 @@ package body Harriet.Configure.Worlds is
                        / Harriet.Solar_System.Earth_Radius;
    begin
 
-      case Rec.Category is
-         when Asteroid | Dwarf | Terrestrial | Super_Terrestrial =>
-            Tile_Count := Natural (Radius * 200.0);
-         when Sub_Jovian | Jovian | Super_Jovian =>
+      if Terrain.Is_Empty then
+         for T of Harriet.Db.Terrain.Scan_By_Tag loop
+            Terrain.Append (T.Get_Terrain_Reference);
+            if T.Is_Water then
+               Water := T.Get_Terrain_Reference;
+               Water_Index := Terrain.Last_Index;
+            end if;
+         end loop;
+      end if;
+
+      case Rec.Composition is
+         when Ice | Rock | Rock_Ice | Rock_Iron =>
+            Tile_Count := Natural (Radius * 400.0);
+         when Hydrogen | Gaseous =>
             Tile_Count := 0;
       end case;
 
@@ -61,7 +87,93 @@ package body Harriet.Configure.Worlds is
 
       end;
 
+      declare
+         World_Rec : constant Harriet.Db.World.World_Type :=
+                       Harriet.Db.World.Get (World);
+         System    : constant Harriet.Db.Star_System.Star_System_Type :=
+                       Harriet.Db.Star_System.Get
+                         (World_Rec.Star_System);
+      begin
+         Harriet.Configure.Resources.Create_Deposits
+           (World     => World_Rec,
+            Generator =>
+              Harriet.Configure.Resources.Create_Generator
+                (System.X, System.Y, System.Z));
+      end;
+
    end Generate_Surface;
+
+   function Get_Frequencies
+     (World : Harriet.Db.World.World_Type)
+      return Heights.Frequency_Map
+   is
+      type Climate_Terrain_Record is
+         record
+            Terrain : Harriet.Db.Terrain_Reference;
+            Index   : Positive;
+            Count   : Natural;
+         end record;
+
+      package Climate_Terrain_Vectors is
+        new Ada.Containers.Vectors (Positive, Climate_Terrain_Record);
+
+      Vector : Climate_Terrain_Vectors.Vector;
+      Total : Natural := 0;
+
+   begin
+      for Climate_Terrain of
+        Harriet.Db.Climate_Terrain.Select_By_Climate
+          (World.Climate)
+      loop
+         declare
+            use type Harriet.Db.Terrain_Reference;
+            Index : Natural := 0;
+         begin
+            for I in 1 .. Terrain.Last_Index loop
+               if Terrain.Element (I) = Climate_Terrain.Terrain then
+                  Index := I;
+                  exit;
+               end if;
+            end loop;
+
+            if Index = 0 then
+               Ada.Text_IO.Put_Line
+                 (Ada.Text_IO.Standard_Error,
+                  "bad terrain:"
+                  & Harriet.Db.To_String (Climate_Terrain.Terrain));
+            else
+               Vector.Append (Climate_Terrain_Record'
+                                (Terrain => Climate_Terrain.Terrain,
+                                 Index   => Index,
+                                 Count   => Climate_Terrain.Frequency));
+               Total := Total + Climate_Terrain.Frequency;
+            end if;
+         end;
+      end loop;
+
+      if World.Hydrosphere > 0.0 then
+         declare
+            New_Total : constant Natural :=
+                          Natural (1.0 / (1.0 - World.Hydrosphere)
+                                   * Real (Total));
+            Water_Freq : constant Natural := New_Total - Total;
+         begin
+            Vector.Append (Climate_Terrain_Record'
+                             (Terrain => Water,
+                              Index   => Water_Index,
+                              Count   => Water_Freq));
+         end;
+      end if;
+
+      return Freqs : Heights.Frequency_Map (1 .. Terrain.Last_Index) :=
+        (others => 0)
+      do
+         for Item of Vector loop
+            Freqs (Item.Index) := Item.Count;
+         end loop;
+      end return;
+
+   end Get_Frequencies;
 
    ------------------
    -- Save_Surface --
@@ -71,127 +183,82 @@ package body Harriet.Configure.Worlds is
      (Surface   : Harriet.Surfaces.Surface_Type;
       World     : Harriet.Db.World.World_Type)
    is
+      Freqs : constant Heights.Frequency_Map :=
+                Get_Frequencies (World);
+      Hs    : Heights.Height_Array (1 .. Natural (Surface.Tile_Count));
+
       Tile_Refs : array (1 .. Surface.Tile_Count)
         of Harriet.Db.Sector_Reference;
-      Terrain_Refs : array (1 .. Surface.Tile_Count)
-        of Harriet.Db.Terrain_Reference :=
-          (others => Harriet.Db.Null_Terrain_Reference);
 
-      Climate   : constant Harriet.Db.Climate_Reference := World.Climate;
+      function Base_Temperature
+        (Tile : Surfaces.Surface_Tile_Index)
+         return Non_Negative_Real;
+
+      function Get_Neighbours
+        (Index : Positive)
+         return Heights.Neighbour_Array;
+
+      function Base_Temperature
+        (Tile : Surfaces.Surface_Tile_Index)
+         return Non_Negative_Real
+      is
+         Y : constant Real := Surface.Tile_Centre (Tile) (2);
+      begin
+         return World.Average_Temperature
+           + (0.5 - abs Y) * 10.0;
+      end Base_Temperature;
+
+      --------------------
+      -- Get_Neighbours --
+      --------------------
+
+      function Get_Neighbours
+        (Index : Positive)
+         return Heights.Neighbour_Array
+      is
+         Tile : constant Surfaces.Surface_Tile_Index :=
+                  Surfaces.Surface_Tile_Index (Index);
+      begin
+         return Ns : Heights.Neighbour_Array
+           (1 .. Natural (Surface.Neighbour_Count (Tile)))
+         do
+            for I in Ns'Range loop
+               Ns (I) :=
+                 Positive
+                   (Surface.Neighbour
+                      (Tile,
+                       Surfaces.Tile_Neighbour_Index (I)));
+            end loop;
+         end return;
+      end Get_Neighbours;
+
    begin
-      for Tile_Index in 1 .. Surface.Tile_Count loop
+
+      Heights.Generate_Height_Map
+        (Heights     => Hs,
+         Frequencies => Freqs,
+         Smoothing   => 4,
+         Neighbours  => Get_Neighbours'Access);
+
+      for I in Tile_Refs'Range loop
          declare
-            use Harriet.Surfaces;
-
-            type Terrain_Array is
-              array (Tile_Neighbour_Count range <>)
-              of Harriet.Db.Terrain_Reference;
-
-            function Get_Neighbour_Terrain
-              return Terrain_Array;
-
-            ---------------------------
-            -- Get_Neighbour_Terrain --
-            ---------------------------
-
-            function Get_Neighbour_Terrain
-              return Terrain_Array
-            is
-               use type Harriet.Db.Terrain_Reference;
-               Result : Terrain_Array
-                 (1 .. Surface.Neighbour_Count (Tile_Index));
-               Count : Tile_Neighbour_Count := 0;
-            begin
-               for I in Result'Range loop
-                  declare
-                     Neighbour : constant Surface_Tile_Index :=
-                                   Surface.Neighbour (Tile_Index, I);
-                     Terrain   : constant Harriet.Db.Terrain_Reference :=
-                                   Terrain_Refs (Neighbour);
-                  begin
-                     if Terrain /= Harriet.Db.Null_Terrain_Reference then
-                        Count := Count + 1;
-                        Result (Count) := Terrain;
-                     end if;
-                  end;
-               end loop;
-               return Result (1 .. Count);
-            end Get_Neighbour_Terrain;
-
-            Neighbour_Terrain : constant Terrain_Array :=
-                                  Get_Neighbour_Terrain;
-
-            Assigned : Boolean := False;
+            Centre : constant Harriet.Surfaces.Vector_3 :=
+                       Surface.Tile_Centre (I);
+            Sector : constant Harriet.Db.World_Sector_Reference :=
+                       Harriet.Db.World_Sector.Create
+                         (Surface             => World.Get_Surface_Reference,
+                          X                   => Centre (1),
+                          Y                   => Centre (2),
+                          Z                   => Centre (3),
+                          World               => World.Get_World_Reference,
+                          Terrain             =>
+                            Terrain.Element (Hs (Positive (I))),
+                          Sector_Use          =>
+                            Harriet.Db.Null_Sector_Use_Reference,
+                          Average_Temperature => Base_Temperature (I));
          begin
-            for Climate_Terrain of
-              Harriet.Db.Climate_Terrain.Select_By_Climate (Climate)
-            loop
-               declare
-                  use type Harriet.Db.Terrain_Reference;
-                  Chance : Non_Negative_Real :=
-                             Climate_Terrain.Chance;
-                  Count  : Natural := 0;
-               begin
-                  for Terrain of Neighbour_Terrain loop
-                     if Terrain = Climate_Terrain.Terrain then
-                        Count := Count + 1;
-                     end if;
-                  end loop;
-                  Chance := Chance * (1.0 + Real (Count) / 5.0);
-
-                  if Harriet.Random.Unit_Random < Chance then
-                     Terrain_Refs (Tile_Index) := Climate_Terrain.Terrain;
-                     Assigned := True;
-                     exit;
-                  end if;
-               end;
-            end loop;
-
-            if not Assigned then
-               Terrain_Refs (Tile_Index) :=
-                 Harriet.Climates.Default_Terrain (Climate);
-            end if;
-         end;
-      end loop;
-
-      for Tile_Index in 1 .. Surface.Tile_Count loop
-         declare
-            use Harriet.Surfaces;
-            Sector : constant Harriet.Db.World_Sector.World_Sector_Type :=
-                       Harriet.Db.World_Sector.Create;
-            Centre : constant Vector_3 := Surface.Tile_Centre (Tile_Index);
-         begin
-            Sector.Set_World (World);
-            Sector.Set_Surface (World);
-            Sector.Set_X (Centre (1));
-            Sector.Set_Y (Centre (2));
-            Sector.Set_Z (Centre (3));
-            Sector.Set_Terrain (Terrain_Refs (Tile_Index));
-
-            for Terrain_Resource of
-              Harriet.Db.Terrain_Resource.Select_By_Terrain
-                (Terrain_Refs (Tile_Index))
-            loop
-               if Harriet.Random.Unit_Random < Terrain_Resource.Chance then
-                  Harriet.Db.Deposit.Create
-                    (World_Sector  => Sector.Get_World_Sector_Reference,
-                     Resource      => Terrain_Resource.Resource,
-                     Accessibility => Harriet.Random.Unit_Random,
-                     Abundance     =>
-                       (Harriet.Random.Unit_Random + 0.5)
-                     * 1.0e6);
-               end if;
-            end loop;
-
-            for Point of Surface.Tile_Boundary (Tile_Index) loop
-               Harriet.Db.Sector_Vertex.Create
-                 (Sector        => Sector.Get_Sector_Reference,
-                  X             => Point (1),
-                  Y             => Point (2),
-                  Z             => Point (3));
-            end loop;
-
-            Tile_Refs (Tile_Index) := Sector.Get_Sector_Reference;
+            Tile_Refs (I) :=
+              Harriet.Db.World_Sector.Get (Sector).Get_Sector_Reference;
          end;
       end loop;
 

@@ -1,0 +1,8 @@
+mine = 1
+power = 1
+operating-cost = 10
+employees = 1000
+build = {
+   construction-materials = 100
+}
+resource = trilithium

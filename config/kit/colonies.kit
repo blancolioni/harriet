@@ -43,4 +43,10 @@ record Available_Commodity is
    unique key Available_Commodity with Colony, Commodity;
 end Available_Commodity;
 
+record Colony_Sector is
+   key Colony;
+   World_Sector;
+   unique key Colony_Sector with Colony, World_Sector;
+end Colony_Sector;
+
 end Colonies;

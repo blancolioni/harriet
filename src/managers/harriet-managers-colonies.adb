@@ -12,19 +12,19 @@ with Harriet.Ships;
 with Harriet.Worlds;
 
 with Harriet.Managers.Colonies.Requirements;
-with Harriet.Managers.Goals;
+--  with Harriet.Managers.Goals;
 
 with Harriet.Db.Colony;
 with Harriet.Db.Commodity;
 with Harriet.Db.Consumer_Commodity;
-with Harriet.Db.Deposit;
+--  with Harriet.Db.Deposit;
 with Harriet.Db.Expense;
 with Harriet.Db.Facility;
 with Harriet.Db.Facility_Input;
 with Harriet.Db.Installation;
 --  with Harriet.Db.Manufactured;
 with Harriet.Db.Production_Goal;
-with Harriet.Db.Resource;
+--  with Harriet.Db.Resource;
 with Harriet.Db.Revenue;
 with Harriet.Db.Ship;
 with Harriet.Db.Stock_Item;
@@ -507,18 +507,19 @@ package body Harriet.Managers.Colonies is
         Ada.Containers.Vectors (Positive, Harriet.Db.Installation_Reference,
                                 Harriet.Db."=");
 
-      Remaining_Mines       : Natural := 0;
+--        Remaining_Mines       : Natural := 0;
 
       Mine_Map       : Installation_Vectors.Vector;
       Strip_Mine_Map : Installation_Vectors.Vector;
       Industry_Map   : Installation_Vectors.Vector;
 
-      Next_Mine       : Natural := 0;
+--        Next_Mine       : Natural := 0;
 
       procedure Assign_Mines
         (Commodity   : Harriet.Db.Commodity_Reference;
          Requirement : Harriet.Quantities.Quantity_Type;
-         Priority    : Priority_Type);
+         Priority    : Priority_Type)
+      is null;
 
       procedure Add_Production_Goal
         (Commodity   : Harriet.Db.Commodity_Reference;
@@ -574,101 +575,101 @@ package body Harriet.Managers.Colonies is
       -- Assign_Mines --
       ------------------
 
-      procedure Assign_Mines
-        (Commodity    : Harriet.Db.Commodity_Reference;
-         Requirement  : Harriet.Quantities.Quantity_Type;
-         Priority     : Priority_Type)
-      is
-         use Harriet.Quantities;
-         Resource : constant Harriet.Db.Resource_Reference :=
-           Harriet.Db.Resource.Get_Resource (Commodity).Get_Resource_Reference;
-         Deposit : constant Harriet.Db.Deposit.Deposit_Type :=
-           Harriet.Db.Deposit.Get_By_Deposit
-             (Manager.World, Resource);
-         Mined_Resource : constant Harriet.Db.Resource_Reference := Resource;
-         Available      : constant Quantity_Type :=
-           Harriet.Commodities.Current_Quantity
-             (Manager.Colony_Has_Stock, Commodity);
-         Quantity : constant Quantity_Type :=
-           (if Requirement > Available
-            then Requirement - Available
-            else Zero);
-      begin
-
-         Manager.Log
-           (Harriet.Db.Commodity.Get (Commodity).Tag
-            & ": requirement: "
-            & Show (Requirement)
-            & "; available: "
-            & Show (Available)
-            & "; missing: "
-            & Show (Quantity));
-
-         if Quantity > Zero then
-            if Deposit.Has_Element
-              and then Deposit.Available > Zero
-              and then Deposit.Concentration > 0.0
-            then
-               Manager.Log
-                 ("found " & Harriet.Db.Commodity.Get (Commodity).Tag
-                  & " deposit: size "
-                  & Show (Deposit.Available)
-                  & " concentration "
-                  & Harriet.Real_Images.Approximate_Image
-                    (Deposit.Concentration * 100.0)
-                  & "%");
-
-               declare
-                  Available     : constant Quantity_Type := Deposit.Available;
-                  Concentration : constant Unit_Real := Deposit.Concentration;
-                  Estimated_Mine : constant Real :=
-                    To_Real (Available) * Concentration / 1.0e4;
-                  Required      : constant Natural :=
-                    Natural (To_Real (Quantity) / Estimated_Mine) + 1;
-                  Assign        : constant Natural :=
-                    Natural'Min (Required, Remaining_Mines);
-               begin
-                  if Required > Remaining_Mines then
-                     Manager.Required_Mines := Manager.Required_Mines
-                       + Required - Remaining_Mines;
-                  end if;
-
-                  for I in 1 .. Assign loop
-                     Next_Mine := Next_Mine + 1;
-                     Harriet.Db.Installation.Update_Installation
-                       (Mine_Map (Next_Mine))
-                         .Set_Resource (Mined_Resource)
-                       .Done;
-                  end loop;
-                  Remaining_Mines := Remaining_Mines - Assign;
-
-                  Manager.Log
-                    (Show (Quantity) & " "
-                     & Harriet.Db.Commodity.Get (Commodity).Tag
-                     & " requires"
-                     & Required'Image & " mines");
-
-               end;
-            else
-
-               Harriet.Managers.Goals.Colony_Needs_Resource
-                 (Faction  => Manager.Faction,
-                  Priority => Priority,
-                  Colony   => Manager.Colony,
-                  Resource => Resource,
-                  Quantity => Quantity);
-
-               Harriet.Installations.Add_Production_Goal
-                 (Colony    => Manager.Colony,
-                  Commodity => Commodity,
-                  Quantity  => Requirement,
-                  Priority  => Priority);
-
-            end if;
-
-         end if;
-
-      end Assign_Mines;
+--        procedure Assign_Mines
+--          (Commodity    : Harriet.Db.Commodity_Reference;
+--           Requirement  : Harriet.Quantities.Quantity_Type;
+--           Priority     : Priority_Type)
+--        is
+--           use Harriet.Quantities;
+--           Resource : constant Harriet.Db.Resource_Reference :=
+--        Harriet.Db.Resource.Get_Resource (Commodity).Get_Resource_Reference;
+--           Deposit : constant Harriet.Db.Deposit.Deposit_Type :=
+--             Harriet.Db.Deposit.Get_By_Deposit
+--               (Manager.World, Resource);
+--       Mined_Resource : constant Harriet.Db.Resource_Reference := Resource;
+--           Available      : constant Quantity_Type :=
+--             Harriet.Commodities.Current_Quantity
+--               (Manager.Colony_Has_Stock, Commodity);
+--           Quantity : constant Quantity_Type :=
+--             (if Requirement > Available
+--              then Requirement - Available
+--              else Zero);
+--        begin
+--
+--           Manager.Log
+--             (Harriet.Db.Commodity.Get (Commodity).Tag
+--              & ": requirement: "
+--              & Show (Requirement)
+--              & "; available: "
+--              & Show (Available)
+--              & "; missing: "
+--              & Show (Quantity));
+--
+--           if Quantity > Zero then
+--              if Deposit.Has_Element
+--                and then Deposit.Available > Zero
+--                and then Deposit.Concentration > 0.0
+--              then
+--                 Manager.Log
+--                   ("found " & Harriet.Db.Commodity.Get (Commodity).Tag
+--                    & " deposit: size "
+--                    & Show (Deposit.Available)
+--                    & " concentration "
+--                    & Harriet.Real_Images.Approximate_Image
+--                      (Deposit.Concentration * 100.0)
+--                    & "%");
+--
+--                 declare
+--               Available     : constant Quantity_Type := Deposit.Available;
+--               Concentration : constant Unit_Real := Deposit.Concentration;
+--                    Estimated_Mine : constant Real :=
+--                      To_Real (Available) * Concentration / 1.0e4;
+--                    Required      : constant Natural :=
+--                      Natural (To_Real (Quantity) / Estimated_Mine) + 1;
+--                    Assign        : constant Natural :=
+--                      Natural'Min (Required, Remaining_Mines);
+--                 begin
+--                    if Required > Remaining_Mines then
+--                       Manager.Required_Mines := Manager.Required_Mines
+--                         + Required - Remaining_Mines;
+--                    end if;
+--
+--                    for I in 1 .. Assign loop
+--                       Next_Mine := Next_Mine + 1;
+--                       Harriet.Db.Installation.Update_Installation
+--                         (Mine_Map (Next_Mine))
+--                           .Set_Resource (Mined_Resource)
+--                         .Done;
+--                    end loop;
+--                    Remaining_Mines := Remaining_Mines - Assign;
+--
+--                    Manager.Log
+--                      (Show (Quantity) & " "
+--                       & Harriet.Db.Commodity.Get (Commodity).Tag
+--                       & " requires"
+--                       & Required'Image & " mines");
+--
+--                 end;
+--              else
+--
+--                 Harriet.Managers.Goals.Colony_Needs_Resource
+--                   (Faction  => Manager.Faction,
+--                    Priority => Priority,
+--                    Colony   => Manager.Colony,
+--                    Resource => Resource,
+--                    Quantity => Quantity);
+--
+--                 Harriet.Installations.Add_Production_Goal
+--                   (Colony    => Manager.Colony,
+--                    Commodity => Commodity,
+--                    Quantity  => Requirement,
+--                    Priority  => Priority);
+--
+--              end if;
+--
+--           end if;
+--
+--        end Assign_Mines;
 
       ----------------------------------
       -- Initialize_Installation_Maps --
@@ -706,11 +707,11 @@ package body Harriet.Managers.Colonies is
             end;
          end loop;
 
-         Remaining_Mines := Manager.Available_Mines;
-
-         Manager.Log
-           ("found" & Manager.Available_Mines'Image & " mines and"
-            & Manager.Available_Industry'Image & " industry");
+--           Remaining_Mines := Manager.Available_Mines;
+--
+--           Manager.Log
+--             ("found" & Manager.Available_Mines'Image & " mines and"
+--              & Manager.Available_Industry'Image & " industry");
       end Initialize_Installation_Maps;
 
    begin
