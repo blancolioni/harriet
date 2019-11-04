@@ -125,6 +125,9 @@ package Harriet.Worlds is
      (Sector : Harriet.Db.World_Sector_Reference)
       return Sector_Vertex_Array;
 
+   procedure Check_Surface
+     (World : Harriet.Db.World_Reference);
+
 private
 
    package World_Lists is

@@ -19,9 +19,6 @@ package body Harriet.Worlds is
        (Harriet.Db.World_Sector_Reference,
         Harriet.Db."=");
 
-   procedure Check_Surface
-     (World : Harriet.Db.World_Reference);
-
    -----------------
    -- Best_Sector --
    -----------------

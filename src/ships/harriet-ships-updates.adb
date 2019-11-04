@@ -153,6 +153,8 @@ package body Harriet.Ships.Updates is
         (Ship.Name,
          "arrived at " & Harriet.Worlds.Name (Ship.Destination));
 
+      Harriet.Worlds.Check_Surface (Ship.Destination);
+
       Harriet.Db.Ship.Update_Ship (Ship.Get_Ship_Reference)
         .Set_World (Ship.Destination)
         .Set_Primary_Massive (Ship.Primary_Massive)
