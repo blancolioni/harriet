@@ -23,6 +23,7 @@ with Harriet.Db.Facility;
 with Harriet.Db.Facility_Input;
 with Harriet.Db.Installation;
 --  with Harriet.Db.Manufactured;
+with Harriet.Db.Mining_Facility;
 with Harriet.Db.Production_Goal;
 --  with Harriet.Db.Resource;
 with Harriet.Db.Revenue;
@@ -507,13 +508,13 @@ package body Harriet.Managers.Colonies is
         Ada.Containers.Vectors (Positive, Harriet.Db.Installation_Reference,
                                 Harriet.Db."=");
 
---        Remaining_Mines       : Natural := 0;
-
       Mine_Map       : Installation_Vectors.Vector;
       Strip_Mine_Map : Installation_Vectors.Vector;
       Industry_Map   : Installation_Vectors.Vector;
 
---        Next_Mine       : Natural := 0;
+      function Active_Mines
+        (Resource : Harriet.Db.Resource_Reference)
+         return Natural;
 
       procedure Assign_Mines
         (Commodity   : Harriet.Db.Commodity_Reference;
@@ -528,6 +529,30 @@ package body Harriet.Managers.Colonies is
 
       procedure Initialize_Installation_Maps;
 
+      ------------------
+      -- Active_Mines --
+      ------------------
+
+      function Active_Mines
+        (Resource : Harriet.Db.Resource_Reference)
+         return Natural
+      is
+         Mine : constant Harriet.Db.Mining_Facility.Mining_Facility_Type :=
+           Harriet.Db.Mining_Facility.First_By_Resource
+             (Resource);
+         Facility : constant Harriet.Db.Facility_Reference :=
+           Mine.Get_Facility_Reference;
+      begin
+         return Result : Natural := 0 do
+            for Installation of
+              Harriet.Db.Installation.Select_By_World_Facility
+                (Manager.World, Facility)
+            loop
+               Result := Result + 1;
+            end loop;
+         end return;
+      end Active_Mines;
+
       -------------------------
       -- Add_Production_Goal --
       -------------------------
@@ -538,7 +563,11 @@ package body Harriet.Managers.Colonies is
          Priority    : Priority_Type)
       is
       begin
-         if Harriet.Commodities.Is_Resource (Commodity) then
+         if Harriet.Commodities.Is_Resource (Commodity)
+           and then Active_Mines
+             (Harriet.Commodities.To_Resource (Commodity))
+               > 0
+         then
             Assign_Mines (Commodity, Requirement, Priority);
          else
             declare

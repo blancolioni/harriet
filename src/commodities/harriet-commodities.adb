@@ -1,6 +1,7 @@
 with Harriet.Db.Commodity;
 with Harriet.Db.Input_Commodity;
 with Harriet.Db.Manufactured;
+with Harriet.Db.Resource;
 with Harriet.Db.Stock_Item;
 
 package body Harriet.Commodities is
@@ -211,5 +212,18 @@ package body Harriet.Commodities is
          Process (Input.Commodity, Input.Quantity);
       end loop;
    end Scan_Ingredients;
+
+   -----------------
+   -- To_Resource --
+   -----------------
+
+   function To_Resource
+     (Commodity : Commodity_Reference)
+      return Harriet.Db.Resource_Reference
+   is
+   begin
+      return Harriet.Db.Resource.Get_Resource (Commodity)
+        .Get_Resource_Reference;
+   end To_Resource;
 
 end Harriet.Commodities;

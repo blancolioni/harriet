@@ -291,7 +291,7 @@ package body Harriet.Installations.Updates is
         Min (Max, Scale (Available, 0.1));
    begin
 
-      if Max_Production > Zero then
+      if Max_Production > To_Quantity (0.1) then
          Harriet.Logging.Log
            (Category => "production",
             Message  =>

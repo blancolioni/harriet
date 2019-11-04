@@ -19,6 +19,10 @@ package Harriet.Commodities is
      (Commodity : Commodity_Reference)
       return Boolean;
 
+   function To_Resource
+     (Commodity : Commodity_Reference)
+      return Harriet.Db.Resource_Reference;
+
    function Is_Manufactured
      (Commodity : Commodity_Reference)
       return Boolean;
