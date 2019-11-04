@@ -47,7 +47,7 @@ class Toolbar extends React.Component<ToolbarProps,State> {
                             {this.props.currentDate}
                         </li>
                         <li className="nav-item">
-                            <i className="fas fa-coins"></i>
+                            <i className="fas fa-hryvnia"></i>
                             {this.props.currentCash}
                         </li>
                     </ul>
