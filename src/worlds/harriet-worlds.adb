@@ -246,6 +246,18 @@ package body Harriet.Worlds is
       return Result (1 .. Count);
    end Get_Neighbours;
 
+   ---------------
+   -- Get_Owner --
+   ---------------
+
+   function Get_Owner
+     (Sector : Harriet.Db.World_Sector_Reference)
+      return Harriet.Db.Faction_Reference
+   is
+   begin
+      return Harriet.Db.World_Sector.Get (Sector).Faction;
+   end Get_Owner;
+
    -----------------
    -- Get_Terrain --
    -----------------

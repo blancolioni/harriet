@@ -95,6 +95,10 @@ package Harriet.Worlds is
      (Sector : Harriet.Db.World_Sector_Reference)
       return Sector_Vertex;
 
+   function Get_Owner
+     (Sector : Harriet.Db.World_Sector_Reference)
+      return Harriet.Db.Faction_Reference;
+
    function Get_Terrain
      (Sector : Harriet.Db.World_Sector_Reference)
       return Harriet.Db.Terrain_Reference;
