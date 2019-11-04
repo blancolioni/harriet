@@ -3,6 +3,7 @@ with Harriet.Options;
 with Harriet.Configure.Commodities;
 with Harriet.Configure.Facilities;
 with Harriet.Configure.Galaxies;
+with Harriet.Configure.Sectors;
 with Harriet.Configure.Ships;
 with Harriet.Configure.Terrain;
 
@@ -28,10 +29,9 @@ package body Harriet.Configure.Scenarios is
 
       Harriet.Configure.Terrain.Configure_Terrain (Scenario_Name);
 
-      Harriet.Configure.Commodities.Configure_Commodities
-        (Scenario_Name);
-      Harriet.Configure.Facilities.Configure_Facilities
-        (Scenario_Name);
+      Harriet.Configure.Commodities.Configure_Commodities (Scenario_Name);
+      Harriet.Configure.Sectors.Configure_Sector_Use (Scenario_Name);
+      Harriet.Configure.Facilities.Configure_Facilities (Scenario_Name);
       Harriet.Configure.Ships.Configure_Ship_Components (Scenario_Name);
       Harriet.Configure.Ships.Configure_Ship_Designs (Scenario_Name);
 

@@ -298,6 +298,9 @@ package body Harriet.UI.Models is
                         Obj.Set_Property ("color",
                                           Harriet.Color.To_Html_String
                                             (Color));
+                        Obj.Set_Property
+                          ("model",
+                           (if Is_Urban (Sector) then "city" else ""));
                         Sectors.Append (Obj);
                      end Add_Sector;
 
@@ -312,7 +315,9 @@ package body Harriet.UI.Models is
                         Faction : constant Faction_Reference :=
                           Harriet.Worlds.Get_Owner (Sector);
                      begin
-                        if Faction /= Null_Faction_Reference then
+                        if Harriet.Worlds.Is_Urban (Sector) then
+                           return Harriet.Color.From_String ("#0000FF");
+                        elsif Faction /= Null_Faction_Reference then
                            return Harriet.Factions.Get (Faction).Color;
                         else
                            declare

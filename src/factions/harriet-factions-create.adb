@@ -24,6 +24,7 @@ with Harriet.Db.Installation;
 with Harriet.Db.Mining_Facility;
 with Harriet.Db.Script;
 with Harriet.Db.Script_Line;
+with Harriet.Db.Sector_Use;
 with Harriet.Db.Ship_Design;
 with Harriet.Db.Star_Gate;
 with Harriet.Db.Star_System;
@@ -375,6 +376,8 @@ package body Harriet.Factions.Create is
 
       Harriet.Db.World_Sector.Update_World_Sector (Capital_Sector)
         .Set_Faction (Faction)
+        .Set_Sector_Use
+          (Harriet.Db.Sector_Use.Get_Reference_By_Tag ("urban"))
         .Done;
 
       Harriet.Configure.Commodities.Configure_Stock
@@ -556,6 +559,8 @@ package body Harriet.Factions.Create is
                   Harriet.Db.World_Sector.Update_World_Sector
                     (Deposit.World_Sector)
                     .Set_Faction (Faction)
+                    .Set_Sector_Use
+                      (Harriet.Db.Sector_Use.Get_Reference_By_Tag ("mining"))
                     .Done;
                end;
             end if;

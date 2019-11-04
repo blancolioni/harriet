@@ -7,10 +7,12 @@ with Resources;
 with Technology;
 with Updated;
 with Worlds;
+with World_Sectors;
 
 package Facilities is
 
    record Facility : Technological, Localised, Constructed is
+      Sector_Use;
       Operating_Cost     : Money_Type;
       Employees          : Quantity_Type;
       Power              : Natural;

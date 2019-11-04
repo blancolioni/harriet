@@ -7,6 +7,7 @@ with Harriet.Configure.Worlds;
 with Harriet.Db.Generation;
 with Harriet.Db.Massive_Object;
 with Harriet.Db.Sector_Neighbour;
+with Harriet.Db.Sector_Use;
 with Harriet.Db.Sector_Vertex;
 with Harriet.Db.World;
 
@@ -367,6 +368,20 @@ package body Harriet.Worlds is
       return Harriet.Db.World.Get (World).Climate =
         Harriet.Db.Temperate;
    end Is_Terrestrial;
+
+   --------------
+   -- Is_Urban --
+   --------------
+
+   function Is_Urban
+     (Sector : Harriet.Db.World_Sector_Reference)
+      return Boolean
+   is
+   begin
+      return Harriet.Db.Sector_Use.Get
+        (Harriet.Db.World_Sector.Get (Sector).Sector_Use)
+          .Tag = "urban";
+   end Is_Urban;
 
    ----------
    -- Mass --

@@ -8,6 +8,7 @@ with Harriet.Db.Facility_Input;
 with Harriet.Db.Facility_Output;
 with Harriet.Db.Mining_Facility;
 with Harriet.Db.Resource;
+with Harriet.Db.Sector_Use;
 
 package body Harriet.Configure.Facilities is
 
@@ -109,6 +110,9 @@ package body Harriet.Configure.Facilities is
                       (Enabled_By         =>
                                  Harriet.Db.Null_Technology_Reference,
                        Tag                => Config.Config_Name,
+                       Sector_Use =>
+                         Harriet.Db.Sector_Use.Get_Reference_By_Tag
+                           (Config.Get ("sector", "mining")),
                        Operating_Cost     =>
                          Harriet.Money.To_Money
                            (Config.Get ("operating-cost")),
@@ -140,6 +144,9 @@ package body Harriet.Configure.Facilities is
          return Harriet.Db.Facility.Create
            (Enabled_By         => Harriet.Db.Null_Technology_Reference,
             Tag                => Config.Config_Name,
+            Sector_Use         =>
+              Harriet.Db.Sector_Use.Get_Reference_By_Tag
+                (Config.Get ("sector", "urban")),
             Operating_Cost     =>
               Harriet.Money.To_Money (Config.Get ("operating-cost")),
             Employees          =>

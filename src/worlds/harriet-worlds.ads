@@ -111,6 +111,10 @@ package Harriet.Worlds is
      (Sector : Harriet.Db.World_Sector_Reference)
       return Non_Negative_Real;
 
+   function Is_Urban
+     (Sector : Harriet.Db.World_Sector_Reference)
+      return Boolean;
+
    type Sector_Vertex_Array is array (Positive range <>) of Sector_Vertex;
 
    function Get_Vertices
