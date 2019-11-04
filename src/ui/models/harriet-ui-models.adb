@@ -12,6 +12,7 @@ with Harriet.Color;
 with Harriet.Orbits;
 with Harriet.Solar_System;
 
+with Harriet.Factions;
 with Harriet.Stars;
 with Harriet.Worlds;
 
@@ -268,6 +269,10 @@ package body Harriet.UI.Models is
                      procedure Add_Sector
                        (Sector : Harriet.Db.World_Sector_Reference);
 
+                     function Sector_Color
+                       (Sector : Harriet.Db.World_Sector_Reference)
+                        return Harriet.Color.Harriet_Color;
+
                      ----------------
                      -- Add_Sector --
                      ----------------
@@ -275,14 +280,13 @@ package body Harriet.UI.Models is
                      procedure Add_Sector
                        (Sector : Harriet.Db.World_Sector_Reference)
                      is
-                        use Harriet.Db.Elevation;
                         use Harriet.Worlds;
                         Vertices : constant Sector_Vertex_Array :=
                                      Get_Vertices (Sector);
                         Centre   : constant Sector_Vertex :=
                           Get_Centre (Sector);
-                        Elevation : constant Elevation_Type :=
-                          Get (Get_Elevation (Sector));
+                        Color     : constant Harriet.Color.Harriet_Color :=
+                          Sector_Color (Sector);
                         Arr      : Json.Json_Array;
                         Obj      : Json.Json_Object;
                      begin
@@ -293,11 +297,33 @@ package body Harriet.UI.Models is
                         Obj.Set_Property ("normal", Serialize (Centre));
                         Obj.Set_Property ("color",
                                           Harriet.Color.To_Html_String
-                                            (Elevation.Red,
-                                             Elevation.Green,
-                                             Elevation.Blue));
+                                            (Color));
                         Sectors.Append (Obj);
                      end Add_Sector;
+
+                     ------------------
+                     -- Sector_Color --
+                     ------------------
+
+                     function Sector_Color
+                       (Sector : Harriet.Db.World_Sector_Reference)
+                        return Harriet.Color.Harriet_Color
+                     is
+                        Faction : constant Faction_Reference :=
+                          Harriet.Worlds.Get_Owner (Sector);
+                     begin
+                        if Faction /= Null_Faction_Reference then
+                           return Harriet.Factions.Get (Faction).Color;
+                        else
+                           declare
+                              E : constant Elevation.Elevation_Type :=
+                                Harriet.Db.Elevation.Get
+                                  (Harriet.Worlds.Get_Elevation (Sector));
+                           begin
+                              return (E.Red, E.Green, E.Blue, 1.0);
+                           end;
+                        end if;
+                     end Sector_Color;
 
                      ---------------
                      -- Serialize --
