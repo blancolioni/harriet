@@ -231,11 +231,11 @@ class World extends React.Component<Props,WorldSceneState> {
   }
 
   addCustomSceneObjects = () => {
-    this.model!.light.position.set(5, 0, 3);
+    this.model!.light.position.set(3, 0, 3);
     this.model!.scene.add(this.model!.light);
-    const light2 = new THREE.DirectionalLight();
-    light2.position.set(3, 0, -3);
-    this.model!.scene.add(light2);
+    // const light2 = new THREE.DirectionalLight();
+    // light2.position.set(3, 0, -3);
+    // this.model!.scene.add(light2);
   }
 
   beforeRender() {
