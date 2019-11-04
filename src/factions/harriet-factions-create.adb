@@ -51,7 +51,8 @@ package body Harriet.Factions.Create is
       Sector   : Harriet.Db.World_Sector_Reference);
 
    procedure Initial_Mines
-     (Colony  : Harriet.Db.Colony_Reference;
+     (Faction : Harriet.Db.Faction_Reference;
+      Colony  : Harriet.Db.Colony_Reference;
       World   : Harriet.Db.World_Reference;
       Capital : Harriet.Db.World_Sector_Reference);
 
@@ -372,6 +373,10 @@ package body Harriet.Factions.Create is
                            (World, Evaluate_Sector'Access);
    begin
 
+      Harriet.Db.World_Sector.Update_World_Sector (Capital_Sector)
+        .Set_Faction (Faction)
+        .Done;
+
       Harriet.Configure.Commodities.Configure_Stock
         (Has_Stock => Harriet.Db.Colony.Get (Colony).Get_Has_Stock_Reference,
          Config    => Config);
@@ -383,7 +388,8 @@ package body Harriet.Factions.Create is
          Sector => Capital_Sector);
 
       Initial_Mines
-        (Colony  => Colony,
+        (Faction => Faction,
+         Colony  => Colony,
          World   => World,
          Capital => Capital_Sector);
 
@@ -468,7 +474,8 @@ package body Harriet.Factions.Create is
    -------------------
 
    procedure Initial_Mines
-     (Colony  : Harriet.Db.Colony_Reference;
+     (Faction : Harriet.Db.Faction_Reference;
+      Colony  : Harriet.Db.Colony_Reference;
       World   : Harriet.Db.World_Reference;
       Capital : Harriet.Db.World_Sector_Reference)
    is
@@ -494,19 +501,25 @@ package body Harriet.Factions.Create is
       loop
          declare
             Current_Count : Natural := 0;
-            Build         : Boolean := True;
+            Terrain       : constant Harriet.Db.Terrain_Reference :=
+              Harriet.Worlds.Get_Terrain (Deposit.World_Sector);
+            Build         : Boolean :=
+              not (Harriet.Db.Terrain.Get (Terrain).Is_Water);
          begin
-            for Item of Resource_Count (1 .. Mine_Type_Count) loop
-               if Item.Resource = Deposit.Resource then
-                  if Item.Count >= Max_Mine_Type_Count then
-                     Build := False;
-                  else
-                     Item.Count := Item.Count + 1;
-                     Current_Count := Item.Count;
-                     exit;
+
+            if Build then
+               for Item of Resource_Count (1 .. Mine_Type_Count) loop
+                  if Item.Resource = Deposit.Resource then
+                     if Item.Count >= Max_Mine_Type_Count then
+                        Build := False;
+                     else
+                        Item.Count := Item.Count + 1;
+                        Current_Count := Item.Count;
+                        exit;
+                     end if;
                   end if;
-               end if;
-            end loop;
+               end loop;
+            end if;
 
             if Build and then Current_Count = 0 then
                Mine_Type_Count := Mine_Type_Count + 1;
@@ -540,6 +553,10 @@ package body Harriet.Factions.Create is
                      Commodity       => Harriet.Db.Null_Commodity_Reference,
                      Resource        => Deposit.Resource,
                      Technology      => Harriet.Db.Null_Technology_Reference);
+                  Harriet.Db.World_Sector.Update_World_Sector
+                    (Deposit.World_Sector)
+                    .Set_Faction (Faction)
+                    .Done;
                end;
             end if;
          end;
