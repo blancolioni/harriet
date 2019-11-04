@@ -12,7 +12,7 @@ with Harriet.Ships;
 with Harriet.Worlds;
 
 with Harriet.Managers.Colonies.Requirements;
---  with Harriet.Managers.Goals;
+with Harriet.Managers.Goals;
 
 with Harriet.Db.Colony;
 with Harriet.Db.Commodity;
@@ -590,6 +590,16 @@ package body Harriet.Managers.Colonies is
                   & Show (Quantity));
 
                if Quantity > Zero then
+                  if Harriet.Commodities.Is_Resource (Commodity) then
+                     Harriet.Managers.Goals.Colony_Needs_Resource
+                       (Faction  => Manager.Faction,
+                        Priority => Priority,
+                        Colony   => Manager.Colony,
+                        Resource =>
+                          Harriet.Commodities.To_Resource (Commodity),
+                        Quantity => Quantity);
+                  end if;
+
                   Harriet.Installations.Add_Production_Goal
                     (Colony    => Manager.Colony,
                      Commodity => Commodity,
