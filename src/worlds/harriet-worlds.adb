@@ -1,5 +1,6 @@
 with Harriet.Calendar;
 with Harriet.Elementary_Functions;
+with Harriet.Logging;
 with Harriet.Orbits;
 
 with Harriet.Configure.Worlds;
@@ -68,6 +69,8 @@ package body Harriet.Worlds is
                    (Is_Gen);
    begin
       if not Gen.Has_Element or else not Gen.Ready then
+         Harriet.Logging.Log
+           ("generate", "starting " & Name (World));
          Harriet.Configure.Worlds.Generate_Surface (World);
          if Gen.Has_Element then
             Harriet.Db.Generation.Update_Generation
@@ -77,6 +80,8 @@ package body Harriet.Worlds is
          else
             Harriet.Db.Generation.Create (Is_Gen, True);
          end if;
+         Harriet.Logging.Log
+           ("generate", "finished " & Name (World));
       end if;
    end Check_Surface;
 

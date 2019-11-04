@@ -1,9 +1,8 @@
 with Ada.Containers.Vectors;
-with Ada.Text_IO;
 
 with WL.Random.Height_Maps;
 
-with Harriet.Real_Images;
+with Harriet.Logging;
 with Harriet.Solar_System;
 with Harriet.Surfaces;
 
@@ -80,23 +79,23 @@ package body Harriet.Configure.Worlds is
             Tile_Count := 0;
       end case;
 
-      if Tile_Count = 0 then
-         return;
+      if Tile_Count > 0 then
+         declare
+            Surface   : Harriet.Surfaces.Root_Surface_Type;
+         begin
+            Harriet.Logging.Log
+              ("surfaces",
+               Rec.Name & ": creating surface with "
+               & Tile_Count'Image & " tiles");
+            Surface.Create_Voronoi_Partition (Tile_Count);
+            Save_Surface (Surface, Rec);
+
+            Harriet.Logging.Log
+              ("surfaces",
+               Rec.Name & ": done");
+
+         end;
       end if;
-
-      declare
-         Surface   : Harriet.Surfaces.Root_Surface_Type;
-      begin
-         Ada.Text_IO.Put_Line
-           (Rec.Name & ": creating surface with "
-            & Tile_Count'Image & " tiles");
-         Surface.Create_Voronoi_Partition (Tile_Count);
-         Save_Surface (Surface, Rec);
-
-         Ada.Text_IO.Put_Line
-           (Rec.Name & ": done");
-
-      end;
 
       declare
          World_Rec : constant Harriet.Db.World.World_Type :=
@@ -213,12 +212,6 @@ package body Harriet.Configure.Worlds is
             Water_Freq : constant Natural := New_Total - Total;
          begin
             Freq (Freq'First) := Water_Freq;
-            Ada.Text_IO.Put_Line
-              ("hydrosphere: "
-               & Harriet.Real_Images.Approximate_Image (World.Hydrosphere)
-               & "; old total:" & Total'Image
-               & "; new total:" & New_Total'Image
-               & ": water:" & Water_Freq'Image);
          end;
       end if;
 
