@@ -218,8 +218,12 @@ package body Harriet.Managers.Goals is
         Harriet.Db.World_Knowledge.Select_By_Faction (Faction)
       loop
          if not World_Knowledge.Deposits then
-            Add_World_Scan_Goal
-              (Faction, Priority, World_Knowledge.World);
+            if not World_Knowledge.Classification
+              or else not Harriet.Worlds.Is_Gas_Giant (World_Knowledge.World)
+            then
+               Add_World_Scan_Goal
+                 (Faction, Priority, World_Knowledge.World);
+            end if;
          end if;
       end loop;
 
