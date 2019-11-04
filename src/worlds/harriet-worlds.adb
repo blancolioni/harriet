@@ -360,6 +360,18 @@ package body Harriet.Worlds is
       return Selection.List.Is_Empty;
    end Is_Empty;
 
+   ------------------
+   -- Is_Gas_Giant --
+   ------------------
+
+   function Is_Gas_Giant
+     (World : Harriet.Db.World_Reference)
+      return Boolean
+   is
+   begin
+      return Harriet.Db.World.Get (World).Gas_Giant;
+   end Is_Gas_Giant;
+
    --------------------
    -- Is_Terrestrial --
    --------------------

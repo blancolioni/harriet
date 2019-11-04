@@ -48,6 +48,10 @@ package Harriet.Worlds is
      (World : Harriet.Db.World_Reference)
       return Unit_Real;
 
+   function Is_Gas_Giant
+     (World : Harriet.Db.World_Reference)
+      return Boolean;
+
    function Is_Terrestrial
      (World : Harriet.Db.World_Reference)
       return Boolean;
