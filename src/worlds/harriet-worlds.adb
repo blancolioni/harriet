@@ -203,6 +203,18 @@ package body Harriet.Worlds is
         (Rec.X, Rec.Y, Rec.Z);
    end Get_Centre;
 
+   -------------------
+   -- Get_Elevation --
+   -------------------
+
+   function Get_Elevation
+     (Sector : Harriet.Db.World_Sector_Reference)
+      return Harriet.Db.Elevation_Reference
+   is
+   begin
+      return Harriet.Db.World_Sector.Get (Sector).Elevation;
+   end Get_Elevation;
+
    --------------------
    -- Get_Neighbours --
    --------------------

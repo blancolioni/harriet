@@ -21,7 +21,7 @@ with Harriet.Db.Massive_Object;
 with Harriet.Db.Ship;
 with Harriet.Db.Star;
 with Harriet.Db.Star_System_Object;
-with Harriet.Db.Terrain;
+with Harriet.Db.Elevation;
 with Harriet.Db.World;
 
 with Harriet.Paths;
@@ -275,14 +275,14 @@ package body Harriet.UI.Models is
                      procedure Add_Sector
                        (Sector : Harriet.Db.World_Sector_Reference)
                      is
+                        use Harriet.Db.Elevation;
                         use Harriet.Worlds;
                         Vertices : constant Sector_Vertex_Array :=
                                      Get_Vertices (Sector);
                         Centre   : constant Sector_Vertex :=
-                                     Get_Centre (Sector);
-                        Terrain  : constant Harriet.Db.Terrain.Terrain_Type :=
-                                     Harriet.Db.Terrain.Get
-                                       (Get_Terrain (Sector));
+                          Get_Centre (Sector);
+                        Elevation : constant Elevation_Type :=
+                          Get (Get_Elevation (Sector));
                         Arr      : Json.Json_Array;
                         Obj      : Json.Json_Object;
                      begin
@@ -291,9 +291,11 @@ package body Harriet.UI.Models is
                         end loop;
                         Obj.Set_Property ("border", Arr);
                         Obj.Set_Property ("normal", Serialize (Centre));
-                        Obj.Set_Property ("red", Float (Terrain.Red));
-                        Obj.Set_Property ("green", Float (Terrain.Green));
-                        Obj.Set_Property ("blue", Float (Terrain.Blue));
+                        Obj.Set_Property ("color",
+                                          Harriet.Color.To_Html_String
+                                            (Elevation.Red,
+                                             Elevation.Green,
+                                             Elevation.Blue));
                         Sectors.Append (Obj);
                      end Add_Sector;
 

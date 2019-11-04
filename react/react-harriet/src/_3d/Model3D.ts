@@ -20,6 +20,7 @@ export default class Model3D {
     readonly textureLoader: THREE.TextureLoader;
     readonly controls : OrbitControls;
     readonly labelDiv : HTMLDivElement;
+    readonly light : THREE.Light;
 
     debug: boolean
 
@@ -73,7 +74,9 @@ export default class Model3D {
 
         this.controls.maxPolarAngle = Math.PI / 2;
 
-        this.camera.position.z = 2;
+        this.light = new THREE.DirectionalLight();
+
+        this.camera.position.z = 3;
         this.travelStart = this.travelEnd = this.camera.position;
 
         this.textureLoader = new THREE.TextureLoader();

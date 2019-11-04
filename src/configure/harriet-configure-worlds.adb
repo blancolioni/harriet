@@ -3,12 +3,14 @@ with Ada.Text_IO;
 
 with WL.Random.Height_Maps;
 
+with Harriet.Real_Images;
 with Harriet.Solar_System;
 with Harriet.Surfaces;
 
 with Harriet.Configure.Resources;
 
 with Harriet.Db.Climate_Terrain;
+with Harriet.Db.Elevation;
 with Harriet.Db.Sector_Neighbour;
 with Harriet.Db.Sector_Vertex;
 with Harriet.Db.Star_System;
@@ -20,14 +22,15 @@ package body Harriet.Configure.Worlds is
 
    package Heights renames WL.Random.Height_Maps;
 
-   package Terrain_Vectors is
+   package Elevation_Vectors is
      new Ada.Containers.Vectors
-       (Positive, Harriet.Db.Terrain_Reference, Harriet.Db."=");
+       (Positive, Harriet.Db.Elevation_Reference, Harriet.Db."=");
 
-   Terrain     : Terrain_Vectors.Vector;
-   Water       : Harriet.Db.Terrain_Reference :=
-                   Harriet.Db.Null_Terrain_Reference;
-   Water_Index : Natural := 0;
+   Elevation   : Elevation_Vectors.Vector;
+--     Water       : Harriet.Db.Terrain_Reference :=
+--                     Harriet.Db.Null_Terrain_Reference;
+--     Water_Index : Natural := 0;
+   First_Land  : Natural := 0;
 
    procedure Save_Surface
      (Surface : Harriet.Surfaces.Surface_Type;
@@ -53,14 +56,21 @@ package body Harriet.Configure.Worlds is
                        / Harriet.Solar_System.Earth_Radius;
    begin
 
-      if Terrain.Is_Empty then
-         for T of Harriet.Db.Terrain.Scan_By_Tag loop
-            Terrain.Append (T.Get_Terrain_Reference);
-            if T.Is_Water then
-               Water := T.Get_Terrain_Reference;
-               Water_Index := Terrain.Last_Index;
+      if Elevation.Is_Empty then
+         for E of Harriet.Db.Elevation.Scan_By_Top_Record loop
+            Elevation.Append (E.Get_Elevation_Reference);
+            if First_Land = 0
+              and then E.Height > 0
+            then
+               First_Land := Elevation.Last_Index;
             end if;
          end loop;
+
+--           for T of Harriet.Db.Terrain.Scan_By_Tag loop
+--              if T.Is_Water then
+--                 Water := T.Get_Terrain_Reference;
+--              end if;
+--           end loop;
       end if;
 
       case Rec.Composition is
@@ -104,22 +114,77 @@ package body Harriet.Configure.Worlds is
 
    end Generate_Surface;
 
+   ---------------------
+   -- Get_Frequencies --
+   ---------------------
+
    function Get_Frequencies
      (World : Harriet.Db.World.World_Type)
       return Heights.Frequency_Map
    is
       type Climate_Terrain_Record is
          record
-            Terrain : Harriet.Db.Terrain_Reference;
-            Index   : Positive;
-            Count   : Natural;
+            Terrain  : Harriet.Db.Terrain_Reference;
+            Min, Max : Integer;
+            Count    : Natural;
          end record;
 
       package Climate_Terrain_Vectors is
         new Ada.Containers.Vectors (Positive, Climate_Terrain_Record);
 
       Vector : Climate_Terrain_Vectors.Vector;
-      Total : Natural := 0;
+      Total  : Natural := 0;
+
+      Freq : Heights.Frequency_Map (1 .. Elevation.Last_Index) :=
+        (others => 0);
+
+      procedure Interpolate
+        (Region : in out Heights.Frequency_Map;
+         Next   : Natural);
+
+      -----------------
+      -- Interpolate --
+      -----------------
+
+      procedure Interpolate
+        (Region : in out Heights.Frequency_Map;
+         Next   : Natural)
+      is
+         pragma Unreferenced (Next);
+         Start  : constant Non_Negative_Real := Real (Region (Region'First));
+--           Finish : constant Non_Negative_Real := Real (Next);
+         Mean   : constant Non_Negative_Real := Real (Start);
+         Length : constant Non_Negative_Real :=
+           Real (Region'Length);
+--           Line   : array (Region'Range) of Non_Negative_Real :=
+--             (others => Mean);
+      begin
+
+--           for I in Line'Range loop
+--              Line (I) := Start +
+--                (Finish - Start) * Real (I - Line'First)
+--                / Real (Line'Last - Line'First + 1);
+--              Total := Total + Line (I);
+--           end loop;
+--
+--           Ada.Text_IO.Put_Line
+--             ("interpolating: heights" & Natural'Image (Region'First)
+--              & " .." & Natural'Image (Region'Last)
+--              & "; start" & Natural'Image (Region (Region'First))
+--              & "; finish" & Next'Image
+--              & "; mean "
+--              & Harriet.Real_Images.Approximate_Image (Mean)
+--              & "; area" & Natural'Image (Natural (Total)));
+--
+--           for H of Line loop
+--              H := H * Mean / Total;
+--           end loop;
+
+         for I in Region'Range loop
+            Region (I) := Natural (100.0 * Mean / Length);
+         end loop;
+
+      end Interpolate;
 
    begin
       for Climate_Terrain of
@@ -127,28 +192,16 @@ package body Harriet.Configure.Worlds is
           (World.Climate)
       loop
          declare
-            use type Harriet.Db.Terrain_Reference;
-            Index : Natural := 0;
+            Terrain : constant Harriet.Db.Terrain.Terrain_Type :=
+              Harriet.Db.Terrain.Get (Climate_Terrain.Terrain);
          begin
-            for I in 1 .. Terrain.Last_Index loop
-               if Terrain.Element (I) = Climate_Terrain.Terrain then
-                  Index := I;
-                  exit;
-               end if;
-            end loop;
-
-            if Index = 0 then
-               Ada.Text_IO.Put_Line
-                 (Ada.Text_IO.Standard_Error,
-                  "bad terrain:"
-                  & Harriet.Db.To_String (Climate_Terrain.Terrain));
-            else
-               Vector.Append (Climate_Terrain_Record'
-                                (Terrain => Climate_Terrain.Terrain,
-                                 Index   => Index,
-                                 Count   => Climate_Terrain.Frequency));
-               Total := Total + Climate_Terrain.Frequency;
-            end if;
+            Vector.Append (Climate_Terrain_Record'
+                             (Terrain => Climate_Terrain.Terrain,
+                              Min     => Terrain.Min,
+                              Max     => Terrain.Max,
+                              Count   => Climate_Terrain.Frequency));
+            Total := Total + Climate_Terrain.Frequency;
+            Freq (Terrain.Min + First_Land - 1) := Climate_Terrain.Frequency;
          end;
       end loop;
 
@@ -159,20 +212,60 @@ package body Harriet.Configure.Worlds is
                                    * Real (Total));
             Water_Freq : constant Natural := New_Total - Total;
          begin
-            Vector.Append (Climate_Terrain_Record'
-                             (Terrain => Water,
-                              Index   => Water_Index,
-                              Count   => Water_Freq));
+            Freq (Freq'First) := Water_Freq;
+            Ada.Text_IO.Put_Line
+              ("hydrosphere: "
+               & Harriet.Real_Images.Approximate_Image (World.Hydrosphere)
+               & "; old total:" & Total'Image
+               & "; new total:" & New_Total'Image
+               & ": water:" & Water_Freq'Image);
          end;
       end if;
 
-      return Freqs : Heights.Frequency_Map (1 .. Terrain.Last_Index) :=
-        (others => 0)
-      do
-         for Item of Vector loop
-            Freqs (Item.Index) := Item.Count;
+      declare
+         Index       : Positive := Freq'First;
+         Start_Index : Positive;
+         This_F      : Natural;
+      begin
+         while Index <= Freq'Last
+           and then Freq (Index) = 0
+         loop
+            Index := Index + 1;
          end loop;
-      end return;
+
+         pragma Assert (Index <= Freq'Last);
+
+         Start_Index := Index;
+         This_F := Freq (Index);
+         Index := Index + 1;
+
+         while Index <= Freq'Last loop
+            if Freq (Index) > 0 then
+               Interpolate (Freq (Start_Index .. Index - 1), Freq (Index));
+               Start_Index := Index;
+               This_F := Freq (Index);
+            end if;
+            Index := Index + 1;
+         end loop;
+
+         if This_F > 0 then
+            Interpolate (Freq (Start_Index .. Freq'Last), 0);
+         end if;
+      end;
+
+      declare
+         Total : Natural := 0;
+         Cum   : Natural := 0;
+      begin
+         for I in Freq'Range loop
+            Total := Total + Freq (I);
+         end loop;
+
+         for I in Freq'Range loop
+            Cum := Cum + Freq (I);
+         end loop;
+      end;
+      return Freq;
 
    end Get_Frequencies;
 
@@ -238,13 +331,16 @@ package body Harriet.Configure.Worlds is
       Heights.Generate_Height_Map
         (Heights     => Hs,
          Frequencies => Freqs,
-         Smoothing   => 4,
+         Smoothing   => 3,
          Neighbours  => Get_Neighbours'Access);
 
       for I in Tile_Refs'Range loop
          declare
             Centre : constant Harriet.Surfaces.Vector_3 :=
-                       Surface.Tile_Centre (I);
+              Surface.Tile_Centre (I);
+            E      : constant Harriet.Db.Elevation.Elevation_Type :=
+              Harriet.Db.Elevation.Get
+                (Elevation.Element (Hs (Positive (I))));
             Sector : constant Harriet.Db.World_Sector_Reference :=
                        Harriet.Db.World_Sector.Create
                          (Surface             => World.Get_Surface_Reference,
@@ -252,8 +348,9 @@ package body Harriet.Configure.Worlds is
                           Y                   => Centre (2),
                           Z                   => Centre (3),
                           World               => World.Get_World_Reference,
-                          Terrain             =>
-                            Terrain.Element (Hs (Positive (I))),
+                          Terrain             => E.Terrain,
+                          Height              => E.Height,
+                          Elevation           => E.Get_Elevation_Reference,
                           Sector_Use          =>
                             Harriet.Db.Null_Sector_Use_Reference,
                           Average_Temperature => Base_Temperature (I));

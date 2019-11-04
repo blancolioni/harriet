@@ -31,8 +31,15 @@ package Worlds is
    record Terrain : Localised, Has_Color is
       Hazard   : Long_Float;
       Is_Water : Boolean;   
+	  Min      : Integer;
+	  Max      : Integer;
    end Terrain;
 
+   record Elevation : Has_Color is
+      Terrain;
+	  Height : Integer;
+   end Elevation;
+      
    record Climate_Terrain is
       key Climate : World_Climate;
       Terrain;
@@ -76,6 +83,8 @@ record World_Sector : Sector is
    key World;
    Terrain;
    Sector_Use;
+   Height : Integer;
+   key Elevation;
    Average_Temperature : Long_Float;
    key World_Sector_Use with World, Sector_Use;
 end World_Sector;

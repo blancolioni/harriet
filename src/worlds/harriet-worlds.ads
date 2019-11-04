@@ -99,6 +99,10 @@ package Harriet.Worlds is
      (Sector : Harriet.Db.World_Sector_Reference)
       return Harriet.Db.Terrain_Reference;
 
+   function Get_Elevation
+     (Sector : Harriet.Db.World_Sector_Reference)
+      return Harriet.Db.Elevation_Reference;
+
    function Get_Average_Temperature
      (Sector : Harriet.Db.World_Sector_Reference)
       return Non_Negative_Real;

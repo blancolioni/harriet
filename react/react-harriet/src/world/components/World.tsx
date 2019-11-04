@@ -128,24 +128,52 @@ export function worldMesh(
   lightFrom : THREE.Vector3,
 ) : THREE.Mesh
 {
-  const vertexShader = standardVertexShader;
 
-  const fragmentShader = world.climate == Climate.Jovian ? gasGiantFragmentShader : rockWorldFragmentShader;
-  const textureName = worldTextureName(world);
-  const texture =  model.textureLoader.load(textureName + '.png');
+  if (world.surface.length === 0) {
+      const vertexShader = standardVertexShader;
 
-  const geometry = new THREE.IcosahedronBufferGeometry(1, detail);
-  const material = new THREE.ShaderMaterial({
-    vertexShader,
-    fragmentShader,
-    uniforms: {
-      textureSampler: { type: 't', value: texture },
-      unTime: { type: 'f', value: 0},
-      starLight: { value: lightFrom }
-    },
-  });
+      const fragmentShader = world.climate == Climate.Jovian ? gasGiantFragmentShader : rockWorldFragmentShader;
+      const textureName = worldTextureName(world);
+      const texture =  model.textureLoader.load(textureName + '.png');
 
-  return new THREE.Mesh(geometry, material);
+      const geometry = new THREE.IcosahedronBufferGeometry(1, detail);
+      const material = new THREE.ShaderMaterial({
+        vertexShader,
+        fragmentShader,
+        uniforms: {
+          textureSampler: { type: 't', value: texture },
+          unTime: { type: 'f', value: 0},
+          starLight: { value: lightFrom }
+        },
+      });
+
+      return new THREE.Mesh(geometry, material);
+    } else {
+      //let mats : THREE.Material[] = [];
+      const mesh = new THREE.Mesh();
+      for(const sector of world.surface) {
+        let geometry = new THREE.Geometry();
+        for (const vertex of sector.border) {
+          const v = new THREE.Vector3(vertex.x, vertex.z, -vertex.y);
+          geometry.vertices.push(v);
+        }
+        for (let i = 1; i < sector.border.length - 1; ++i) {
+          const face = new THREE.Face3(0, i + 1, i,  new THREE.Vector3(sector.normal.x, sector.normal.z, -sector.normal.y));
+          for (const vertex of sector.border) {
+            const v = new THREE.Vector3(vertex.x, vertex.z, -vertex.y);
+            face.vertexNormals.push(v);
+          }
+          geometry.faces.push(face);
+        }
+
+        const material = new THREE.MeshBasicMaterial({
+            color: new THREE.Color(sector.color),
+          });
+        mesh.add(new THREE.Mesh(geometry, material));
+        }
+      return mesh;
+    }
+
 }
 
 class World extends React.Component<Props,WorldSceneState> {
@@ -180,11 +208,20 @@ class World extends React.Component<Props,WorldSceneState> {
   }
 
   addCustomSceneObjects = () => {
+    this.model!.light.position.set(5, 0, 3);
+    this.model!.scene.add(this.model!.light);
+    const light2 = new THREE.DirectionalLight();
+    light2.position.set(3, 0, -3);
+    this.model!.scene.add(light2);
   }
 
   beforeRender() {
     if (this.planet) {
-      (this.planet!.material as THREE.ShaderMaterial).uniforms.unTime.value = this.renderCount;
+      if (this.props.clientState.world && this.props.clientState.world.surface.length === 0) {
+        (this.planet!.material as THREE.ShaderMaterial).uniforms.unTime.value = this.renderCount;
+      } else {
+        this.planet.rotateY(0.002);
+      }
     }
     
     this.renderCount += 0.0002;
@@ -199,6 +236,7 @@ class World extends React.Component<Props,WorldSceneState> {
 
   render() {
     if (this.props.clientState.world) {
+      console.log('render', this.props.clientState.world)
       this.updateScene(this.props.clientState.world);
     }
     return (

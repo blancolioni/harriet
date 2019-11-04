@@ -31,9 +31,7 @@ export interface WorldPoint {
   z : number
 }
 export interface WorldSector {
-  red    : number,
-  green  : number,
-  blue   : number,
+  color  : string
   normal : WorldPoint,
   border : WorldPoint[],
 }
