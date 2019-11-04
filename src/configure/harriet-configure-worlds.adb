@@ -347,6 +347,8 @@ package body Harriet.Configure.Worlds is
                           X                   => Centre (1),
                           Y                   => Centre (2),
                           Z                   => Centre (3),
+                          Faction             =>
+                            Harriet.Db.Null_Faction_Reference,
                           World               => World.Get_World_Reference,
                           Terrain             => E.Terrain,
                           Height              => E.Height,
