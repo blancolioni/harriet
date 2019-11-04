@@ -5,6 +5,8 @@ import { State, Composition, Climate } from '../model';
 import { ClientDispatch } from '../../clients/model';
 import { WorldObject } from "../../system/model";
 import Model3D from '../../_3d/Model3D';
+import { GLTF } from "three/examples/jsm/loaders/GLTFLoader";
+import { VertexColors } from "three";
 
 interface Dispatch extends ClientDispatch {
 }
@@ -170,7 +172,28 @@ export function worldMesh(
             color: new THREE.Color(sector.color),
           });
         mesh.add(new THREE.Mesh(geometry, material));
-        }
+
+        if (false && sector.model) {
+            model.getModel(sector.model, (gltf : GLTF) => {
+              gltf.scene.scale.set(0.0001, 0.0001, 0.0001);
+              const position = sector.normal;
+              console.log(sector.model, position);
+              gltf.scene.position.set(position.x * 1.1, position.z * 1.1, -position.y * 1.1);
+              gltf.scene.lookAt(position.x, position.z, -position.y);
+              // gltf.scene.traverse( function ( child ) {
+
+							// 	if ( child instanceof THREE.Mesh ) {
+
+							// 		child.scale(0.001, 0.001, 0.001);
+
+							// 	}
+
+							// } );
+
+              mesh.add(gltf.scene)
+            });
+        } 
+      }
       return mesh;
     }
 

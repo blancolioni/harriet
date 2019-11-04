@@ -34,6 +34,7 @@ export interface WorldSector {
   color  : string
   normal : WorldPoint,
   border : WorldPoint[],
+  model  : string,
 }
 
 export interface WorldObject extends SystemObject {

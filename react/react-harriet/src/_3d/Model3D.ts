@@ -1,5 +1,6 @@
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRenderer.js';
+import { GLTFLoader, GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 
 import * as THREE from "three";
 import { Quaternion, ReinhardToneMapping } from "three";
@@ -11,6 +12,12 @@ interface Waypoint {
     duration : number,
 }
 
+interface CachedModelTable {
+    [key : string] : GLTF
+}
+
+var cachedModels : CachedModelTable = {}
+
 export default class Model3D {
 
     readonly scene: THREE.Scene;
@@ -21,6 +28,7 @@ export default class Model3D {
     readonly controls : OrbitControls;
     readonly labelDiv : HTMLDivElement;
     readonly light : THREE.Light;
+    readonly modelLoader : GLTFLoader;
 
     debug: boolean
 
@@ -80,6 +88,7 @@ export default class Model3D {
         this.travelStart = this.travelEnd = this.camera.position;
 
         this.textureLoader = new THREE.TextureLoader();
+        this.modelLoader = new GLTFLoader();
       }
 
    startTravel = () : void => {
@@ -149,6 +158,22 @@ export default class Model3D {
 
    stopAnimationLoop() {
     window.cancelAnimationFrame(this.requestID);
+   }
+
+   getModel = (name : string, callback : (model : GLTF) => void) : void => {
+       if (!(name in cachedModels)) {
+           const saveModel = (model : GLTF) => {
+                cachedModels[name] = model;
+                callback (model);
+           }
+           const loadError = (event : ErrorEvent) => {
+               console.log(event)
+               alert(event.message);
+           }
+           this.modelLoader.load('models/' + name + '.gltf', saveModel, undefined, loadError);
+       } else {
+           callback(cachedModels[name]);
+       }
    }
       
 }
