@@ -1,3 +1,5 @@
+with Harriet.Calendar;
+
 package Harriet.Orbits is
 
    function Period
@@ -16,6 +18,12 @@ package Harriet.Orbits is
      (Large_Mass : Non_Negative_Real;
       Orbit      : Non_Negative_Real;
       Elapsed    : Duration)
+      return Real;
+
+   function Calculate_Current_Longitude
+     (Large_Mass : Non_Negative_Real;
+      Orbit      : Non_Negative_Real;
+      Epoch      : Harriet.Calendar.Time)
       return Real;
 
 end Harriet.Orbits;

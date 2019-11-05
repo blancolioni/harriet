@@ -31,6 +31,7 @@ with Harriet.Db.Scenario;
 with Harriet.Db.Star_System;
 with Harriet.Db.Star_Gate;
 with Harriet.Db.Star;
+with Harriet.Db.World;
 
 package body Harriet.Configure.Galaxies is
 
@@ -365,7 +366,7 @@ package body Harriet.Configure.Galaxies is
                         Harriet.Db.Star.Create
                           (Star_System           => Star_System,
                            Primary               =>
-                             Harriet.Db.Null_Massive_Object_Reference,
+                             Harriet.Db.Null_Star_System_Object_Reference,
                            Mass                  => Mass,
                            Radius                => Radius,
                            Density               => Mass / Volume,
@@ -504,30 +505,48 @@ package body Harriet.Configure.Galaxies is
          Process.Finish;
       end;
 
-      declare
-         Total : Natural := 0;
-      begin
-         for Item of Vector loop
-            Total := Total + Item.Gates;
-         end loop;
-         Ada.Text_IO.Put_Line
-           ("ave connections: "
-            & Approximate_Image (Real (Total) / Real (Number_Of_Systems)));
-      end;
-
---        Process.Start_Bar
---          (Name            => "Generating planets  ",
---           Finish          => Number_Of_Systems,
---           With_Percentage => True,
---           Bar_Length      => 40);
+      Process.Start_Bar
+        (Name            => "Generating planets  ",
+         Finish          => Number_Of_Systems,
+         With_Percentage => True,
+         Bar_Length      => 40);
 
       for I in 1 .. Number_Of_Systems loop
          Harriet.Configure.Star_Systems.Generate_Star_System
            (Vector.Element (I).Reference);
---           Process.Tick;
+         Process.Tick;
       end loop;
 
---        Process.Finish;
+      Process.Finish;
+
+      declare
+         Total_Worlds : Natural := 0;
+         Terrestrial  : Natural := 0;
+         Marginal     : Natural := 0;
+         Habitable    : Natural := 0;
+         Garden       : Natural := 0;
+      begin
+         for World of Harriet.Db.World.Scan_By_Top_Record loop
+            Total_Worlds := Total_Worlds + 1;
+            if not World.Gas_Giant then
+               Terrestrial := Terrestrial + 1;
+               if World.Habitability > 0.8 then
+                  Garden := Garden + 1;
+               elsif World.Habitability > 0.6 then
+                  Habitable := Habitable + 1;
+               elsif World.Habitability > 0.1 then
+                  Marginal := Marginal + 1;
+               end if;
+            end if;
+         end loop;
+
+         Ada.Text_IO.Put_Line
+           ("total worlds" & Total_Worlds'Image
+            & "; terrestrial" & Terrestrial'Image
+            & "; marginal" & Marginal'Image
+            & "; habitable" & Habitable'Image
+            & "; garden" & Garden'Image);
+      end;
 
    end Generate_Galaxy;
 

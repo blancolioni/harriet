@@ -1,6 +1,8 @@
 with Calendar;
-with Names;
 with Knowledge;
+with Locations;
+with Massive_Objects;
+with Names;
 
 package Star_Systems is
 
@@ -13,10 +15,6 @@ package Star_Systems is
    
    record Serializable : Has_Name;
    
-   record Massive_Object is
-      Mass : Long_Float;
-   end Massive_Object;
-   
    record Orbiting_Object : Massive_Object, Serializable is
       key Primary_Massive : Massive_Object;
 	  Semimajor_Axis  : Long_Float;
@@ -25,9 +23,9 @@ package Star_Systems is
 	  Period          : Long_Float;
    end Orbiting_Object;
    
-   record Star_System_Object : Knowable, Orbiting_Object is
+   record Star_System_Object : Knowable, Orbiting_Object, Has_Orbits is
       key Star_System;
-      key Primary     : Massive_Object;
+      key Primary     : Star_System_Object;
       Radius          : Long_Float;
       Density         : Long_Float;
       Rotation_Period : Long_Float;

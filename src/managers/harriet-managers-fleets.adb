@@ -4,6 +4,7 @@ with Harriet.Solar_System;
 with Harriet.Logging;
 --  with Harriet.Real_Images;
 
+with Harriet.Locations;
 with Harriet.Ships;
 with Harriet.Worlds;
 
@@ -103,6 +104,10 @@ package body Harriet.Managers.Fleets is
      (Goal : Harriet.Db.Goal.Goal_Type)
       return Boolean;
 
+   procedure Set_Goal_Destination
+     (Destination : Harriet.Db.Location_Reference;
+      Goal        : Harriet.Db.Goal.Goal_Type);
+
    --------------
    -- Activate --
    --------------
@@ -201,8 +206,6 @@ package body Harriet.Managers.Fleets is
      (Ship : Harriet.Db.Ship_Reference;
       Goal : Harriet.Db.Goal.Goal_Type'Class)
    is
---        S : constant Harriet.Ships.Ship_Type'Class :=
---          Harriet.Ships.Get (Ship);
    begin
       Harriet.Logging.Log
         ("fleets",
@@ -216,10 +219,12 @@ package body Harriet.Managers.Fleets is
         .Done;
 
       Harriet.Db.Ship.Update_Ship (Ship)
-        --          .Set_Destination (Goal_Rec.World)
         .Set_Status (Harriet.Db.Activating)
         .Set_Goal (Goal.Get_Goal_Reference)
         .Done;
+
+      Set_Goal_Destination
+        (Harriet.Db.Ship.Get (Ship).Destination, Goal);
 
       Harriet.Ships.Updates.Signal (Ship);
 
@@ -407,6 +412,61 @@ package body Harriet.Managers.Fleets is
         | R_Explore_Goal
         | R_Scan_Star_Gate_Goal;
    end Is_Fleet_Goal;
+
+   --------------------------
+   -- Set_Goal_Destination --
+   --------------------------
+
+   procedure Set_Goal_Destination
+     (Destination : Harriet.Db.Location_Reference;
+      Goal        : Harriet.Db.Goal.Goal_Type)
+   is
+      use Harriet.Db;
+   begin
+      if Is_Fleet_Goal (Goal) then
+         if Goal.Top_Record = R_Scan_Star_Gate_Goal then
+            declare
+               Gate : constant Harriet.Db.Star_Gate.Star_Gate_Type :=
+                 Harriet.Db.Star_Gate.Get
+                   (Harriet.Db.Scan_Star_Gate_Goal.Get_Scan_Star_Gate_Goal
+                      (Goal.Get_Goal_Reference)
+                    .Star_Gate);
+            begin
+               Harriet.Locations.Set_System_Location
+                 (Location    => Destination,
+                  Star_System => Gate.From,
+                  X           => Gate.X,
+                  Y           => Gate.Y,
+                  Z           => Gate.Z);
+            end;
+         elsif Goal.Top_Record in
+           R_Scan_World_Goal | R_Explore_Goal | R_Colonise_Goal
+         then
+            declare
+               World : constant Harriet.Db.World_Reference :=
+                 Harriet.Db.World_Goal.Get_World_Goal
+                   (Goal.Get_Goal_Reference)
+                 .World;
+            begin
+               Harriet.Locations.Set_World_Orbit_Location
+                 (Location => Destination,
+                  World    => World,
+                  Orbit    => 0.0);
+            end;
+         else
+            raise Constraint_Error with
+              "unknown fleet goal type:"
+              & Harriet.Db.Record_Type'Image (Goal.Top_Record)
+              & " goal" & Harriet.Db.To_String (Goal.Get_Goal_Reference);
+         end if;
+      else
+         raise Constraint_Error with
+           "unknown goal type:"
+           & Harriet.Db.Record_Type'Image (Goal.Top_Record)
+           & " goal" & Harriet.Db.To_String (Goal.Get_Goal_Reference);
+
+      end if;
+   end Set_Goal_Destination;
 
    --------------------
    -- Standard_Score --

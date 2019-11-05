@@ -2,16 +2,21 @@ with Harriet.Calendar;
 with Harriet.Logging;
 with Harriet.Real_Images;
 
+with Harriet.Solar_System;
+
 with Harriet.Factions;
+with Harriet.Locations;
+with Harriet.Star_Systems;
 with Harriet.Worlds;
 
 with Harriet.Managers;
 with Harriet.Updates.Events;
 
-with Harriet.Db.World;
-
 with Harriet.Db.Goal;
+with Harriet.Db.Scan_Star_Gate_Goal;
 with Harriet.Db.Scan_World_Goal;
+with Harriet.Db.Star_Gate;
+with Harriet.Db.Star_System;
 with Harriet.Db.World_Goal;
 
 package body Harriet.Ships.Updates is
@@ -29,6 +34,10 @@ package body Harriet.Ships.Updates is
    procedure Scan_World
      (Ship  : Harriet.Db.Ship_Reference;
       World : Harriet.Db.World_Reference);
+
+   procedure Enter_Star_Gate
+     (Ship  : Harriet.Db.Ship_Reference;
+      Gate  : Harriet.Db.Star_Gate_Reference);
 
    --------------
    -- Activate --
@@ -49,20 +58,32 @@ package body Harriet.Ships.Updates is
          when Activating =>
             Harriet.Logging.Log
               (Ship.Name,
-               "moving to " & Harriet.Db.World.Get (Ship.Destination).Name);
+               "moving to " & Harriet.Locations.Show (Ship.Destination));
             declare
                use Harriet.Calendar;
+               Distance : constant Non_Negative_Real :=
+                 Harriet.Locations.Distance
+                   (Ship.Location, Ship.Destination);
                Journey_Time : constant Duration :=
                  Harriet.Ships.Journey_Time
                    (Ship     => Get (Update.Ship),
-                    Distance =>
-                      Harriet.Worlds.Distance
-                        (Ship.World, Ship.Destination));
+                    Distance => Distance);
                Arrival_Time : constant Time := Clock + Journey_Time;
             begin
+               Harriet.Logging.Log
+                 (Ship.Name,
+                  "distance "
+                  & Harriet.Real_Images.Approximate_Image
+                    (Distance / Harriet.Solar_System.Earth_Orbit)
+                  & " AU; journey time "
+                  & Harriet.Real_Images.Approximate_Image
+                    (Real (Journey_Time) / 3600.0)
+                  & " hours; arrival "
+                  & Harriet.Calendar.Image (Arrival_Time, True));
                Harriet.Db.Ship.Update_Ship (Update.Ship)
                  .Set_Status (Moving)
                  .Set_Arrival (Arrival_Time)
+                 .Set_World (Harriet.Db.Null_World_Reference)
                  .Done;
                Harriet.Updates.Events.Update_At
                  (Arrival_Time, Update);
@@ -143,24 +164,74 @@ package body Harriet.Ships.Updates is
       end case;
    end Activate;
 
+   ---------------------
+   -- Enter_Star_Gate --
+   ---------------------
+
+   procedure Enter_Star_Gate
+     (Ship  : Harriet.Db.Ship_Reference;
+      Gate  : Harriet.Db.Star_Gate_Reference)
+   is
+      use type Harriet.Calendar.Time;
+      Origin : constant Harriet.Db.Star_System_Reference :=
+        Harriet.Db.Star_Gate.Get (Gate).From;
+      Destination : constant Harriet.Db.Star_System_Reference :=
+        Harriet.Db.Star_Gate.Get (Gate).To;
+      Distance    : constant Non_Negative_Real :=
+        Harriet.Star_Systems.Distance (Origin, Destination);
+      Arrival : constant Harriet.Calendar.Time :=
+        Harriet.Calendar.Clock
+          + Harriet.Calendar.Days (Distance);
+   begin
+      Harriet.Logging.Log
+        (Harriet.Db.Ship.Get (Ship).Name,
+         "travelling via gate" & Harriet.Db.To_String (Gate)
+         & " to "
+         & Harriet.Db.Star_System.Get
+           (Harriet.Db.Star_Gate.Get (Gate).To)
+         .Name);
+      Harriet.Db.Ship.Update_Ship (Ship)
+        .Set_Arrival (Arrival)
+        .Set_Status (Harriet.Db.Moving)
+        .Set_Star_System (Harriet.Db.Null_Star_System_Reference)
+        .Done;
+
+      Harriet.Locations.Set_System_Location
+        (Harriet.Db.Ship.Get (Ship).Destination,
+         Destination, 0.0, 0.0, 0.0);
+
+      Harriet.Updates.Events.Update_At
+        (Arrival, Ship_Update'(Ship => Ship));
+
+   end Enter_Star_Gate;
+
    ----------------
    -- On_Arrival --
    ----------------
 
    procedure On_Arrival (Ship : Harriet.Db.Ship.Ship_Type) is
+      World : constant Harriet.Db.World_Reference :=
+        (if Harriet.Locations.Has_World (Ship.Destination)
+         then Harriet.Locations.Get_World (Ship.Destination)
+         else Harriet.Db.Null_World_Reference);
    begin
       Harriet.Logging.Log
         (Ship.Name,
-         "arrived at " & Harriet.Worlds.Name (Ship.Destination));
+         "arrived at " & Harriet.Locations.Show (Ship.Destination));
 
-      Harriet.Worlds.Check_Surface (Ship.Destination);
+      if Harriet.Locations.Has_World (Ship.Destination) then
+         Harriet.Worlds.Check_Surface (World);
+      end if;
 
       Harriet.Db.Ship.Update_Ship (Ship.Get_Ship_Reference)
-        .Set_World (Ship.Destination)
-        .Set_Primary_Massive (Ship.Primary_Massive)
-        .Set_Destination (Harriet.Db.Null_World_Reference)
+        .Set_World (World)
+        .Set_Primary_Massive
+          (Harriet.Locations.Get_Primary_Massive
+             (Ship.Destination))
         .Set_Status (Harriet.Db.Idle)
         .Done;
+
+      Harriet.Locations.Clear (Ship.Destination);
 
       declare
          use Harriet.Db;
@@ -171,6 +242,13 @@ package body Harriet.Ships.Updates is
                   Scan_World (Ship.Get_Ship_Reference,
                               Harriet.Db.World_Goal.Get_World_Goal
                                 (Ship.Goal).World);
+               when R_Scan_Star_Gate_Goal =>
+                  Enter_Star_Gate
+                    (Ship.Get_Ship_Reference,
+                     Harriet.Db.Scan_Star_Gate_Goal.Get_Scan_Star_Gate_Goal
+                       (Ship.Goal)
+                     .Star_Gate);
+
                when others =>
                   Harriet.Db.Ship.Update_Ship (Ship.Get_Ship_Reference)
                     .Set_Goal (Harriet.Db.Null_Goal_Reference)

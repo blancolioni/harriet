@@ -69,6 +69,14 @@ package Harriet.Star_Systems is
      (Star_System : Harriet.Db.Star_System_Reference)
       return Harriet.Worlds.World_Selection;
 
+   procedure Get_Current_System_Position
+     (Object  : Harriet.Db.Star_System_Object_Reference;
+      X, Y, Z : out Real);
+
+   function Distance
+     (From, To : Harriet.Db.Star_System_Reference)
+      return Non_Negative_Real;
+
 private
 
    type Star_System_Type is tagged

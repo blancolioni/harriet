@@ -5,6 +5,7 @@ with Harriet.Orbits;
 with Harriet.Random;
 with Harriet.Solar_System;
 
+with Harriet.Locations;
 with Harriet.Worlds;
 
 with Harriet.Db.Component;
@@ -180,6 +181,8 @@ package body Harriet.Ships is
           + 1000.0 * (3000.0 + 1000.0 * Harriet.Random.Unit_Random);
       Period    : constant Non_Negative_Real :=
         Harriet.Orbits.Period (World_Rec.Mass, Orbit);
+      Location : constant Harriet.Db.Location_Reference :=
+        Harriet.Locations.New_Location;
       Ship         : constant Harriet.Db.Ship_Reference :=
         Harriet.Db.Ship.Create
           (Name              => Name,
@@ -190,6 +193,7 @@ package body Harriet.Ships is
            Updates_Started   => True,
            Next_Update       => Harriet.Calendar.Clock,
            Faction           => Owner,
+           Location          => Location,
            Mass              => Harriet.Ships.Design_Mass (Design),
            Star_System       => World_Rec.Star_System,
            World             => World,
@@ -207,9 +211,10 @@ package body Harriet.Ships is
            Departure         => Harriet.Calendar.Clock,
            Arrival           => Harriet.Calendar.Clock,
            Start             => Harriet.Calendar.Clock,
-           Destination       => Harriet.Db.Null_World_Reference,
+           Destination       => Harriet.Locations.New_Location,
            Goal              => Harriet.Db.Null_Goal_Reference);
    begin
+      Harriet.Locations.Set_World_Orbit_Location (Location, World, Orbit);
       for Design_Module of
         Harriet.Db.Design_Module.Select_By_Ship_Design
           (Design)

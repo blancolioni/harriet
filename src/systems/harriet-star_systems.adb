@@ -1,7 +1,12 @@
+with Harriet.Elementary_Functions;
+with Harriet.Orbits;
+
 with Harriet.Db.Faction;
+with Harriet.Db.Massive_Object;
 with Harriet.Db.Scenario;
 with Harriet.Db.Star;
 with Harriet.Db.Star_System;
+with Harriet.Db.Star_System_Object;
 with Harriet.Db.World;
 
 package body Harriet.Star_Systems is
@@ -33,6 +38,23 @@ package body Harriet.Star_Systems is
    begin
       return Harriet.Db.Star_System.Get (Star_System).Claimed;
    end Claimed;
+
+   --------------
+   -- Distance --
+   --------------
+
+   function Distance
+     (From, To : Harriet.Db.Star_System_Reference)
+      return Non_Negative_Real
+   is
+      S1 : constant Harriet.Db.Star_System.Star_System_Type :=
+        Harriet.Db.Star_System.Get (From);
+      S2 : constant Harriet.Db.Star_System.Star_System_Type :=
+        Harriet.Db.Star_System.Get (To);
+   begin
+      return Harriet.Elementary_Functions.Sqrt
+        ((S1.X - S2.X) ** 2 + (S1.Y - S2.Y) ** 2 + (S1.Z - S2.Z) ** 2);
+   end Distance;
 
    ----------------
    -- Find_Exact --
@@ -84,6 +106,36 @@ package body Harriet.Star_Systems is
    begin
       return Star_System_Type'(Reference => Reference);
    end Get;
+
+   procedure Get_Current_System_Position
+     (Object  : Harriet.Db.Star_System_Object_Reference;
+      X, Y, Z : out Real)
+   is
+      use Harriet.Db, Harriet.Db.Star_System_Object;
+      Rec : constant Star_System_Object_Type := Get (Object);
+   begin
+      if Rec.Primary = Null_Star_System_Object_Reference then
+         X := 0.0;
+         Y := 0.0;
+         Z := 0.0;
+         return;
+      end if;
+
+      Get_Current_System_Position (Rec.Primary, X, Y, Z);
+
+      declare
+         use Harriet.Elementary_Functions;
+         Longitude : constant Real :=
+           Harriet.Orbits.Calculate_Current_Longitude
+             (Harriet.Db.Massive_Object.Get (Rec.Primary_Massive).Mass,
+              Rec.Semimajor_Axis,
+              Rec.Epoch);
+      begin
+         X := X + Rec.Semimajor_Axis * Cos (Longitude, 360.0);
+         Y := Y + Rec.Semimajor_Axis * Sin (Longitude, 360.0);
+      end;
+
+   end Get_Current_System_Position;
 
    ---------------------
    -- Has_Star_System --

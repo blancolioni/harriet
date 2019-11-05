@@ -289,7 +289,7 @@ package body Harriet.Configure.Worlds is
         (Tile : Surfaces.Surface_Tile_Index)
          return Non_Negative_Real
       is
-         Y : constant Real := Surface.Tile_Centre (Tile) (2);
+         Y : constant Real := Surface.Tile_Centre (Tile) (3);
       begin
          return World.Average_Temperature
            + (0.5 - abs Y) * 10.0;
@@ -320,6 +320,8 @@ package body Harriet.Configure.Worlds is
       end Get_Neighbours;
 
    begin
+
+      WL.Random.Reset (World.Seed);
 
       Heights.Generate_Height_Map
         (Heights     => Hs,
