@@ -940,7 +940,11 @@ package body Harriet.Configure.Star_Systems is
               Habitability        => Habitability,
               Surface_Pressure    => Current_Pressure * Earth_Surface_Pressure,
               Average_Temperature => Current_Temperature,
-              Hydrosphere         => Hydrosphere);
+              Hydrosphere         => Hydrosphere,
+              Life                => (if Life_Bearing
+                                      then Life_Complexity_Type'Pos
+                                        (Life_Complexity)
+                                      else 0));
       begin
          if Current_Pressure > 0.0 then
             for Item of Current_Atm.List loop
