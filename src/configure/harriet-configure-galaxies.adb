@@ -136,6 +136,45 @@ package body Harriet.Configure.Galaxies is
           + (From.Y - To.Y) ** 2
           + (From.Z - To.Z) ** 2);
 
+      procedure New_Star_Gate
+        (System_1, System_2 : Harriet.Db.Star_System_Reference);
+
+      -------------------
+      -- New_Star_Gate --
+      -------------------
+
+      procedure New_Star_Gate
+        (System_1, System_2 : Harriet.Db.Star_System_Reference)
+      is
+         procedure Create (From, To : Harriet.Db.Star_System_Reference);
+
+         ------------
+         -- Create --
+         ------------
+
+         procedure Create (From, To : Harriet.Db.Star_System_Reference) is
+            Star : constant Harriet.Db.Star.Star_Type :=
+              Harriet.Db.Star.First_By_Star_System (From);
+            D    : constant Non_Negative_Real :=
+              Real'Max (Harriet.Random.Normal_Random (0.1) + 2.0, 0.5)
+                * Harriet.Solar_System.Earth_Orbit
+              * (Star.Mass / Harriet.Solar_System.Solar_Mass);
+            A    : constant Real :=
+              Harriet.Random.Unit_Random * 360.0;
+         begin
+            Harriet.Db.Star_Gate.Create
+              (From => From,
+               To   => To,
+               X    => D * Cos (A, 360.0),
+               Y    => D * Sin (A, 360.0),
+               Z    => Harriet.Random.Normal_Random (0.5) * 1.0e9);
+         end Create;
+
+      begin
+         Create (System_1, System_2);
+         Create (System_2, System_1);
+      end New_Star_Gate;
+
       Process : WL.Processes.Process_Type;
 
    begin
@@ -406,14 +445,7 @@ package body Harriet.Configure.Galaxies is
                        < Average_Connections
                      then
                         Count := Count + 1;
-
-                        Harriet.Db.Star_Gate.Create
-                          (From => From,
-                           To   => To);
-
-                        Harriet.Db.Star_Gate.Create
-                          (From => To,
-                           To   => From);
+                        New_Star_Gate (From, To);
 
                         Vector (I).Gates :=
                           Vector.Element (I).Gates + 1;
@@ -453,13 +485,7 @@ package body Harriet.Configure.Galaxies is
                        and then not Star_Graphs.Same_Sub_Graph
                          (Sub_Graphs, I, Nearest.To)
                      then
-                        Harriet.Db.Star_Gate.Create
-                          (From => From,
-                           To   => To);
-
-                        Harriet.Db.Star_Gate.Create
-                          (From => To,
-                           To   => From);
+                        New_Star_Gate (From, To);
 
                         Vector (I).Gates :=
                           Vector.Element (I).Gates + 1;

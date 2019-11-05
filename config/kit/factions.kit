@@ -29,6 +29,13 @@ package Factions is
 	  unique key System_Knowledge with Faction, Star_System;
    end System_Knowledge;
    
+   record Star_Gate_Knowledge : Faction_Knowledge is
+      key Star_Gate;
+	  From_System : Boolean;
+	  To_System   : Boolean;
+	  unique key Star_Gate_Knowledge with Faction, Star_Gate;
+   end Star_Gate_Knowledge;
+   
    record World_Knowledge : Faction_Knowledge is
 	  key World;
 	  Classification : Boolean;

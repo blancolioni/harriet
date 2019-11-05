@@ -27,6 +27,7 @@ with Harriet.Db.Script_Line;
 with Harriet.Db.Sector_Use;
 with Harriet.Db.Ship_Design;
 with Harriet.Db.Star_Gate;
+with Harriet.Db.Star_Gate_Knowledge;
 with Harriet.Db.Star_System;
 with Harriet.Db.System_Knowledge;
 with Harriet.Db.Terrain;
@@ -135,6 +136,20 @@ package body Harriet.Factions.Create is
             Faction       => Faction,
             Star_System   =>
               Harriet.Worlds.Star_System (Capital));
+
+         for Gate of
+           Harriet.Db.Star_Gate.Select_By_From (System)
+         loop
+            Harriet.Db.Star_Gate_Knowledge.Create
+              (Has_Knowledge => Has_Knowledge,
+               Knowable      => Gate.Get_Knowable_Reference,
+               Existence     => True,
+               Current       => True,
+               Faction       => Faction,
+               Star_Gate     => Gate.Get_Star_Gate_Reference,
+               From_System   => True,
+               To_System     => False);
+         end loop;
 
          for World of
            Harriet.Db.World.Select_By_Star_System (System)

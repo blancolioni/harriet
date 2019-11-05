@@ -43,6 +43,11 @@ record Scan_World_Goal : World_Goal is
    Minimum_Deposit : Long_Float;
 end Scan_World_Goal;
 
+record Scan_Star_Gate_Goal : Goal is
+   Star_Gate;
+   unique key Scan_Star_Gate_Goal with Faction, Star_Gate;
+end Scan_Star_Gate_Goal;
+
 record Scan_System_Goal : Goal is
    Star_System;
    unique key Scan_System_Goal with Faction, Star_System;
