@@ -24,4 +24,9 @@ package Harriet.Managers.Goals is
       Priority : Priority_Type;
       System   : Harriet.Db.Star_System_Reference);
 
+   procedure Add_Star_Gate_Travel_Goal
+     (Faction  : Harriet.Db.Faction_Reference;
+      Priority : Priority_Type;
+      Gate     : Harriet.Db.Star_Gate_Reference);
+
 end Harriet.Managers.Goals;

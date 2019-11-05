@@ -10,12 +10,43 @@ with Harriet.Db.Deposit_Knowledge;
 with Harriet.Db.Faction;
 with Harriet.Db.Resource;
 with Harriet.Db.Resource_Goal;
+with Harriet.Db.Scan_Star_Gate_Goal;
 with Harriet.Db.Scan_System_Goal;
 with Harriet.Db.Scan_World_Goal;
 with Harriet.Db.Transport_Goal;
 with Harriet.Db.World_Knowledge;
 
 package body Harriet.Managers.Goals is
+
+   -------------------------------
+   -- Add_Star_Gate_Travel_Goal --
+   -------------------------------
+
+   procedure Add_Star_Gate_Travel_Goal
+     (Faction  : Harriet.Db.Faction_Reference;
+      Priority : Priority_Type;
+      Gate     : Harriet.Db.Star_Gate_Reference)
+   is
+      use Harriet.Db, Harriet.Db.Scan_Star_Gate_Goal;
+      Current : constant Scan_Star_Gate_Goal_Type :=
+        Get_By_Scan_Star_Gate_Goal (Faction, Gate);
+   begin
+      if Current.Has_Element then
+         if Current.Priority /= Priority then
+            Update_Scan_Star_Gate_Goal
+              (Current.Get_Scan_Star_Gate_Goal_Reference)
+              .Set_Priority (Priority)
+              .Done;
+         end if;
+      else
+         Create
+           (Status    => Waiting,
+            Faction   => Faction,
+            Priority  => Priority,
+            Star_Gate => Gate);
+      end if;
+
+   end Add_Star_Gate_Travel_Goal;
 
    --------------------------
    -- Add_System_Scan_Goal --

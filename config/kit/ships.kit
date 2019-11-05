@@ -1,6 +1,7 @@
 with Commodities;
 with Factions;
 with Localisation;
+with Locations;
 with Managed;
 with Names;
 with Updated;
@@ -64,9 +65,9 @@ record Design_Module is
 end Design_Module;
 
 type Ship_Status is
-  (Idle, Activating, Moving, Surveying, Training, Repairing, Destroyed);
+  (Idle, Activating, Moving, Jumping, Surveying, Training, Repairing, Destroyed);
   
-record Ship : Has_Name, Has_Stock, Managed, Updated, Orbiting_Object is
+record Ship : Has_Name, Has_Stock, Managed, Updated, Orbiting_Object, Has_Location, Can_Carry is
    key Faction;
    key World;
    key Star_System;
@@ -74,7 +75,7 @@ record Ship : Has_Name, Has_Stock, Managed, Updated, Orbiting_Object is
    Status      : Ship_Status;
    Training    : Long_Float;
    Fuel        : Long_Float;
-   Destination : World;
+   Destination : Location;
    Departure   : Time;
    Arrival     : Time;
    Start       : Time;

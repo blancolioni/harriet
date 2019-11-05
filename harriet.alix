@@ -10,6 +10,7 @@ source_dir = src/facilities
 source_dir = src/installations
 source_dir = src/kit
 source_dir = src/library
+source_dir = src/locations
 source_dir = src/managers
 source_dir = src/sessions
 source_dir = src/ships

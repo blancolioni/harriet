@@ -8,6 +8,24 @@ package body Harriet.Orbits is
    function Sqrt (X : Non_Negative_Real) return Non_Negative_Real
                   renames Harriet.Elementary_Functions.Sqrt;
 
+   ---------------------------------
+   -- Calculate_Current_Longitude --
+   ---------------------------------
+
+   function Calculate_Current_Longitude
+     (Large_Mass : Non_Negative_Real;
+      Orbit      : Non_Negative_Real;
+      Epoch      : Harriet.Calendar.Time)
+      return Real
+   is
+      use Harriet.Calendar;
+   begin
+      return Calculate_Longitude
+        (Large_Mass => Large_Mass,
+         Orbit      => Orbit,
+         Elapsed    => Clock - Epoch);
+   end Calculate_Current_Longitude;
+
    -------------------------
    -- Calculate_Longitude --
    -------------------------

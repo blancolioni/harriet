@@ -108,7 +108,7 @@ package body Harriet.Worlds is
       R2 : constant Non_Negative_Real := W2.Semimajor_Axis;
       pragma Assert (W1.Primary = W2.Primary);
       Primary_Mass : constant Non_Negative_Real :=
-        Harriet.Db.Massive_Object.Get (W1.Primary).Mass;
+        Harriet.Db.Massive_Object.Get (W1.Primary_Massive).Mass;
       From_Angle : constant Real :=
         Harriet.Orbits.Calculate_Longitude
           (Large_Mass => Primary_Mass,

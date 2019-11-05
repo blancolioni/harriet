@@ -6,12 +6,15 @@ with Harriet.Real_Images;
 with Harriet.Commodities.Maps;
 
 with Harriet.Managers.Execution;
+with Harriet.Managers.Goals;
 
 with Harriet.Db.Deposit;
 with Harriet.Db.Faction;
 with Harriet.Db.Resource;
 with Harriet.Db.World;
 with Harriet.Db.Commodity;
+with Harriet.Db.Star_Gate;
+with Harriet.Db.Star_Gate_Knowledge;
 with Harriet.Db.Star_System;
 
 package body Harriet.Managers.Factions is
@@ -44,12 +47,22 @@ package body Harriet.Managers.Factions is
    package Star_System_Lists is
      new Ada.Containers.Doubly_Linked_Lists (Star_System_Record);
 
+   type Star_Gate_Record is
+      record
+         From_System : Harriet.Db.Star_System_Reference;
+         To_System   : Harriet.Db.Star_System_Reference;
+      end record;
+
+   package Star_Gate_Lists is
+     new Ada.Containers.Doubly_Linked_Lists (Star_Gate_Record);
+
    type Root_Faction_Manager is new Root_Manager_Type with
       record
          Faction        : Harriet.Db.Faction_Reference;
          Capital_System : Harriet.Db.Star_System_Reference;
          Capital_World  : Harriet.Db.World_Reference;
          Star_Systems   : Star_System_Lists.List;
+         Star_Gates     : Star_Gate_Lists.List;
       end record;
 
    overriding function Identifier
@@ -75,6 +88,35 @@ package body Harriet.Managers.Factions is
      (Manager : not null access Root_Faction_Manager)
    is
    begin
+      if Manager.Star_Gates.Is_Empty then
+         for Gate_Knowledge of
+           Harriet.Db.Star_Gate_Knowledge.Select_By_Faction (Manager.Faction)
+         loop
+            declare
+               Unknown : constant Harriet.Db.Star_System_Reference :=
+                 Harriet.Db.Null_Star_System_Reference;
+               Gate : constant Harriet.Db.Star_Gate.Star_Gate_Type :=
+                 Harriet.Db.Star_Gate.Get (Gate_Knowledge.Star_Gate);
+               Rec  : constant Star_Gate_Record :=
+                 Star_Gate_Record'
+                   (From_System =>
+                      (if Gate_Knowledge.From_System
+                       then Gate.From else Unknown),
+                    To_System   =>
+                      (if Gate_Knowledge.To_System
+                       then Gate.From else Unknown));
+            begin
+               Manager.Star_Gates.Append (Rec);
+               if not Gate_Knowledge.To_System then
+                  Harriet.Managers.Goals.Add_Star_Gate_Travel_Goal
+                    (Faction  => Manager.Faction,
+                     Priority => Medium_Priority,
+                     Gate     => Gate_Knowledge.Star_Gate);
+               end if;
+            end;
+         end loop;
+      end if;
+
       Manager.Check_Star_Systems;
       Manager.Set_Next_Update_Delay (Harriet.Calendar.Days (1));
    end Activate;
