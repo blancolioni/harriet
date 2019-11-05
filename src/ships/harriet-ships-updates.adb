@@ -1,5 +1,7 @@
 with Harriet.Calendar;
+with Harriet.Elementary_Functions;
 with Harriet.Logging;
+with Harriet.Random;
 with Harriet.Real_Images;
 
 with Harriet.Solar_System;
@@ -15,6 +17,7 @@ with Harriet.Updates.Events;
 with Harriet.Db.Goal;
 with Harriet.Db.Scan_Star_Gate_Goal;
 with Harriet.Db.Scan_World_Goal;
+with Harriet.Db.Star;
 with Harriet.Db.Star_Gate;
 with Harriet.Db.Star_System;
 with Harriet.Db.World_Goal;
@@ -96,6 +99,40 @@ package body Harriet.Ships.Updates is
                Harriet.Updates.Events.Update_At
                  (Ship.Arrival, Update);
             end if;
+
+         when Jumping =>
+
+            declare
+               use Harriet.Elementary_Functions;
+               System : constant Harriet.Db.Star_System_Reference :=
+                 Harriet.Locations.Get_System (Ship.Destination);
+               Star   : constant Harriet.Db.Star.Star_Type :=
+                 Harriet.Db.Star.First_By_Star_System (System);
+               D      : constant Non_Negative_Real :=
+                 Real'Max (Harriet.Random.Normal_Random (0.1) + 2.0, 0.5)
+                   * Harriet.Solar_System.Earth_Orbit
+                 * (Star.Mass / Harriet.Solar_System.Solar_Mass);
+               A      : constant Real :=
+                 Harriet.Random.Unit_Random * 360.0;
+
+            begin
+
+               Harriet.Locations.Set_System_Location
+                 (Ship.Location, System,
+                  X => D * Cos (A, 360.0),
+                  Y => D * Sin (A, 360.0),
+                  Z => Harriet.Random.Normal_Random (0.5) * 1.0e9);
+
+               Harriet.Db.Ship.Update_Ship (Ship.Get_Ship_Reference)
+                 .Set_Status (Harriet.Db.Training)
+                 .Set_Star_System (System)
+                 .Set_World (Harriet.Db.Null_World_Reference)
+                 .Done;
+
+               Harriet.Logging.Log
+                 (Ship.Name,
+                  "arrived at " & Harriet.Locations.Show (Ship.Location));
+            end;
 
          when Surveying =>
 
@@ -192,7 +229,7 @@ package body Harriet.Ships.Updates is
          .Name);
       Harriet.Db.Ship.Update_Ship (Ship)
         .Set_Arrival (Arrival)
-        .Set_Status (Harriet.Db.Moving)
+        .Set_Status (Harriet.Db.Jumping)
         .Set_Star_System (Harriet.Db.Null_Star_System_Reference)
         .Done;
 

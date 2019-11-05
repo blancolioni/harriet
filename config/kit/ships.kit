@@ -65,7 +65,7 @@ record Design_Module is
 end Design_Module;
 
 type Ship_Status is
-  (Idle, Activating, Moving, Surveying, Training, Repairing, Destroyed);
+  (Idle, Activating, Moving, Jumping, Surveying, Training, Repairing, Destroyed);
   
 record Ship : Has_Name, Has_Stock, Managed, Updated, Orbiting_Object, Has_Location, Can_Carry is
    key Faction;
