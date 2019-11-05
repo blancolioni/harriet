@@ -632,7 +632,7 @@ package body Harriet.Configure.Star_Systems is
         Natural (Gravity * 4.0);
       Elevation_Range : constant Natural :=
         Natural
-          ((Harriet.Random.Normal_Random (0.1) + 2.0) * 50.0);
+          ((Harriet.Random.Normal_Random (0.1) + 2.0) * 25.0);
       Day         : constant Non_Negative_Real :=
                       Planet_Tables.Random_Planet_Rotation
                         (Mass  => Mass,
