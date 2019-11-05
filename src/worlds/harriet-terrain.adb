@@ -37,6 +37,17 @@ package body Harriet.Terrain is
    is (WL.Localisation.Local_Text
        (Harriet.Db.Terrain.Get (Terrain).Tag));
 
+   -----------
+   -- Ocean --
+   -----------
+
+   function Ocean
+     return Harriet.Db.Terrain_Reference
+   is
+   begin
+      return Harriet.Db.Terrain.Get_Reference_By_Tag ("ocean");
+   end Ocean;
+
    --------------
    -- Is_Water --
    --------------

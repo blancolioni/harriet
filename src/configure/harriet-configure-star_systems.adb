@@ -628,6 +628,11 @@ package body Harriet.Configure.Star_Systems is
       Radius      : constant Non_Negative_Real :=
                       (Mass / Density) ** (1.0 / 3.0);
       Gravity     : constant Non_Negative_Real := Radius * Density;
+      Smoothness  : constant Natural :=
+        Natural (Gravity * 4.0);
+      Elevation_Range : constant Natural :=
+        Natural
+          ((Harriet.Random.Normal_Random (0.1) + 2.0) * 50.0);
       Day         : constant Non_Negative_Real :=
                       Planet_Tables.Random_Planet_Rotation
                         (Mass  => Mass,
@@ -945,7 +950,11 @@ package body Harriet.Configure.Star_Systems is
               Life                => (if Life_Bearing
                                       then Life_Complexity_Type'Pos
                                         (Life_Complexity)
-                                      else 0));
+                                      else 0),
+              Smoothness          => Smoothness,
+              Elevation_Range     => Elevation_Range,
+              Sea_Level           =>
+                Natural (Real (Elevation_Range) * Hydrosphere));
       begin
          if Current_Pressure > 0.0 then
             for Item of Current_Atm.List loop

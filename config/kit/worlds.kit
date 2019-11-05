@@ -32,19 +32,17 @@ package Worlds is
    record Terrain : Localised, Has_Color is
       Hazard   : Long_Float;
       Is_Water : Boolean;   
-	  Min      : Integer;
-	  Max      : Integer;
    end Terrain;
 
    record Elevation : Has_Color is
-      Terrain;
 	  Height : Integer;
    end Elevation;
       
    record Climate_Terrain is
       key Climate : World_Climate;
       Terrain;
-      Frequency : Natural;
+	  Sequence  : Natural;
+      Frequency : Long_Float;
       key Climate_Terrain with Climate, Terrain;
    end Climate_Terrain;
    
@@ -65,6 +63,9 @@ package Worlds is
 	  Average_Temperature : Long_Float;
       Hydrosphere         : Long_Float;
 	  Life                : Natural;
+	  Smoothness          : Natural;
+	  Elevation_Range     : Natural;
+	  Sea_Level           : Natural;
    end World; 
 
    record Atmosphere is

@@ -20,4 +20,7 @@ package Harriet.Terrain is
      (Terrain : Harriet.Db.Terrain_Reference)
       return Unit_Real;
 
+   function Ocean
+     return Harriet.Db.Terrain_Reference;
+
 end Harriet.Terrain;

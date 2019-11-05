@@ -5,6 +5,7 @@ with WL.Random.Height_Maps;
 with Harriet.Logging;
 with Harriet.Solar_System;
 with Harriet.Surfaces;
+with Harriet.Terrain;
 
 with Harriet.Configure.Resources;
 
@@ -13,7 +14,6 @@ with Harriet.Db.Elevation;
 with Harriet.Db.Sector_Neighbour;
 with Harriet.Db.Sector_Vertex;
 with Harriet.Db.Star_System;
-with Harriet.Db.Terrain;
 with Harriet.Db.World;
 with Harriet.Db.World_Sector;
 
@@ -21,19 +21,35 @@ package body Harriet.Configure.Worlds is
 
    package Heights renames WL.Random.Height_Maps;
 
+   type Elevation_Terrain is
+      record
+         Elevation : Harriet.Db.Elevation_Reference;
+         Terrain   : Harriet.Db.Terrain_Reference;
+      end record;
+
    package Elevation_Vectors is
      new Ada.Containers.Vectors
-       (Positive, Harriet.Db.Elevation_Reference, Harriet.Db."=");
+       (Positive, Elevation_Terrain);
 
-   Elevation   : Elevation_Vectors.Vector;
---     Water       : Harriet.Db.Terrain_Reference :=
---                     Harriet.Db.Null_Terrain_Reference;
---     Water_Index : Natural := 0;
-   First_Land  : Natural := 0;
+   type Climate_Terrain_Record is
+      record
+         Terrain   : Harriet.Db.Terrain_Reference;
+         First     : Positive;
+         Last      : Natural;
+         Frequency : Unit_Real;
+         Count     : Natural;
+      end record;
+
+   package Climate_Terrain_Vectors is
+     new Ada.Containers.Vectors (Positive, Climate_Terrain_Record);
 
    procedure Save_Surface
      (Surface : Harriet.Surfaces.Surface_Type;
       World   : Harriet.Db.World.World_Type);
+
+   procedure Get_Climate_Terrain
+     (World  : Harriet.Db.World.World_Type;
+      Vector : out Climate_Terrain_Vectors.Vector);
 
    function Get_Frequencies
      (World : Harriet.Db.World.World_Type)
@@ -54,23 +70,6 @@ package body Harriet.Configure.Worlds is
                      Rec.Radius
                        / Harriet.Solar_System.Earth_Radius;
    begin
-
-      if Elevation.Is_Empty then
-         for E of Harriet.Db.Elevation.Scan_By_Top_Record loop
-            Elevation.Append (E.Get_Elevation_Reference);
-            if First_Land = 0
-              and then E.Height > 0
-            then
-               First_Land := Elevation.Last_Index;
-            end if;
-         end loop;
-
---           for T of Harriet.Db.Terrain.Scan_By_Tag loop
---              if T.Is_Water then
---                 Water := T.Get_Terrain_Reference;
---              end if;
---           end loop;
-      end if;
 
       case Rec.Composition is
          when Ice | Rock | Rock_Ice | Rock_Iron =>
@@ -113,6 +112,74 @@ package body Harriet.Configure.Worlds is
 
    end Generate_Surface;
 
+   -------------------------
+   -- Get_Climate_Terrain --
+   -------------------------
+
+   procedure Get_Climate_Terrain
+     (World  : Harriet.Db.World.World_Type;
+      Vector : out Climate_Terrain_Vectors.Vector)
+   is
+      Water_Last : constant Natural := World.Sea_Level;
+      Next       : Positive := Water_Last + 1;
+   begin
+
+      if Water_Last > 0 then
+         Vector.Append
+           (Climate_Terrain_Record'
+              (Terrain   => Harriet.Terrain.Ocean,
+               First     => 1,
+               Last      => Water_Last,
+               Frequency => World.Hydrosphere,
+               Count     => Water_Last));
+      end if;
+
+      for Climate_Terrain of
+        Harriet.Db.Climate_Terrain.Select_By_Climate
+          (World.Climate)
+      loop
+         declare
+            Frequency : constant Unit_Real :=
+              Climate_Terrain.Frequency * (1.0 - World.Hydrosphere);
+            Count     : constant Natural :=
+              Natural (Frequency * Real (World.Elevation_Range));
+         begin
+            Vector.Append (Climate_Terrain_Record'
+                             (Terrain   => Climate_Terrain.Terrain,
+                              First     => Next,
+                              Last      => Next + Count - 1,
+                              Frequency => Frequency,
+                              Count     => Count));
+            Next := Next + Count;
+         end;
+      end loop;
+
+      while Next < World.Elevation_Range loop
+         declare
+            Total_Move : Natural := 0;
+            Remaining  : constant Natural :=
+              World.Elevation_Range - Next;
+         begin
+            for Item of Vector loop
+               declare
+                  This_Move : constant Positive :=
+                    Natural'Min
+                      (Natural'Max (Remaining / Vector.Last_Index, 1),
+                       Remaining - Total_Move);
+               begin
+                  Item.First := Item.First + This_Move;
+                  Item.Count := Item.Count + This_Move;
+                  Item.Last := Item.First + Item.Count - 1;
+                  Total_Move := Total_Move + This_Move;
+                  exit when Total_Move = Remaining;
+               end;
+            end loop;
+            Next := Next + Total_Move;
+         end;
+      end loop;
+
+   end Get_Climate_Terrain;
+
    ---------------------
    -- Get_Frequencies --
    ---------------------
@@ -121,145 +188,9 @@ package body Harriet.Configure.Worlds is
      (World : Harriet.Db.World.World_Type)
       return Heights.Frequency_Map
    is
-      type Climate_Terrain_Record is
-         record
-            Terrain  : Harriet.Db.Terrain_Reference;
-            Min, Max : Integer;
-            Count    : Natural;
-         end record;
-
-      package Climate_Terrain_Vectors is
-        new Ada.Containers.Vectors (Positive, Climate_Terrain_Record);
-
-      Vector : Climate_Terrain_Vectors.Vector;
-      Total  : Natural := 0;
-
-      Freq : Heights.Frequency_Map (1 .. Elevation.Last_Index) :=
-        (others => 0);
-
-      procedure Interpolate
-        (Region : in out Heights.Frequency_Map;
-         Next   : Natural);
-
-      -----------------
-      -- Interpolate --
-      -----------------
-
-      procedure Interpolate
-        (Region : in out Heights.Frequency_Map;
-         Next   : Natural)
-      is
-         pragma Unreferenced (Next);
-         Start  : constant Non_Negative_Real := Real (Region (Region'First));
---           Finish : constant Non_Negative_Real := Real (Next);
-         Mean   : constant Non_Negative_Real := Real (Start);
-         Length : constant Non_Negative_Real :=
-           Real (Region'Length);
---           Line   : array (Region'Range) of Non_Negative_Real :=
---             (others => Mean);
-      begin
-
---           for I in Line'Range loop
---              Line (I) := Start +
---                (Finish - Start) * Real (I - Line'First)
---                / Real (Line'Last - Line'First + 1);
---              Total := Total + Line (I);
---           end loop;
---
---           Ada.Text_IO.Put_Line
---             ("interpolating: heights" & Natural'Image (Region'First)
---              & " .." & Natural'Image (Region'Last)
---              & "; start" & Natural'Image (Region (Region'First))
---              & "; finish" & Next'Image
---              & "; mean "
---              & Harriet.Real_Images.Approximate_Image (Mean)
---              & "; area" & Natural'Image (Natural (Total)));
---
---           for H of Line loop
---              H := H * Mean / Total;
---           end loop;
-
-         for I in Region'Range loop
-            Region (I) := Natural (100.0 * Mean / Length);
-         end loop;
-
-      end Interpolate;
-
    begin
-      for Climate_Terrain of
-        Harriet.Db.Climate_Terrain.Select_By_Climate
-          (World.Climate)
-      loop
-         declare
-            Terrain : constant Harriet.Db.Terrain.Terrain_Type :=
-              Harriet.Db.Terrain.Get (Climate_Terrain.Terrain);
-         begin
-            Vector.Append (Climate_Terrain_Record'
-                             (Terrain => Climate_Terrain.Terrain,
-                              Min     => Terrain.Min,
-                              Max     => Terrain.Max,
-                              Count   => Climate_Terrain.Frequency));
-            Total := Total + Climate_Terrain.Frequency;
-            Freq (Terrain.Min + First_Land - 1) := Climate_Terrain.Frequency;
-         end;
-      end loop;
-
-      if World.Hydrosphere > 0.0 then
-         declare
-            New_Total : constant Natural :=
-                          Natural (1.0 / (1.0 - World.Hydrosphere)
-                                   * Real (Total));
-            Water_Freq : constant Natural := New_Total - Total;
-         begin
-            Freq (Freq'First) := Water_Freq;
-         end;
-      end if;
-
-      declare
-         Index       : Positive := Freq'First;
-         Start_Index : Positive;
-         This_F      : Natural;
-      begin
-         while Index <= Freq'Last
-           and then Freq (Index) = 0
-         loop
-            Index := Index + 1;
-         end loop;
-
-         pragma Assert (Index <= Freq'Last);
-
-         Start_Index := Index;
-         This_F := Freq (Index);
-         Index := Index + 1;
-
-         while Index <= Freq'Last loop
-            if Freq (Index) > 0 then
-               Interpolate (Freq (Start_Index .. Index - 1), Freq (Index));
-               Start_Index := Index;
-               This_F := Freq (Index);
-            end if;
-            Index := Index + 1;
-         end loop;
-
-         if This_F > 0 then
-            Interpolate (Freq (Start_Index .. Freq'Last), 0);
-         end if;
-      end;
-
-      declare
-         Total : Natural := 0;
-         Cum   : Natural := 0;
-      begin
-         for I in Freq'Range loop
-            Total := Total + Freq (I);
-         end loop;
-
-         for I in Freq'Range loop
-            Cum := Cum + Freq (I);
-         end loop;
-      end;
-      return Freq;
-
+      return Freq : constant Heights.Frequency_Map
+        (1 .. World.Elevation_Range) := (others => 1);
    end Get_Frequencies;
 
    ------------------
@@ -319,9 +250,14 @@ package body Harriet.Configure.Worlds is
          end return;
       end Get_Neighbours;
 
+      Climate_Vector : Climate_Terrain_Vectors.Vector;
+      Elevation      : Elevation_Vectors.Vector;
+
    begin
 
       WL.Random.Reset (World.Seed);
+
+      Get_Climate_Terrain (World, Climate_Vector);
 
       Heights.Generate_Height_Map
         (Heights     => Hs,
@@ -329,13 +265,36 @@ package body Harriet.Configure.Worlds is
          Smoothing   => 3,
          Neighbours  => Get_Neighbours'Access);
 
+      for E of Harriet.Db.Elevation.Scan_By_Top_Record loop
+         declare
+            Height  : constant Integer := E.Height + World.Sea_Level;
+            Terrain : Harriet.Db.Terrain_Reference;
+         begin
+            if Height in 1 .. World.Elevation_Range then
+               for Item of Climate_Vector loop
+                  if Height in Item.First .. Item.Last then
+                     Terrain := Item.Terrain;
+                     exit;
+                  end if;
+               end loop;
+
+               Elevation.Append
+                 (Elevation_Terrain'
+                    (Elevation => E.Get_Elevation_Reference,
+                     Terrain   => Terrain));
+            end if;
+         end;
+      end loop;
+
       for I in Tile_Refs'Range loop
          declare
             Centre : constant Harriet.Surfaces.Vector_3 :=
               Surface.Tile_Centre (I);
             E      : constant Harriet.Db.Elevation.Elevation_Type :=
               Harriet.Db.Elevation.Get
-                (Elevation.Element (Hs (Positive (I))));
+                (Elevation.Element (Hs (Positive (I))).Elevation);
+            Terrain : constant Harriet.Db.Terrain_Reference :=
+              Elevation.Element (Hs (Positive (I))).Terrain;
             Sector : constant Harriet.Db.World_Sector_Reference :=
                        Harriet.Db.World_Sector.Create
                          (Surface             => World.Get_Surface_Reference,
@@ -345,8 +304,8 @@ package body Harriet.Configure.Worlds is
                           Faction             =>
                             Harriet.Db.Null_Faction_Reference,
                           World               => World.Get_World_Reference,
-                          Terrain             => E.Terrain,
-                          Height              => E.Height,
+                          Terrain             => Terrain,
+                          Height              => Hs (Positive (I)),
                           Elevation           => E.Get_Elevation_Reference,
                           Sector_Use          =>
                             Harriet.Db.Null_Sector_Use_Reference,

@@ -1,2 +1,6 @@
-terrain = { plain = 30 hills = 20 mountains = 5 }
+terrain = {
+   rock = 70%
+   mountains = 30%
+}
+
 habitability = 0

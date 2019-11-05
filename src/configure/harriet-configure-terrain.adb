@@ -31,18 +31,21 @@ package body Harriet.Configure.Terrain is
      (Config : Tropos.Configuration)
    is
       Climate : constant Harriet.Db.World_Climate :=
-                  Harriet.Db.World_Climate'Value (Config.Config_Name);
+        Harriet.Db.World_Climate'Value (Config.Config_Name);
+      Next    : Natural := 0;
    begin
       for Terrain_Config of Config.Child ("terrain") loop
          declare
             Terrain : constant Harriet.Db.Terrain_Reference :=
                         Harriet.Db.Terrain.Get_Reference_By_Tag
                           (Terrain_Config.Config_Name);
-            Frequency : constant Natural := Terrain_Config.Value;
+            Frequency : constant Real := Terrain_Config.Value;
          begin
+            Next := Next + 1;
             Harriet.Db.Climate_Terrain.Create
               (Climate   => Climate,
                Terrain   => Terrain,
+               Sequence  => Next,
                Frequency => Frequency);
          end;
       end loop;
@@ -59,17 +62,12 @@ package body Harriet.Configure.Terrain is
           ("star-systems/palettes/land-elevation.bmp");
       Reader            : WL.Images.Bitmaps.Bitmap_Image_Reader;
       Image             : WL.Images.Image_Type;
-      Terrain_Map       : array (Min_Height .. Max_Height) of
-        Harriet.Db.Terrain_Reference;
       Water_Color       : Harriet.Color.Harriet_Color;
    begin
       for Terrain of Harriet.Db.Terrain.Scan_By_Tag loop
          if Terrain.Is_Water then
             Water_Color := (Terrain.Red, Terrain.Green, Terrain.Blue, 1.0);
          end if;
-         for I in Terrain.Min .. Terrain.Max loop
-            Terrain_Map (I) := Terrain.Get_Terrain_Reference;
-         end loop;
       end loop;
 
       for I in Min_Height .. 0 loop
@@ -77,7 +75,6 @@ package body Harriet.Configure.Terrain is
            (Red     => Water_Color.Red,
             Green   => Water_Color.Green,
             Blue    => Water_Color.Blue,
-            Terrain => Terrain_Map (I),
             Height  => I);
       end loop;
 
@@ -92,7 +89,6 @@ package body Harriet.Configure.Terrain is
               (Red     => Real (Color.Red) / 255.0,
                Green   => Real (Color.Green) / 255.0,
                Blue    => Real (Color.Blue) / 255.0,
-               Terrain => Terrain_Map (Positive (X)),
                Height  => Positive (X));
          end;
       end loop;
@@ -138,9 +134,7 @@ package body Harriet.Configure.Terrain is
          Green    => Color.Green,
          Blue     => Color.Blue,
          Hazard   => Get_Real (Config, "hazard") / 100.0,
-         Is_Water => Config.Get ("is-water"),
-         Min      => Min,
-         Max      => Max);
+         Is_Water => Config.Get ("is-water"));
    end Configure_Terrain;
 
 end Harriet.Configure.Terrain;
