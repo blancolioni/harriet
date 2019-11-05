@@ -305,7 +305,13 @@ package body Harriet.UI.Models is
                       (World.Climate));
                Set ("day", World.Rotation_Period / 3600.0);
 
-               if not World.Gas_Giant then
+               if World.Gas_Giant then
+                  declare
+                     Sectors : Json.Json_Array;
+                  begin
+                     Set ("surface", Sectors);
+                  end;
+               else
                   declare
                      Sectors : Json.Json_Array;
 
