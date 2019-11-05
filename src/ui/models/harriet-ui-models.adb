@@ -33,9 +33,11 @@ package body Harriet.UI.Models is
      new Ada.Containers.Vectors (Natural, Harriet.Color.Harriet_Color,
                                  Harriet.Color."=");
 
-   Star_Spectrum_Palette : Palette_Vectors.Vector;
+   Star_Spectrum_Palette     : Palette_Vectors.Vector;
+   World_Temperature_Palette : Palette_Vectors.Vector;
 
    procedure Load_Spectrum_Palette;
+   procedure Load_World_Temperature_Palette;
 
    -----------
    -- Close --
@@ -107,6 +109,35 @@ package body Harriet.UI.Models is
       end loop;
    end Load_Spectrum_Palette;
 
+   ------------------------------------
+   -- Load_World_Temperature_Palette --
+   ------------------------------------
+
+   procedure Load_World_Temperature_Palette is
+      Tag               : constant String := "world-temperature";
+      Palette_File_Name : constant String :=
+        Harriet.Paths.Config_File
+          ("star-systems/palettes/" & Tag & ".bmp");
+      Reader            : WL.Images.Bitmaps.Bitmap_Image_Reader;
+      Image             : WL.Images.Image_Type;
+   begin
+      Reader.Read (Palette_File_Name, Image);
+
+      for X in 1 .. Image.Width loop
+         declare
+            Color : constant WL.Images.Image_Color :=
+              Image.Color (X, 1);
+         begin
+            World_Temperature_Palette.Append
+              (Harriet.Color.Harriet_Color'
+                 (Red   => Real (Color.Red) / 255.0,
+                  Green => Real (Color.Green) / 255.0,
+                  Blue  => Real (Color.Blue) / 255.0,
+                  Alpha => 1.0));
+         end;
+      end loop;
+   end Load_World_Temperature_Palette;
+
    ---------------
    -- Serialize --
    ---------------
@@ -129,7 +160,7 @@ package body Harriet.UI.Models is
                      Property_Value : Json.Json_Value'Class);
 
       function Orbiting_Objects
-        (Primary : Harriet.Db.Massive_Object_Reference)
+        (Primary : Harriet.Db.Star_System_Object_Reference)
          return Json.Json_Array;
 
       ----------------------
@@ -137,7 +168,7 @@ package body Harriet.UI.Models is
       ----------------------
 
       function Orbiting_Objects
-        (Primary : Harriet.Db.Massive_Object_Reference)
+        (Primary : Harriet.Db.Star_System_Object_Reference)
          return Json.Json_Array
       is
       begin
@@ -188,6 +219,10 @@ package body Harriet.UI.Models is
          Load_Spectrum_Palette;
       end if;
 
+      if World_Temperature_Palette.Is_Empty then
+         Load_World_Temperature_Palette;
+      end if;
+
       Set ("title", Object.Name);
       Set ("name", Object.Name);
       Set ("orbit",
@@ -200,8 +235,18 @@ package body Harriet.UI.Models is
                Object.Semimajor_Axis,
                Harriet.Calendar.Clock - Object.Epoch))
            * Ada.Numerics.Pi / 180.0);
-      Set ("dependents",
-           Orbiting_Objects (Object.Get_Massive_Object_Reference));
+      declare
+         use Harriet.Db.Star_System_Object;
+         SSO : constant Star_System_Object_Type :=
+           Get_Star_System_Object
+             (Object.Get_Orbiting_Object_Reference);
+         Deps : Json.Json_Array;
+      begin
+         if SSO.Has_Element then
+            Deps := Orbiting_Objects (SSO.Get_Star_System_Object_Reference);
+         end if;
+         Set ("dependents", Deps);
+      end;
 
       if Full then
          Set ("year", Object.Period);
@@ -312,6 +357,7 @@ package body Harriet.UI.Models is
                        (Sector : Harriet.Db.World_Sector_Reference)
                         return Harriet.Color.Harriet_Color
                      is
+                        Temperature_Model : constant Boolean := False;
                         Faction : constant Faction_Reference :=
                           Harriet.Worlds.Get_Owner (Sector);
                      begin
@@ -319,6 +365,20 @@ package body Harriet.UI.Models is
                            return Harriet.Color.From_String ("#0000FF");
                         elsif Faction /= Null_Faction_Reference then
                            return Harriet.Factions.Get (Faction).Color;
+                        elsif Temperature_Model then
+                           declare
+                              K : constant Real :=
+                                Harriet.Worlds.Get_Average_Temperature
+                                  (Sector);
+                              I : constant Natural :=
+                                Integer'Max
+                                  (0,
+                                   Integer'Min
+                                     (World_Temperature_Palette.Last_Index,
+                                      Integer ((K - 247.4) * 20.0)));
+                           begin
+                              return World_Temperature_Palette.Element (I);
+                           end;
                         else
                            declare
                               E : constant Elevation.Elevation_Type :=
