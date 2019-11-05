@@ -1,5 +1,6 @@
 with Harriet.Elementary_Functions;
 with Harriet.Real_Images;
+with Harriet.Solar_System;
 
 with Harriet.Star_Systems;
 
@@ -172,6 +173,10 @@ package body Harriet.Locations is
       end;
    end Has_World;
 
+   ------------------
+   -- Location_XYZ --
+   ------------------
+
    procedure Location_XYZ
      (Location : Harriet.Db.Location_Reference;
       X, Y, Z  : out Real)
@@ -263,7 +268,7 @@ package body Harriet.Locations is
    is
    begin
       Harriet.Db.Location.Update_Location (Location)
-        .Set_Class (Harriet.Db.In_Orbit)
+        .Set_Class (Harriet.Db.System_Point)
         .Set_Has_Orbits
           (Harriet.Db.Star.First_By_Star_System (Star_System)
            .Get_Has_Orbits_Reference)
@@ -299,6 +304,8 @@ package body Harriet.Locations is
 
    function Show (Location : Harriet.Db.Location_Reference) return String is
       use Harriet.Db;
+      AU  : constant Non_Negative_Real :=
+        Harriet.Solar_System.Earth_Orbit;
       Rec : constant Harriet.Db.Location.Location_Type :=
         Harriet.Db.Location.Get (Location);
 
@@ -321,16 +328,27 @@ package body Harriet.Locations is
                        Harriet.Db.Star.Get_Star (Rec.Has_Orbits).Name,
                      when others  =>
                        "some sort of object");
+               Distance   : constant String :=
+                 (if Rec.Orbit < AU / 100.0
+                  then Image (Rec.Orbit / 1000.0) & "km"
+                  else Image (Rec.Orbit / AU) & "AU");
             begin
-               return "in orbit around " & Name;
+               return "orbiting " & Name & " at " & Distance;
             end;
          when System_Point =>
-            return "near "
-              & Harriet.Db.Star.Get_Star (Rec.Has_Orbits).Name
-              & " ("
-              & Image (Rec.X) & ","
-              & Image (Rec.Y) & ","
-              & Image (Rec.Z) & ")";
+            declare
+               use Harriet.Elementary_Functions;
+               Distance   : constant Non_Negative_Real :=
+                 Sqrt (Rec.X ** 2 + Rec.Y ** 2 + Rec.Z ** 2);
+               Distance_Image : constant String :=
+                 (if Distance < AU / 100.0
+                  then Image (Distance / 1000.0) & "km"
+                  else Image (Distance / AU) & "AU");
+            begin
+               return Distance_Image & " from "
+                 & Harriet.Db.Star.Get_Star (Rec.Has_Orbits).Name;
+            end;
+
          when Carried =>
             return "being carried";
       end case;
