@@ -11,6 +11,7 @@ with Harriet.Constants;
 with Harriet.Money;
 with Harriet.Quantities;
 with Harriet.Random;
+with Harriet.Real_Images;
 
 with Harriet.Ships;
 with Harriet.Star_Systems;
@@ -369,19 +370,29 @@ package body Harriet.Factions.Create is
                     Harriet.Constants.To_Celsius (Sector.Average_Temperature);
          Terrain : constant Harriet.Db.Terrain_Reference :=
                      Harriet.Worlds.Get_Terrain
-                       (Sector.Get_World_Sector_Reference);
+             (Sector.Get_World_Sector_Reference);
+         Score   : constant Real :=
+           (if Temp_C <= -20.0 or else Temp_C >= 50.0
+            then 0.0
+            elsif Harriet.Db.Terrain.Get (Terrain).Is_Water
+            then 0.0
+            elsif Temp_C < 0.0
+            then 60.0 + Temp_C * 3.0
+            elsif Temp_C >= 20.0
+            then 60.0 - (Temp_C - 20.0) * 2.0
+            else 200.0 - abs (Temp_C - 12.0));
       begin
-         if Temp_C <= -20.0 or else Temp_C >= 50.0 then
-            return 0.0;
-         elsif Harriet.Db.Terrain.Get (Terrain).Is_Water then
-            return 0.0;
-         elsif Temp_C < 0.0 then
-            return 60.0 + Temp_C * 3.0;
-         elsif Temp_C >= 20.0 then
-            return 60.0 - (Temp_C - 20.0) * 2.0;
-         else
-            return 100.0;
+         if False then
+            Ada.Text_IO.Put_Line
+              ("temperature "
+               & Harriet.Real_Images.Approximate_Image (Temp_C)
+               & "; terrain "
+               & Harriet.Db.Terrain.Get (Terrain).Tag
+               & "; score "
+               & Harriet.Real_Images.Approximate_Image (Score));
          end if;
+         return Score;
+
       end Evaluate_Sector;
 
       Capital_Sector : constant Harriet.Db.World_Sector_Reference :=
