@@ -2,6 +2,7 @@ with Ada.Containers.Vectors;
 
 with WL.Random.Height_Maps;
 
+with Harriet.Constants;
 with Harriet.Logging;
 with Harriet.Solar_System;
 with Harriet.Surfaces;
@@ -11,9 +12,11 @@ with Harriet.Configure.Resources;
 
 with Harriet.Db.Climate_Terrain;
 with Harriet.Db.Elevation;
+with Harriet.Db.Feature;
 with Harriet.Db.Sector_Neighbour;
 with Harriet.Db.Sector_Vertex;
 with Harriet.Db.Star_System;
+with Harriet.Db.Terrain;
 with Harriet.Db.World;
 with Harriet.Db.World_Sector;
 
@@ -305,6 +308,8 @@ package body Harriet.Configure.Worlds is
                             Harriet.Db.Null_Faction_Reference,
                           World               => World.Get_World_Reference,
                           Terrain             => Terrain,
+                          Feature             =>
+                            Harriet.Db.Null_Feature_Reference,
                           Height              => Hs (Positive (I)),
                           Elevation           => E.Get_Elevation_Reference,
                           Sector_Use          =>
@@ -332,6 +337,35 @@ package body Harriet.Configure.Worlds is
                Neighbour => Tile_Refs (Surface.Neighbour (Tile_Index, I)));
          end loop;
       end loop;
+
+      declare
+         Max_Ice_Sectors : constant Natural :=
+           (if World.Average_Temperature < -20.0
+            then Natural (Surface.Tile_Count)
+            else Natural (Real (Surface.Tile_Count) * World.Hydrosphere));
+         Ice_Sector_Count : Natural := 0;
+         Ice_Feature      : constant Harriet.Db.Feature_Reference :=
+           Harriet.Db.Feature.Get_Reference_By_Tag ("ice");
+      begin
+         for World_Sector of
+           Harriet.Db.World_Sector
+             .Select_World_Temperature_Bounded_By_Average_Temperature
+               (World.Get_World_Reference, 0.0,
+                Harriet.Constants.Freezing_Point_Of_Water)
+         loop
+            exit when Ice_Sector_Count > Max_Ice_Sectors;
+            if World_Sector.Average_Temperature < 243.0
+              or else not Harriet.Db.Terrain.Get (World_Sector.Terrain)
+              .Is_Water
+            then
+               Harriet.Db.World_Sector.Update_World_Sector
+                 (World_Sector.Get_World_Sector_Reference)
+                 .Set_Feature (Ice_Feature)
+                 .Done;
+               Ice_Sector_Count := Ice_Sector_Count + 1;
+            end if;
+         end loop;
+      end;
 
    end Save_Surface;
 

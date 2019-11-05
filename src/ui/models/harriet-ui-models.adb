@@ -26,6 +26,8 @@ with Harriet.Db.Elevation;
 with Harriet.Db.World;
 
 with Harriet.Paths;
+with Harriet.Db.World_Sector;
+with Harriet.Db.Feature;
 
 package body Harriet.UI.Models is
 
@@ -360,6 +362,9 @@ package body Harriet.UI.Models is
                         Temperature_Model : constant Boolean := False;
                         Faction : constant Faction_Reference :=
                           Harriet.Worlds.Get_Owner (Sector);
+                        WS : constant Harriet.Db.World_Sector
+                          .World_Sector_Type :=
+                            Harriet.Db.World_Sector.Get (Sector);
                      begin
                         if Harriet.Worlds.Is_Urban (Sector) then
                            return Harriet.Color.From_String ("#0000FF");
@@ -378,6 +383,14 @@ package body Harriet.UI.Models is
                                       Integer ((K - 247.4) * 20.0)));
                            begin
                               return World_Temperature_Palette.Element (I);
+                           end;
+                        elsif WS.Feature /= Null_Feature_Reference then
+                           declare
+                              use Harriet.Db.Feature;
+                              F : constant Feature_Type :=
+                                Get (WS.Feature);
+                           begin
+                              return (F.Red, F.Green, F.Blue, 1.0);
                            end;
                         else
                            declare

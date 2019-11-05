@@ -33,6 +33,10 @@ package Worlds is
       Hazard   : Long_Float;
       Is_Water : Boolean;   
    end Terrain;
+   
+   record Feature : Localised, Has_Color is
+      Is_Ice   : Boolean;
+   end Feature;
 
    record Elevation : Has_Color is
 	  Height : Integer;

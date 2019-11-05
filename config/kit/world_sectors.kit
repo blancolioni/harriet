@@ -10,11 +10,13 @@ package World_Sectors is
 	   key Faction;
 	   key World;
 	   Terrain;
+	   Feature;
 	   Sector_Use;
 	   Height : Integer;
 	   key Elevation;
 	   Average_Temperature : Long_Float;
 	   key World_Sector_Use with World, Sector_Use;
+	   key World_Temperature with World, Average_Temperature;
 	end World_Sector;
 	   
 	record Deposit : Knowable is

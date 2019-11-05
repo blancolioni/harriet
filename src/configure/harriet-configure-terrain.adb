@@ -6,6 +6,7 @@ with Harriet.Color;
 
 with Harriet.Db.Climate_Terrain;
 with Harriet.Db.Elevation;
+with Harriet.Db.Feature;
 with Harriet.Db.Terrain;
 
 with Harriet.Paths;
@@ -16,6 +17,9 @@ package body Harriet.Configure.Terrain is
    Max_Height : Integer := Integer'First;
 
    procedure Configure_Terrain
+     (Config : Tropos.Configuration);
+
+   procedure Configure_Feature
      (Config : Tropos.Configuration);
 
    procedure Configure_Climate_Terrain
@@ -95,6 +99,25 @@ package body Harriet.Configure.Terrain is
    end Configure_Elevation;
 
    -----------------------
+   -- Configure_Feature --
+   -----------------------
+
+   procedure Configure_Feature
+     (Config : Tropos.Configuration)
+   is
+      Color : constant Harriet.Color.Harriet_Color :=
+        Harriet.Color.From_String
+          (Config.Get ("color", "#000"));
+   begin
+      Harriet.Db.Feature.Create
+        (Tag    => Config.Config_Name,
+         Red      => Color.Red,
+         Green    => Color.Green,
+         Blue     => Color.Blue,
+         Is_Ice   => Config.Get ("ice"));
+   end Configure_Feature;
+
+   -----------------------
    -- Configure_Terrain --
    -----------------------
 
@@ -110,6 +133,10 @@ package body Harriet.Configure.Terrain is
         (Path      => Scenario_Directory (Scenario_Name, "climate"),
          Extension => "climate",
          Configure => Configure_Climate_Terrain'Access);
+      Tropos.Reader.Read_Config
+        (Path      => Scenario_Directory (Scenario_Name, "features"),
+         Extension => "feature",
+         Configure => Configure_Feature'Access);
       Configure_Elevation;
    end Configure_Terrain;
 
