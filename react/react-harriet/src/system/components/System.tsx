@@ -115,6 +115,7 @@ class Component extends React.Component<Props,State> {
   model  : Model3D | null;
   renderCount : number
   unTimeMaterial : THREE.ShaderMaterial[];
+  currentZoom : THREE.Mesh | null;
 
   constructor(props : Props) {
     super (props);
@@ -122,6 +123,7 @@ class Component extends React.Component<Props,State> {
     this.renderCount = 0;
     this.unTimeMaterial = [];
     this.model = null;
+    this.currentZoom = null;
     this.beforeRender = this.beforeRender.bind(this);
   }
 
@@ -235,6 +237,18 @@ class Component extends React.Component<Props,State> {
 
     if (this.props.clientState.primary) {
       this.updateScene(this.props.clientState.primary, new THREE.Vector3(0,0,0));
+    }
+
+    if (this.props.clientState.zoom && (!this.currentZoom || this.currentZoom.name !== this.props.clientState.zoom)) {
+      const newZoom = this.model!.scene.getObjectByName(this.props.clientState.zoom);
+      if (newZoom) {
+        this.currentZoom = newZoom as THREE.Mesh;
+        const mesh = this.currentZoom;
+        const { x, y, z } = mesh.position;
+        const wp = new THREE.Vector3 (x, y, z + mesh.scale.z * 2.5);
+        console.log('add waypoint', x, y, z, mesh.scale.z, wp)
+        this.model!.addWaypoint(wp, new THREE.Vector3 (0, 0, 1), 5.0);
+      }
     }
 
     return (

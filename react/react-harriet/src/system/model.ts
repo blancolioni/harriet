@@ -49,10 +49,12 @@ export interface ShipObject extends SystemObject {
 export interface State extends ClientState {
   systemName : string,
   primary    : StarObject | null,
+  zoom       : string,
 }
 
 export const systemInitialState = (baseState : ClientState) => ({
   ...baseState,
   systemName: '',
   primary: null,
+  zoom: '',
 });

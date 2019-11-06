@@ -13,6 +13,13 @@ export default (state = systemInitialState(clientInitialState), action: SystemAc
             ...state,
             ...action.newState,
         }
+    case t.ZOOM:
+    case clients.ZOOM_OBJECT:
+      console.log("zoom", action)
+        return {
+          ...state,
+          zoom: action.name
+        }
     default:
         return state;
   }
