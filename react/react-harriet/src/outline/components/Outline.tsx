@@ -4,9 +4,11 @@ import TreeMenu from 'react-simple-tree-menu';
 
 import { State } from '../model';
 import { AppState } from '../../rootReducer';
+import { zoomObject } from '../../clients/actions';
 
 interface Props {
-  treeData: State[]
+  treeData: State[],
+  zoomObject: typeof zoomObject,
 }
 
 
@@ -21,6 +23,7 @@ class Outline extends React.Component<Props,State> {
                 <TreeMenu 
                    data={this.props.treeData}
                    hasSearch={false}
+                   onClickItem={(props) => { this.props.zoomObject(props.label) }}
                 />
             </nav>
             );
@@ -35,5 +38,5 @@ function mapStateToProps(state: AppState)  {
 
 export default connect(
     mapStateToProps,
-    {  }
+    { zoomObject }
 )(Outline)
