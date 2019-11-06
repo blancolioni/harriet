@@ -36,15 +36,31 @@ export default (clientReducers: ClientReducer[]) => {
     default:
         if ('clientId' in action) {
             let clientAction = action as ClientAction
-            let s = state.clients[clientAction.clientId]
-            for (const r of clientReducers) {
-                s = r(s, clientAction)
-            }
-            let newClients = state.clients.slice();
-            newClients[clientAction.clientId] = s;
-            return {
-                ...state,
-                clients: newClients,
+            if (clientAction.clientId === -1) {
+                console.log('broadcast', clientAction)
+                let newClients = [];
+                for (const clientState of state.clients) {
+                    let s = clientState;
+                    for (const r of clientReducers) {
+                        s = r(s, clientAction)
+                    }
+                    newClients.push(s);
+                }
+                return {
+                    ...state,
+                    clients: newClients,
+                }
+            } else {
+                let s = state.clients[clientAction.clientId]
+                for (const r of clientReducers) {
+                    s = r(s, clientAction)
+                }
+                let newClients = state.clients.slice();
+                newClients[clientAction.clientId] = s;
+                return {
+                    ...state,
+                    clients: newClients,
+                }
             }
         }
         return state;
