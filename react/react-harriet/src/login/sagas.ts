@@ -6,6 +6,7 @@ import { setLayout } from '../dashboard/actions'
 import { userService } from '../_services/user.service';
 import { SagaParams } from '../sagas';
 import setupSocket from '../_sockets';
+import { updateOutline } from '../outline/actions';
 
 function* login(action : any, params : SagaParams)  {
     try {
@@ -13,6 +14,8 @@ function* login(action : any, params : SagaParams)  {
         if (params.socket) { params.socket.close() }
         params.socket = setupSocket(params.dispatch, id);
         yield put(authorize(action.userName, faction, id));
+        const outline = yield call(userService.getRequest, 'environment/OUTLINE');
+        yield put(updateOutline(outline));
         const layout = yield call(userService.getRequest, 'environment/DASHBOARD');
         for (const client of layout.clients) {
             yield put(newClient(client.clientId,client.viewName, client.title, client.modelName, client.modelArgs));

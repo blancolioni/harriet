@@ -7,10 +7,12 @@ import shell from './shell';
 import system from './system';
 import table from './table';
 import world from './world';
+import outline from './outline';
 
 const rootReducer = combineReducers({
   [login.constants.NAME]: login.reducer,
   [toolbar.constants.NAME]: toolbar.reducer,
+  [outline.constants.NAME]: outline.reducer,
   [dashboard.constants.NAME]: dashboard.reducer,
   [clients.constants.NAME]: clients.reducer([shell.reducer, table.reducer, world.reducer, system.reducer]),
 });

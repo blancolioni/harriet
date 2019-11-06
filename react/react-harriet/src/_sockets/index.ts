@@ -3,6 +3,7 @@ import { Dispatch, AnyAction } from 'redux'
 import { logout } from '../login/actions';
 import { updateToolbar } from '../toolbar/actions';
 import { updateClient } from '../clients/actions';
+import { updateOutline } from '../outline/actions';
 
 const serverUrl = 'localhost:8080/socket';
 
@@ -40,6 +41,8 @@ const setupSocket = (dispatch : Dispatch<AnyAction>, token : string) => {
       case 'update-faction':
           dispatch(updateToolbar(undefined, data.payload.cash));
           break;
+      case 'outline':
+        dispatch(updateOutline(data.payload.outline))
       default:
         break
     }

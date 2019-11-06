@@ -13,11 +13,19 @@ with Harriet.Money;
 with Harriet.File_System.Root;
 
 with Harriet.Sessions.Status;
+with Harriet.Outliner;
 
 with Harriet.UI.Models.Loader;
 
+with Harriet.Star_Systems;
+with Harriet.Worlds;
+
 with Harriet.Db.Faction;
+with Harriet.Db.Star_System;
+with Harriet.Db.System_Knowledge;
 with Harriet.Db.User;
+with Harriet.Db.World;
+with Harriet.Db.World_Knowledge;
 
 package body Harriet.Sessions is
 
@@ -58,6 +66,10 @@ package body Harriet.Sessions is
                   Model_Args : String)
            return Harriet.UI.Client_Id)
       return Harriet.Json.Json_Value'Class;
+
+   function Initial_Outline
+     (User : Harriet.Db.User_Reference)
+     return Harriet.Json.Json_Value'Class;
 
    function Return_Error (Message : String) return Json.Json_Value'Class;
 
@@ -616,6 +628,88 @@ package body Harriet.Sessions is
       return Session.Status_Message;
    end Handle_Message;
 
+   ---------------------
+   -- Initial_Outline --
+   ---------------------
+
+   function Initial_Outline
+     (User : Harriet.Db.User_Reference)
+      return Harriet.Json.Json_Value'Class
+   is
+      use type Harriet.Db.Faction_Reference;
+
+      Outliner : Harriet.Outliner.Harriet_Outliner;
+      Faction  : constant Harriet.Db.Faction_Reference :=
+        Harriet.Db.Faction.First_Reference_By_User (User);
+
+      function System_Item
+        (System : Harriet.Db.Star_System_Reference)
+         return Harriet.Outliner.Outliner_Item;
+
+      function World_Item
+        (World : Harriet.Db.World_Reference)
+         return Harriet.Outliner.Outliner_Item;
+
+      -----------------
+      -- System_Item --
+      -----------------
+
+      function System_Item
+        (System : Harriet.Db.Star_System_Reference)
+         return Harriet.Outliner.Outliner_Item
+      is
+      begin
+         return Item : constant Harriet.Outliner.Outliner_Item :=
+           Harriet.Outliner.New_Item
+             (Id    => Harriet.Star_Systems.Name (System),
+              Label => Harriet.Star_Systems.Name (System))
+         do
+            for World of
+              Harriet.Db.World.Select_By_Star_System
+                (System)
+            loop
+               if Harriet.Db.World_Knowledge.Is_World_Knowledge
+                 (Faction, World.Get_World_Reference)
+               then
+                  Harriet.Outliner.Append
+                    (Item, World_Item (World.Get_World_Reference));
+               end if;
+            end loop;
+         end return;
+      end System_Item;
+
+      ----------------
+      -- World_Item --
+      ----------------
+
+      function World_Item
+        (World : Harriet.Db.World_Reference)
+         return Harriet.Outliner.Outliner_Item
+      is
+      begin
+         return Harriet.Outliner.New_Item
+           (Id    => Harriet.Worlds.Name (World),
+            Label => Harriet.Worlds.Name (World));
+      end World_Item;
+
+   begin
+      if Faction = Harriet.Db.Null_Faction_Reference then
+         if Harriet.Db.User.Get (User).Administrator then
+            for Star_System of Harriet.Db.Star_System.Scan_By_Name loop
+               Outliner.Append
+                 (System_Item (Star_System.Get_Star_System_Reference));
+            end loop;
+         end if;
+      else
+         for System_Knowledge of
+           Harriet.Db.System_Knowledge.Select_By_Faction (Faction)
+         loop
+            Outliner.Append (System_Item (System_Knowledge.Star_System));
+         end loop;
+      end if;
+      return Outliner.Serialize;
+   end Initial_Outline;
+
    overriding procedure Initialize (Session : in out Root_Harriet_Session)
    is null;
 
@@ -710,6 +804,9 @@ package body Harriet.Sessions is
                   Session.Data.Set_Environment_Value
                     ("DASHBOARD", Default_Dashboard (New_Client'Access));
                end;
+
+               Session.Data.Set_Environment_Value
+                 ("OUTLINE", Initial_Outline (User.Get_User_Reference));
 
                Session.On_Clock_Tick_Id :=
                  Session.Add_Handler
