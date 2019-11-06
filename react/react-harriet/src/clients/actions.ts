@@ -28,7 +28,12 @@ export interface CloseClientAction extends ClientAction {
   type: typeof t.CLOSE_CLIENT
 }
 
-export type ClientActionTypes = NewClientAction | UpdateClientAction | RequestUpdateAction | CloseClientAction
+export interface ZoomObjectAction extends ClientAction {
+  type: typeof t.ZOOM_OBJECT
+  name: string
+}
+
+export type ClientActionTypes = NewClientAction | UpdateClientAction | RequestUpdateAction | CloseClientAction | ZoomObjectAction
 
 export function newClient (clientId : number, viewName : string, viewTitle : string, modelName: string, modelArgs: string) : ClientActionTypes {
   return {
@@ -64,4 +69,10 @@ export function closeClient (clientId : number) : ClientActionTypes {
       }
 }
 
-
+export function zoomObject(name: string) : ClientActionTypes {
+  return {
+      type: t.ZOOM_OBJECT,
+      clientId: -1,
+      name
+      }
+}
