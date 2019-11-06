@@ -245,9 +245,12 @@ class Component extends React.Component<Props,State> {
         this.currentZoom = newZoom as THREE.Mesh;
         const mesh = this.currentZoom;
         const { x, y, z } = mesh.position;
-        const wp = new THREE.Vector3 (x, y, z + mesh.scale.z * 2.5);
+        const d = mesh.scale.z;
+        const n = new THREE.Vector3(x, y, z).normalize().multiplyScalar(d * 3);
+        const wp = new THREE.Vector3 (x, y, z).sub(n);
+        
         console.log('add waypoint', x, y, z, mesh.scale.z, wp)
-        this.model!.addWaypoint(wp, new THREE.Vector3 (0, 0, 1), 5.0);
+        this.model!.addWaypoint(wp, new THREE.Vector3 (x, y, z), 5.0);
       }
     }
 

@@ -3,7 +3,7 @@ import { CSS2DRenderer, CSS2DObject } from 'three/examples/jsm/renderers/CSS2DRe
 import { GLTFLoader, GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 
 import * as THREE from "three";
-import { Quaternion, ReinhardToneMapping } from "three";
+import { Quaternion, ReinhardToneMapping, Vector3 } from "three";
 
 interface Waypoint {
     position : THREE.Vector3,
@@ -38,6 +38,9 @@ export default class Model3D {
     travelIndex       : number = 0
     travelStart       : THREE.Vector3
     travelEnd         : THREE.Vector3
+    travelLookEnd     : THREE.Vector3
+    travelStartQuat   : THREE.Quaternion
+    travelEndQuat     : THREE.Quaternion
     travelDuration    : number = 0
     travelProgress    : number = 0
 
@@ -86,6 +89,8 @@ export default class Model3D {
 
         this.camera.position.z = 3;
         this.travelStart = this.travelEnd = this.camera.position;
+        this.travelStartQuat = this.travelEndQuat = new THREE.Quaternion(0, 0, 0, 0);
+        this.travelLookEnd = new THREE.Vector3(0, 0, 0);
 
         this.textureLoader = new THREE.TextureLoader();
         this.modelLoader = new GLTFLoader();
@@ -93,19 +98,29 @@ export default class Model3D {
 
    startTravel = () : void => {
         this.travelStart = this.camera.position.clone();
+        this.travelStartQuat = this.camera.quaternion.clone();
 
-        const { position, duration } = this.travel[this.travelIndex];
+        const { position, duration, lookAt } = this.travel[this.travelIndex];
         this.travelEnd = position;
 
+        const lookObject = new THREE.Object3D();
+        lookObject.position.set(position.x, position.y, position.z);
+        lookObject.up.set(0, 1, 0);
+        lookObject.lookAt(-lookAt.x, -lookAt.y, -lookAt.z);
+        console.log('startTravel', lookObject.position, lookObject.up, lookObject.quaternion);
+        this.travelLookEnd = lookAt.clone();
+        this.travelEndQuat = lookObject.quaternion.clone();
         this.travelDuration = duration * 60.0;
         this.travelProgress = 0;
-        console.log('travel', this.travelStart, this.travelEnd, this.travelDuration);
+        console.log('travel', this.travelStart, this.travelEnd, this.travelDuration, this.travelLookEnd);
     }
 
    updateTravel = () : void => {
     this.travelProgress += 1
     if (this.travelProgress >= this.travelDuration) {
-        this.camera.position.set (this.travelEnd.x, this.travelEnd.y, this.travelEnd.z)        
+        this.camera.position.set (this.travelEnd.x, this.travelEnd.y, this.travelEnd.z)   
+        this.camera.quaternion.copy(this.travelEndQuat);
+        console.log('endTravel', this.camera.position, this.camera.up, this.camera.quaternion);
         this.travelIndex += 1
         if (this.travelIndex >= this.travel.length) {
             this.travel = [];
@@ -124,7 +139,7 @@ export default class Model3D {
         v.multiplyScalar(f);
         v.add(v1);
         this.camera.position.set(v.x, v.y, v.z);
-
+        this.camera.quaternion.copy(this.travelStartQuat.clone().slerp(this.travelEndQuat, f));
         if (this.debug) {
             this.labelDiv.innerText = '' + Math.floor(f * 100) + ' ' + Math.floor(v1.z * 100) + ' '  + Math.floor(v.z * 100) + ' '  + Math.floor(v2.z * 100)
         }
