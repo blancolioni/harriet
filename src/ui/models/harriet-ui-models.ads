@@ -69,8 +69,8 @@ private
    type Detail_Level is (Low, Medium, High);
 
    function Serialize
-     (Object : Harriet.Db.Orbiting_Object.Orbiting_Object_Type;
-      Detail : Detail_Level)
+     (Object     : Harriet.Db.Orbiting_Object.Orbiting_Object_Type;
+      Parameters : Json.Json_Value'Class)
       return Json.Json_Value'Class;
 
 end Harriet.UI.Models;

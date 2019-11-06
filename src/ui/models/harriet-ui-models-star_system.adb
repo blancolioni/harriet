@@ -74,21 +74,6 @@ package body Harriet.UI.Models.Star_System is
       pragma Unreferenced (State, Client);
 
       Result : Json.Json_Object;
-      Detail_Image : constant String :=
-        Request.Get_Property ("detail");
-      Detail       : constant Detail_Level :=
-        (if Detail_Image = ""
-         or else Detail_Image = "1"
-         or else Detail_Image = "medium"
-         then Medium
-         elsif Detail_Image = "0"
-         or else Detail_Image = "low"
-         then Low
-         elsif Detail_Image = "2"
-         or else Detail_Image = "high"
-         then High
-         else Medium);
-
    begin
       Result.Set_Property
         ("title", Harriet.Db.Star_System.Get (Model.Star_System).Name);
@@ -98,7 +83,7 @@ package body Harriet.UI.Models.Star_System is
         ("primary",
          Serialize
            (Harriet.Db.Star.First_By_Star_System (Model.Star_System),
-            Detail => Detail));
+            Request));
       return Result;
 
    end Get;

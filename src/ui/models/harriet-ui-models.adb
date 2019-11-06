@@ -145,8 +145,8 @@ package body Harriet.UI.Models is
    ---------------
 
    function Serialize
-     (Object : Harriet.Db.Orbiting_Object.Orbiting_Object_Type;
-      Detail : Detail_Level)
+     (Object     : Harriet.Db.Orbiting_Object.Orbiting_Object_Type;
+      Parameters : Json.Json_Value'Class)
       return Json.Json_Value'Class
    is
 
@@ -154,6 +154,26 @@ package body Harriet.UI.Models is
       use Harriet.Db;
 
       Result : Json.Json_Object;
+
+      Name         : constant String := Parameters.Get_Property ("name");
+      Detail_Image : constant String :=
+        Parameters.Get_Property ("detail");
+
+      Detail       : constant Detail_Level :=
+        (if Name /= "null" and then Name /= Object.Name
+         then Low
+         elsif Detail_Image = ""
+         or else Detail_Image = "null"
+         or else Detail_Image = "1"
+         or else Detail_Image = "medium"
+         then Medium
+         elsif Detail_Image = "0"
+         or else Detail_Image = "low"
+         then Low
+         elsif Detail_Image = "2"
+         or else Detail_Image = "high"
+         then High
+         else Medium);
 
       procedure Set (Property_Name, Property_Value : String);
       procedure Set (Property_Name  : String;
@@ -182,7 +202,7 @@ package body Harriet.UI.Models is
               Harriet.Db.Orbiting_Object.Select_By_Primary_Massive
                 (Primary_Mass)
             loop
-               Arr.Append (Serialize (Item, Detail));
+               Arr.Append (Serialize (Item, Parameters));
             end loop;
          end return;
       end Orbiting_Objects;
@@ -227,9 +247,6 @@ package body Harriet.UI.Models is
       if World_Temperature_Palette.Is_Empty then
          Load_World_Temperature_Palette;
       end if;
-
-      Ada.Text_IO.Put_Line
-        ("serialize " & Object.Name & " detail: " & Detail'Image);
 
       Set ("title", Object.Name);
       Set ("name", Object.Name);
