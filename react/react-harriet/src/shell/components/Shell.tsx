@@ -7,7 +7,6 @@ import LineInput from './LineInput';
 import { ClientDispatch } from '../../clients/model';
 
 interface ShellDispatch extends ClientDispatch {
-    execute : (command : string) => void
 }
 
 interface Props {

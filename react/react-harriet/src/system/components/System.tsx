@@ -207,6 +207,9 @@ class Component extends React.Component<Props,State> {
         case SystemObjectType.World:
           this.addObject(obj, worldMesh(this.model!, obj as WorldObject, 3, new THREE.Vector3(-x, -y, -z)));
           break;
+
+        case SystemObjectType.Ship:
+          this.addObject(obj, new THREE.Mesh(new THREE.IcosahedronGeometry(0.1, 3), new THREE.MeshBasicMaterial()));
       }  
   
     }

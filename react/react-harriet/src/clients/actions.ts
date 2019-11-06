@@ -19,11 +19,16 @@ export interface UpdateClientAction extends ClientAction {
   newState : ClientState
 }
 
+export interface RequestUpdateAction extends ClientAction {
+  type: typeof t.REQUEST_UPDATE
+  detail: number
+}
+
 export interface CloseClientAction extends ClientAction {
   type: typeof t.CLOSE_CLIENT
 }
 
-export type ClientActionTypes = NewClientAction | UpdateClientAction | CloseClientAction
+export type ClientActionTypes = NewClientAction | UpdateClientAction | RequestUpdateAction | CloseClientAction
 
 export function newClient (clientId : number, viewName : string, viewTitle : string, modelName: string, modelArgs: string) : ClientActionTypes {
   return {
@@ -42,6 +47,14 @@ export function updateClient (clientId : number, newState : ClientState) : Clien
       clientId,
       newState,
       }
+}
+
+export function requestUpdate (clientId : number, detail : number) : ClientActionTypes {
+  return {
+    type: t.REQUEST_UPDATE,
+    clientId,
+    detail,
+  }
 }
 
 export function closeClient (clientId : number) : ClientActionTypes {

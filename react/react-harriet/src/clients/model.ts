@@ -7,6 +7,8 @@ export type ClientState = {
   };
 
 export type ClientDispatch = {
+  requestUpdate : (detail : number) => void
+  execute : (command : string) => void
 };
 
 export const clientInitialState : ClientState = {

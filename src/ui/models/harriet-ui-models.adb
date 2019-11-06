@@ -146,7 +146,7 @@ package body Harriet.UI.Models is
 
    function Serialize
      (Object : Harriet.Db.Orbiting_Object.Orbiting_Object_Type;
-      Full   : Boolean)
+      Detail : Detail_Level)
       return Json.Json_Value'Class
    is
 
@@ -173,13 +173,16 @@ package body Harriet.UI.Models is
         (Primary : Harriet.Db.Star_System_Object_Reference)
          return Json.Json_Array
       is
+         Primary_Mass : constant Harriet.Db.Massive_Object_Reference :=
+           Harriet.Db.Star_System_Object.Get (Primary)
+           .Get_Massive_Object_Reference;
       begin
          return Arr : Json.Json_Array do
             for Item of
-              Harriet.Db.Star_System_Object.Select_By_Primary
-                (Primary)
+              Harriet.Db.Orbiting_Object.Select_By_Primary_Massive
+                (Primary_Mass)
             loop
-               Arr.Append (Serialize (Item, Full));
+               Arr.Append (Serialize (Item, Detail));
             end loop;
          end return;
       end Orbiting_Objects;
@@ -225,6 +228,9 @@ package body Harriet.UI.Models is
          Load_World_Temperature_Palette;
       end if;
 
+      Ada.Text_IO.Put_Line
+        ("serialize " & Object.Name & " detail: " & Detail'Image);
+
       Set ("title", Object.Name);
       Set ("name", Object.Name);
       Set ("orbit",
@@ -250,7 +256,7 @@ package body Harriet.UI.Models is
          Set ("dependents", Deps);
       end;
 
-      if Full then
+      if Detail > Low then
          Set ("year", Object.Period);
 
          if Object.Top_Record in R_Star | R_World then
@@ -275,7 +281,7 @@ package body Harriet.UI.Models is
                     Star_Spectrum_Palette.Last_Index));
          begin
             Set ("type", "STAR");
-            if Full then
+            if Detail > Low then
                Set ("mass", Object.Mass / Harriet.Solar_System.Solar_Mass);
                Set ("radius",
                     Star.Radius / Harriet.Solar_System.Solar_Radius);
@@ -292,7 +298,7 @@ package body Harriet.UI.Models is
                 (Object.Get_Orbiting_Object_Reference);
          begin
             Set ("type", "WORLD");
-            if Full then
+            if Detail > Low then
                Set ("mass", Object.Mass / Harriet.Solar_System.Earth_Mass);
                Set ("radius",
                     World.Radius / Harriet.Solar_System.Earth_Radius);
@@ -305,7 +311,7 @@ package body Harriet.UI.Models is
                       (World.Climate));
                Set ("day", World.Rotation_Period / 3600.0);
 
-               if World.Gas_Giant then
+               if World.Gas_Giant or else Detail < High then
                   declare
                      Sectors : Json.Json_Array;
                   begin

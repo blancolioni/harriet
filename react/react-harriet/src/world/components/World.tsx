@@ -6,9 +6,9 @@ import { ClientDispatch } from '../../clients/model';
 import { WorldObject } from "../../system/model";
 import Model3D from '../../_3d/Model3D';
 import { GLTF } from "three/examples/jsm/loaders/GLTFLoader";
-import { VertexColors } from "three";
 
 interface Dispatch extends ClientDispatch {
+  
 }
 
 interface Props {
@@ -204,7 +204,8 @@ class World extends React.Component<Props,WorldSceneState> {
   mount: any;
 
   model  : Model3D | null;
-  planet : THREE.Mesh | null;
+  planetLo : THREE.Mesh | null;
+  planetHi : THREE.Mesh | null;
   renderCount : number
 
   constructor(props : Props) {
@@ -215,7 +216,8 @@ class World extends React.Component<Props,WorldSceneState> {
     }
 
     this.renderCount = 0;
-    this.planet = null;
+    this.planetLo = null;
+    this.planetHi = null;
     this.model = null;
     this.beforeRender = this.beforeRender.bind(this);
   }
@@ -239,21 +241,26 @@ class World extends React.Component<Props,WorldSceneState> {
   }
 
   beforeRender() {
-    if (this.planet) {
+    if (this.planetLo && !this.planetHi) {
       if (this.props.clientState.world && this.props.clientState.world.surface.length === 0) {
-        (this.planet!.material as THREE.ShaderMaterial).uniforms.unTime.value = this.renderCount;
-      } else {
-        this.planet.rotateY(0.002);
-      }
+        (this.planetLo!.material as THREE.ShaderMaterial).uniforms.unTime.value = this.renderCount;
+      } 
+    } else if (this.planetHi) {
+        this.planetHi.rotateY(0.002);
     }
     
     this.renderCount += 0.0002;
   }
 
   updateScene = (world : WorldObject) => {
-    if (!this.planet) {
-      this.planet = worldMesh(this.model!, world, 6, new THREE.Vector3(-5, 0, 3));
-      this.model!.scene.add(this.planet);
+    if (!this.planetLo) {
+      this.planetLo = worldMesh(this.model!, world, 6, new THREE.Vector3(-5, 0, 3));
+      this.model!.scene.add(this.planetLo);
+      this.props.clientDispatch.requestUpdate(2);
+    } else if (world.surface.length > 0 && !this.planetHi) {
+      this.planetHi = worldMesh(this.model!, world, 6, new THREE.Vector3(-5, 0, 3));
+      this.model!.scene.remove(this.planetLo);
+      this.model!.scene.add(this.planetHi);
     }
   }
 
