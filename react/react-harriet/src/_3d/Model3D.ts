@@ -117,7 +117,8 @@ export default class Model3D {
         const v1 = this.travelStart;
         const v2 = this.travelEnd;
         const d = this.travelDuration;
-        const f = this.travelProgress / d;
+        const unitProgress = this.travelProgress / d;
+        const f = unitProgress < 0.5 ? 4 * unitProgress ** 3 : 1 - (4 * (1 - unitProgress) ** 3);
         let v : THREE.Vector3 = v2.clone();
         v.sub(v1);
         v.multiplyScalar(f);
