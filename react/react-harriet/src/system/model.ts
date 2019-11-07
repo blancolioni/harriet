@@ -44,7 +44,25 @@ export interface WorldObject extends SystemObject {
   surface     : WorldSector[],
 }
 
+export enum ComponentShape {
+  Cuboid = "CUBOID",
+  Cylinder = "CYLINDER",
+  Ellipsoid = "ELLIPSOID",
+  Truncated_Cone = "TRUNCATED_CONE"
+}
+
+export interface ShipModule {
+  shape : ComponentShape
+  x : number
+  y : number
+  z : number
+  dx : number
+  dy : number
+  dz : number
+}
+
 export interface ShipObject extends SystemObject {
+  modules : ShipModule[]
 }
 
 export interface State extends ClientState {

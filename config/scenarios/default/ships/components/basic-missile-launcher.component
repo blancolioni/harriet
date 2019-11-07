@@ -1,4 +1,6 @@
 class = missile_launcher
+shape = cuboid
 mass = 1
 power = 1
 launcher = 1
+size = { 1 1 3 }

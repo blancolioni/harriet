@@ -1,4 +1,6 @@
 class = scanner
+shape = { cuboid }
 mass = 1
 power = 1
 scan = 10
+size = { 2 2 2 }

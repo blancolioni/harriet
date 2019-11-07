@@ -1,6 +1,7 @@
 class = hold
+shape = cuboid
 crew = 3
 mass = 10
 power = 1
 cargo = 1000
-
+size = { 10 10 10 }

@@ -1,5 +1,7 @@
 class = shield_generator
+shape = cylinder
 mass = 25
 power = 10
 shield = 20
 crew = 10
+size = { 5 1 5 }

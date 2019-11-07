@@ -1,5 +1,7 @@
 class = quarters
+shape = cuboid
 crew = 1
 mass = 20
 power = 2
 berths = 10
+size = { 2 2 10 }

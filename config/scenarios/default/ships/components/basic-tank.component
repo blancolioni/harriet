@@ -1,5 +1,7 @@
 class = tank
+shape = cylinder
 crew = 3
 mass = 10
 power = 1
 fuel = 100
+size = { 2 2 10 }

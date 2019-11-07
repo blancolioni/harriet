@@ -39,8 +39,8 @@ with Harriet.Db.Tank_Module;
 package body Harriet.Ships is
 
    procedure Create_Module
-     (Ship      : Harriet.Db.Ship_Reference;
-      Component : Harriet.Db.Component_Reference);
+     (Ship   : Harriet.Db.Ship_Reference;
+      Design : Harriet.Db.Design_Module.Design_Module_Type);
 
    -------------------
    -- Create_Module --
@@ -48,9 +48,11 @@ package body Harriet.Ships is
 
    procedure Create_Module
      (Ship      : Harriet.Db.Ship_Reference;
-      Component : Harriet.Db.Component_Reference)
+      Design    : Harriet.Db.Design_Module.Design_Module_Type)
    is
       use all type Harriet.Db.Record_Type;
+      Component : constant Harriet.Db.Component_Reference :=
+        Design.Component;
       Base : constant Harriet.Db.Component.Component_Type :=
         Harriet.Db.Component.Get (Component);
       Top : constant Harriet.Db.Record_Type := Base.Top_Record;
@@ -62,6 +64,12 @@ package body Harriet.Ships is
                Component     => Component,
                Crew          => Base.Crew,
                Condition     => 1.0,
+               X1            => Design.X1,
+               X2            => Design.X2,
+               Y1            => Design.Y1,
+               Y2            => Design.Y2,
+               Z1            => Design.Z1,
+               Z2            => Design.Z2,
                Crew_Quarters =>
                   Harriet.Db.Crew_Quarters.Get_Crew_Quarters (Component)
                .Get_Crew_Quarters_Reference);
@@ -72,7 +80,13 @@ package body Harriet.Ships is
                Component => Component,
                Crew      => Base.Crew,
                Condition => 1.0,
-               Engine    =>
+               X1            => Design.X1,
+               X2            => Design.X2,
+               Y1            => Design.Y1,
+               Y2            => Design.Y2,
+               Z1            => Design.Z1,
+               Z2            => Design.Z2,
+               Engine        =>
                   Harriet.Db.Engine.Get_Engine (Component)
                .Get_Engine_Reference);
 
@@ -82,7 +96,13 @@ package body Harriet.Ships is
                Component => Component,
                Crew      => Base.Crew,
                Condition => 1.0,
-               Hold      =>
+               X1            => Design.X1,
+               X2            => Design.X2,
+               Y1            => Design.Y1,
+               Y2            => Design.Y2,
+               Z1            => Design.Z1,
+               Z2            => Design.Z2,
+               Hold          =>
                   Harriet.Db.Hold.Get_Hold (Component).Get_Hold_Reference);
 
          when R_Tank =>
@@ -91,7 +111,13 @@ package body Harriet.Ships is
                Component => Component,
                Crew      => Base.Crew,
                Condition => 1.0,
-               Tank      =>
+               X1            => Design.X1,
+               X2            => Design.X2,
+               Y1            => Design.Y1,
+               Y2            => Design.Y2,
+               Z1            => Design.Z1,
+               Z2            => Design.Z2,
+               Tank          =>
                   Harriet.Db.Tank.Get_Tank (Component).Get_Tank_Reference);
 
          when R_Missile_Launcher =>
@@ -100,6 +126,12 @@ package body Harriet.Ships is
                Component => Component,
                Crew      => Base.Crew,
                Condition => 1.0,
+               X1               => Design.X1,
+               X2               => Design.X2,
+               Y1               => Design.Y1,
+               Y2               => Design.Y2,
+               Z1               => Design.Z1,
+               Z2               => Design.Z2,
                Missile_Launcher =>
                   Harriet.Db.Missile_Launcher.Get_Missile_Launcher (Component)
                .Get_Missile_Launcher_Reference);
@@ -110,6 +142,12 @@ package body Harriet.Ships is
                Component => Component,
                Crew      => Base.Crew,
                Condition => 1.0,
+               X1            => Design.X1,
+               X2            => Design.X2,
+               Y1            => Design.Y1,
+               Y2            => Design.Y2,
+               Z1            => Design.Z1,
+               Z2            => Design.Z2,
                Energy_Weapon =>
                   Harriet.Db.Energy_Weapon.Get_Energy_Weapon (Component)
                .Get_Energy_Weapon_Reference);
@@ -120,7 +158,13 @@ package body Harriet.Ships is
                Component => Component,
                Crew      => Base.Crew,
                Condition => 1.0,
-               Generator =>
+               X1            => Design.X1,
+               X2            => Design.X2,
+               Y1            => Design.Y1,
+               Y2            => Design.Y2,
+               Z1            => Design.Z1,
+               Z2            => Design.Z2,
+               Generator     =>
                   Harriet.Db.Generator.Get_Generator (Component)
                .Get_Generator_Reference);
 
@@ -130,7 +174,13 @@ package body Harriet.Ships is
                Component => Component,
                Crew      => Base.Crew,
                Condition => 1.0,
-               Scanner =>
+               X1            => Design.X1,
+               X2            => Design.X2,
+               Y1            => Design.Y1,
+               Y2            => Design.Y2,
+               Z1            => Design.Z1,
+               Z2            => Design.Z2,
+               Scanner       =>
                   Harriet.Db.Scanner.Get_Scanner (Component)
                .Get_Scanner_Reference);
 
@@ -140,6 +190,12 @@ package body Harriet.Ships is
                Component => Component,
                Crew      => Base.Crew,
                Condition => 1.0,
+               X1               => Design.X1,
+               X2               => Design.X2,
+               Y1               => Design.Y1,
+               Y2               => Design.Y2,
+               Z1               => Design.Z1,
+               Z2               => Design.Z2,
                Shield_Generator =>
                   Harriet.Db.Shield_Generator.Get_Shield_Generator
                  (Component)
@@ -151,7 +207,13 @@ package body Harriet.Ships is
                Component        => Component,
                Crew             => Base.Crew,
                Condition        => 1.0,
-               Jump_Drive =>
+               X1               => Design.X1,
+               X2               => Design.X2,
+               Y1               => Design.Y1,
+               Y2               => Design.Y2,
+               Z1               => Design.Z1,
+               Z2               => Design.Z2,
+               Jump_Drive       =>
                   Harriet.Db.Jump_Drive.Get_Jump_Drive (Component)
                .Get_Jump_Drive_Reference);
 
@@ -221,7 +283,7 @@ package body Harriet.Ships is
         Harriet.Db.Design_Module.Select_By_Ship_Design
           (Design)
       loop
-         Create_Module (Ship, Design_Module.Component);
+         Create_Module (Ship, Design_Module);
       end loop;
 
       if True then

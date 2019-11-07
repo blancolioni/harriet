@@ -12,12 +12,15 @@ with Harriet.Color;
 with Harriet.Orbits;
 
 with Harriet.Factions;
+with Harriet.Ships;
 with Harriet.Stars;
 with Harriet.Worlds;
 
 with Harriet.UI.Models.Data_Source;
 
+with Harriet.Db.Component;
 with Harriet.Db.Massive_Object;
+with Harriet.Db.Module;
 with Harriet.Db.Ship;
 with Harriet.Db.Star;
 with Harriet.Db.Star_System_Object;
@@ -460,12 +463,78 @@ package body Harriet.UI.Models is
 
       elsif Object.Top_Record = R_Ship then
          declare
-            Ship : constant Harriet.Db.Ship.Ship_Type :=
-              Harriet.Db.Ship.Get_Ship (Object.Get_Orbiting_Object_Reference);
+            Ship : constant Harriet.Db.Ship_Reference :=
+              Harriet.Db.Ship.Get_Ship
+                (Object.Get_Orbiting_Object_Reference)
+              .Get_Ship_Reference;
+            Modules : Json.Json_Array;
+            Max_Dimension : Real := 0.0;
          begin
             Set ("type", "SHIP");
-            Set ("radius", 100.0);
-            Set ("mass", Ship.Mass);
+
+            if Detail > Low then
+               Set ("mass",
+                    Harriet.Ships.Current_Mass
+                      (Harriet.Ships.Get (Ship)));
+
+               for Module of
+                 Harriet.Db.Module.Select_By_Ship (Ship)
+               loop
+                  declare
+                     Value : Json.Json_Object;
+                     Dx    : constant Real :=
+                       abs (Module.X2 - Module.X1);
+                     Dy    : constant Real :=
+                       abs (Module.Y2 - Module.Y1);
+                     Dz    : constant Real :=
+                       abs (Module.Z2 - Module.Z1);
+                     Component : constant Db.Component.Component_Type :=
+                       Harriet.Db.Component.Get (Module.Component);
+
+                     procedure Set
+                       (Name : String;
+                        X : Real);
+
+                     ---------
+                     -- Set --
+                     ---------
+
+                     procedure Set
+                       (Name  : String;
+                        X : Real)
+                     is
+                     begin
+                        Value.Set_Property (Name, Float (X));
+                     end Set;
+
+                  begin
+                     Set ("x", (Module.X1 + Module.X2) / 2.0);
+                     Set ("y", (Module.Y1 + Module.Y2) / 2.0);
+                     Set ("z", (Module.Z1 + Module.Z2) / 2.0);
+                     Set ("dx", Dx);
+                     Set ("dy", Dy);
+                     Set ("dz", Dz);
+                     Max_Dimension :=
+                       Real'Max (Max_Dimension,
+                                 Real'Max (abs Module.X1, abs Module.X2));
+                     Max_Dimension :=
+                       Real'Max (Max_Dimension,
+                                 Real'Max (abs Module.Y1, abs Module.Y2));
+                     Max_Dimension :=
+                       Real'Max (Max_Dimension,
+                                 Real'Max (abs Module.Z1, abs Module.Z2));
+
+                     Value.Set_Property
+                       ("shape",
+                        Harriet.Db.Component_Shape'Image (Component.Shape));
+
+                     Modules.Append (Value);
+                  end;
+               end loop;
+               Set ("radius", Max_Dimension);
+            end if;
+
+            Set ("modules", Modules);
          end;
       end if;
 

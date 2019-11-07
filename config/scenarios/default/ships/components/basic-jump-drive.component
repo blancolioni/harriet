@@ -1,5 +1,7 @@
 class = jump_drive
+shape = ellipsoid
 crew = 20
 mass = 100
 power = 1
 jump = 10
+size = { 20 10 20 }

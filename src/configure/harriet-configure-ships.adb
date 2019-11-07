@@ -56,12 +56,23 @@ package body Harriet.Configure.Ships is
       Crew : constant Natural := Get ("crew");
       Mass : constant Non_Negative_Real := Get ("mass");
       Power : constant Non_Negative_Real := Get ("power");
-
+      Shape      : constant Harriet.Db.Component_Shape :=
+        Harriet.Db.Component_Shape'Value
+          (Component_Config.Get ("shape"));
+      Size_Config : constant Tropos.Configuration :=
+        Component_Config.Child ("size");
+      Size_X  : constant Positive := Size_Config.Get (1);
+      Size_Y  : constant Positive := Size_Config.Get (2);
+      Size_Z  : constant Positive := Size_Config.Get (3);
    begin
       case Class is
          when Engine =>
             Harriet.Db.Engine.Create
               (Crew       => Crew,
+               Shape      => Shape,
+               Width      => Size_X,
+               Height     => Size_Y,
+               Length     => Size_Z,
                Mass       => Mass,
                Power      => Power,
                Tag        => Tag,
@@ -71,6 +82,10 @@ package body Harriet.Configure.Ships is
          when Jump_Drive =>
             Harriet.Db.Jump_Drive.Create
               (Crew       => Crew,
+               Shape      => Shape,
+               Width      => Size_X,
+               Height     => Size_Y,
+               Length     => Size_Z,
                Mass       => Mass,
                Power      => Power,
                Tag        => Tag,
@@ -80,6 +95,10 @@ package body Harriet.Configure.Ships is
          when Tank =>
             Harriet.Db.Tank.Create
               (Crew       => Crew,
+               Shape      => Shape,
+               Width      => Size_X,
+               Height     => Size_Y,
+               Length     => Size_Z,
                Mass       => Mass,
                Power      => Power,
                Tag        => Tag,
@@ -89,6 +108,10 @@ package body Harriet.Configure.Ships is
          when Hold =>
             Harriet.Db.Hold.Create
               (Crew       => Crew,
+               Shape      => Shape,
+               Width      => Size_X,
+               Height     => Size_Y,
+               Length     => Size_Z,
                Mass       => Mass,
                Power      => Power,
                Tag        => Tag,
@@ -98,6 +121,10 @@ package body Harriet.Configure.Ships is
          when Quarters =>
             Harriet.Db.Crew_Quarters.Create
               (Crew       => Crew,
+               Shape      => Shape,
+               Width      => Size_X,
+               Height     => Size_Y,
+               Length     => Size_Z,
                Mass       => Mass,
                Power      => Power,
                Tag        => Tag,
@@ -107,6 +134,10 @@ package body Harriet.Configure.Ships is
          when Generator =>
             Harriet.Db.Generator.Create
               (Crew       => Crew,
+               Shape      => Shape,
+               Width      => Size_X,
+               Height     => Size_Y,
+               Length     => Size_Z,
                Mass       => Mass,
                Power      => Power,
                Tag        => Tag,
@@ -115,6 +146,10 @@ package body Harriet.Configure.Ships is
          when Scanner =>
             Harriet.Db.Scanner.Create
               (Crew       => Crew,
+               Shape      => Shape,
+               Width      => Size_X,
+               Height     => Size_Y,
+               Length     => Size_Z,
                Mass       => Mass,
                Power      => Power,
                Tag        => Tag,
@@ -130,6 +165,10 @@ package body Harriet.Configure.Ships is
          when Shield_Generator =>
             Harriet.Db.Shield_Generator.Create
               (Crew       => Crew,
+               Shape      => Shape,
+               Width      => Size_X,
+               Height     => Size_Y,
+               Length     => Size_Z,
                Mass       => Mass,
                Power      => Power,
                Tag        => Tag,
@@ -139,6 +178,10 @@ package body Harriet.Configure.Ships is
          when Energy_Weapon =>
             Harriet.Db.Energy_Weapon.Create
               (Crew       => Crew,
+               Shape      => Shape,
+               Width      => Size_X,
+               Length     => Size_Y,
+               Height     => Size_Z,
                Mass       => Mass,
                Power      => Power,
                Tag        => Tag,
@@ -148,6 +191,10 @@ package body Harriet.Configure.Ships is
          when Missile_Launcher =>
             Harriet.Db.Missile_Launcher.Create
               (Crew       => Crew,
+               Shape      => Shape,
+               Width      => Size_X,
+               Length     => Size_Y,
+               Height     => Size_Z,
                Mass       => Mass,
                Power      => Power,
                Tag        => Tag,
@@ -174,13 +221,35 @@ package body Harriet.Configure.Ships is
       for Component_Config of Design_Config.Child ("components") loop
          declare
             use Harriet.Db;
+
+            function P (Axis  : String;
+                        Index : Positive)
+                        return Real;
+
+            -------
+            -- P --
+            -------
+
+            function P (Axis : String;
+                        Index : Positive)
+                        return Real
+            is
+            begin
+               if Component_Config.Contains (Axis) then
+                  return Component_Config.Child (Axis).Get (Index);
+               else
+                  raise Constraint_Error with
+                    "in design '" & Design_Config.Config_Name
+                    & "' component '"
+                    & Component_Config.Config_Name
+                    & "': missing value for " & Axis & Index'Image;
+               end if;
+            end P;
+
             Component : constant Harriet.Db.Component_Reference :=
-                          Harriet.Db.Component.Get_Reference_By_Tag
-                            (Component_Config.Config_Name);
-            Count     : constant Positive :=
-                          (if Component_Config.Child_Count = 1
-                           then Component_Config.Value
-                           else 1);
+              Harriet.Db.Component.Get_Reference_By_Tag
+                (Component_Config.Config_Name);
+
          begin
             if Component = Null_Component_Reference then
                Ada.Text_IO.Put_Line
@@ -189,11 +258,15 @@ package body Harriet.Configure.Ships is
                   & "': no such component: "
                   & Component_Config.Config_Name);
             else
-               for I in 1 .. Count loop
-                  Harriet.Db.Design_Module.Create
-                    (Ship_Design => Design,
-                     Component   => Component);
-               end loop;
+               Harriet.Db.Design_Module.Create
+                 (Ship_Design => Design,
+                  Component   => Component,
+                  X1          => P ("x", 1),
+                  X2          => P ("x", 2),
+                  Y1          => P ("y", 1),
+                  Y2          => P ("y", 2),
+                  Z1          => P ("z", 1),
+                  Z2          => P ("z", 2));
             end if;
          end;
       end loop;
@@ -229,7 +302,7 @@ package body Harriet.Configure.Ships is
               (Harriet.Ships.Design_Maximum_System_Speed (Design))
             & " AU/day");
          Ada.Text_IO.Put_Line
-           ("Required crew:"
+           ("Required crew/available berths:"
             & Natural'Image
               (Harriet.Ships.Design_Crew (Design))
             & " /"

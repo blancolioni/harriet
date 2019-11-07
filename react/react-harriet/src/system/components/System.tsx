@@ -1,10 +1,11 @@
 import React from "react";
 import * as THREE from "three";
 import { noise4d } from '../../_3d/Noise';
-import { State, SystemObject, SystemObjectType, StarObject, WorldObject } from '../model';
+import { State, SystemObject, SystemObjectType, StarObject, WorldObject, ShipObject } from '../model';
 import { ClientDispatch } from '../../clients/model';
 import Model3D from '../../_3d/Model3D';
 import { worldMesh } from "../../world/components/World";
+import { shipMesh } from "../../ship/components/Ship";
 import { CSS2DObject } from "three/examples/jsm/renderers/CSS2DRenderer";
 
 interface Dispatch extends ClientDispatch {
@@ -18,7 +19,6 @@ interface Props {
 class Component extends React.Component<Props,State> {
 
   mount: any;
-
   vertexShader() {
     return `
       varying vec2 vUv;
@@ -116,6 +116,7 @@ class Component extends React.Component<Props,State> {
   renderCount : number
   unTimeMaterial : THREE.ShaderMaterial[];
   currentZoom : THREE.Mesh | null;
+  localLight : THREE.Light | null = null;
 
   constructor(props : Props) {
     super (props);
@@ -139,6 +140,8 @@ class Component extends React.Component<Props,State> {
 
   addCustomSceneObjects = () => {
     this.model!.camera.position.z = 15 * 1.5e11;
+    this.localLight = new THREE.DirectionalLight("#fff", 1);
+    this.model!.scene.add(this.localLight);
   }
 
   starMesh = (star : StarObject) : THREE.Mesh => {
@@ -167,12 +170,6 @@ class Component extends React.Component<Props,State> {
 
   addObject = (obj : SystemObject, mesh : THREE.Mesh) => {
     let scale = obj.radius;    
-    // if (obj.type === SystemObjectType.World) {
-    //   scale /= 10;
-    // } else {
-    //   scale /= 2
-    // }
-
     mesh.scale.set(scale, scale, scale);
     mesh.name = obj.id;
     this.model!.scene.add( mesh );
@@ -211,7 +208,7 @@ class Component extends React.Component<Props,State> {
           break;
 
         case SystemObjectType.Ship:
-          this.addObject(obj, new THREE.Mesh(new THREE.IcosahedronGeometry(1, 3), new THREE.MeshStandardMaterial()));
+          this.addObject(obj, shipMesh(obj as ShipObject));
           break;
       }  
   
@@ -220,15 +217,6 @@ class Component extends React.Component<Props,State> {
     const mesh = this.model!.scene.getObjectByName(obj.id)!;
     mesh.position.set(x, y, z);
 
-    if (false) {
-      if (newObject) {
-        const wp = new THREE.Vector3 (x, y, z + mesh.scale.z * 2.5);
-        console.log('add waypoint', x, y, z, mesh.scale.z, wp)
-        this.model!.addWaypoint(wp, new THREE.Vector3 (0, 0, 1), 5.0);
-        this.model!.addWaypoint(new THREE.Vector3 (x, y, z + mesh.scale.z * 2), new THREE.Vector3 (0, 0, 1), 5.0);
-      }
-    }
-    
     for (const dep of obj.dependents) {
       this.updateScene(dep, mesh.position)
     }
@@ -247,9 +235,11 @@ class Component extends React.Component<Props,State> {
         const mesh = this.currentZoom;
         const { x, y, z } = mesh.position;
         const d = mesh.scale.z;
-        const n = new THREE.Vector3(x, y, z).normalize().multiplyScalar(d * 3);
+        const n = new THREE.Vector3(x, y, z).normalize().multiplyScalar(d * 20);
         const wp = new THREE.Vector3 (x, y, z).sub(n);
-        
+        const lt = mesh.position.clone().normalize();
+        this.localLight!.position.set(-lt.x, -lt.y, -lt.z);
+
         console.log('add waypoint', x, y, z, mesh.scale.z, wp)
         this.model!.addWaypoint(wp, new THREE.Vector3 (x, y, z), 5.0);
       }

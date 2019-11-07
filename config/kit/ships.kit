@@ -8,7 +8,25 @@ with Updated;
 
 package Ships is
 
-record Component : Localised, Manufactured is
+type Component_Shape is (Cuboid, Cylinder, Ellipsoid, Truncated_Cone);
+
+record Has_Size is
+   Width   : Positive;
+   Length  : Positive;
+   Height  : Positive;
+end Has_Size;
+
+record Has_Position is
+   X1 : Long_Float;
+   Y1 : Long_Float;
+   Z1 : Long_Float;
+   X2 : Long_Float;
+   Y2 : Long_Float;
+   Z2 : Long_Float;
+end Has_Position;
+
+record Component : Localised, Manufactured, Has_Size is
+   Shape   : Component_Shape;
    Crew    : Natural;
    Power   : Long_Float;
 end Component;
@@ -59,7 +77,7 @@ record Ship_Design : Has_Name is
    Default_Manager : String (32);
 end Ship_Design;
 
-record Design_Module is
+record Design_Module : Has_Position is
    key Ship_Design;
    Component;
 end Design_Module;
@@ -83,7 +101,7 @@ record Ship : Has_Name, Has_Stock, Managed, Updated, Orbiting_Object, Has_Locati
    key Ship_Status with Faction, Status;
 end Ship;
 
-record Module is
+record Module : Has_Position is
    key Ship;
    Component;
    Crew       : Natural;

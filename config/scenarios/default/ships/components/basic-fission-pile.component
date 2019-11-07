@@ -1,4 +1,6 @@
 class = generator
+shape = cylinder
 mass = 20
 power = 100
 crew = 10
+size = { 5 15 5 }
