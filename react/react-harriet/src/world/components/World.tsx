@@ -223,7 +223,7 @@ class World extends React.Component<Props,WorldSceneState> {
   }
 
   componentDidMount() {
-    this.model = new Model3D(this.mount);
+    this.model = new Model3D(this.mount, 0.1, 10, 0.1, 10);
     this.addCustomSceneObjects();
     this.model.startAnimationLoop(this.beforeRender);
   }
@@ -270,7 +270,7 @@ class World extends React.Component<Props,WorldSceneState> {
       this.updateScene(this.props.clientState.world);
     }
     return (
-      <div ref={ref => (this.mount = ref)} />
+      <div className="harriet-model3d" ref={ref => (this.mount = ref)} />
     )
   }
 }

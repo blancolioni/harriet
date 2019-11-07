@@ -30,8 +30,6 @@ export default class Model3D {
     readonly light : THREE.Light;
     readonly modelLoader : GLTFLoader;
 
-    debug: boolean
-
     requestID : number = 0
   
     travel            : Waypoint[] = []
@@ -44,15 +42,14 @@ export default class Model3D {
     travelDuration    : number = 0
     travelProgress    : number = 0
 
-    constructor(mount : any, debugDiv : boolean = false) {
-        this.debug = debugDiv;
+    constructor(mount : any, cameraNear : number, cameraFar : number, orbitNear : number, orbitFar : number) {
         this.scene = new THREE.Scene();
         const itemElement = mount.closest(".concorde-dashboard-item");
   
         const width = itemElement.clientWidth; 
-        const height = itemElement.clientHeight - (debugDiv ? 60 : 30);
+        const height = itemElement.clientHeight - 30;
   
-        this.camera = new THREE.PerspectiveCamera( 60, width / height, 0.01, 100 );
+        this.camera = new THREE.PerspectiveCamera( 60, width / height, cameraNear, cameraFar );
 
         this.renderer = new THREE.WebGLRenderer({ 
             antialias: true,
@@ -70,24 +67,20 @@ export default class Model3D {
         this.labelDiv.className = 'label';
         this.labelDiv.textContent = 'test label';
 
-        if (debugDiv) {
-            mount.appendChild(this.labelDiv);
-        }
-
         this.controls = new OrbitControls( this.camera, this.labelRenderer.domElement );
         this.controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
         this.controls.dampingFactor = 0.05;
 
         this.controls.screenSpacePanning = false;
 
-        this.controls.minDistance = 5;
-        this.controls.maxDistance = 50
+        this.controls.minDistance = orbitNear;
+        this.controls.maxDistance = orbitFar;
 
-        this.controls.maxPolarAngle = Math.PI / 2;
+        this.controls.maxPolarAngle = Math.PI;
 
         this.light = new THREE.DirectionalLight();
 
-        this.camera.position.z = 3;
+        this.camera.position.z = (cameraFar - cameraNear) / 2;
         this.travelStart = this.travelEnd = this.camera.position;
         this.travelStartQuat = this.travelEndQuat = new THREE.Quaternion(0, 0, 0, 0);
         this.travelLookEnd = new THREE.Vector3(0, 0, 0);
@@ -140,9 +133,6 @@ export default class Model3D {
         v.add(v1);
         this.camera.position.set(v.x, v.y, v.z);
         this.camera.quaternion.copy(this.travelStartQuat.clone().slerp(this.travelEndQuat, f));
-        if (this.debug) {
-            this.labelDiv.innerText = '' + Math.floor(f * 100) + ' ' + Math.floor(v1.z * 100) + ' '  + Math.floor(v.z * 100) + ' '  + Math.floor(v2.z * 100)
-        }
     }
    }
 

@@ -21,6 +21,7 @@ with Harriet.Star_Systems;
 with Harriet.Worlds;
 
 with Harriet.Db.Faction;
+with Harriet.Db.Ship;
 with Harriet.Db.Star_System;
 with Harriet.Db.System_Knowledge;
 with Harriet.Db.User;
@@ -650,6 +651,28 @@ package body Harriet.Sessions is
         (World : Harriet.Db.World_Reference)
          return Harriet.Outliner.Outliner_Item;
 
+      function Ship_Item
+        (Ship : Harriet.Db.Ship_Reference)
+         return Harriet.Outliner.Outliner_Item;
+
+      ---------------
+      -- Ship_Item --
+      ---------------
+
+      function Ship_Item
+        (Ship : Harriet.Db.Ship_Reference)
+         return Harriet.Outliner.Outliner_Item
+      is
+         Id : constant String :=
+           Harriet.Db.Ship.Get (Ship).Name;
+         Name : constant String := Id;
+      begin
+         return Item : constant Harriet.Outliner.Outliner_Item :=
+           Harriet.Outliner.New_Item
+             (Id    => Id,
+              Label => Name);
+      end Ship_Item;
+
       -----------------
       -- System_Item --
       -----------------
@@ -687,9 +710,16 @@ package body Harriet.Sessions is
          return Harriet.Outliner.Outliner_Item
       is
       begin
-         return Harriet.Outliner.New_Item
-           (Id    => Harriet.Worlds.Name (World),
-            Label => Harriet.Worlds.Name (World));
+         return Item : constant Harriet.Outliner.Outliner_Item :=
+           Harriet.Outliner.New_Item
+             (Id    => Harriet.Worlds.Name (World),
+              Label => Harriet.Worlds.Name (World))
+         do
+            for Ship of Harriet.Db.Ship.Select_By_World (World) loop
+               Harriet.Outliner.Append
+                 (Item, Ship_Item (Ship.Get_Ship_Reference));
+            end loop;
+         end return;
       end World_Item;
 
    begin

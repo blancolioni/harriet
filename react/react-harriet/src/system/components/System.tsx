@@ -128,7 +128,7 @@ class Component extends React.Component<Props,State> {
   }
 
   componentDidMount() {
-    this.model = new Model3D(this.mount, true);
+    this.model = new Model3D(this.mount, 1, 1.5e15, 1e5, 1e10);
     this.addCustomSceneObjects();
     this.model.startAnimationLoop(this.beforeRender);
   }
@@ -138,7 +138,7 @@ class Component extends React.Component<Props,State> {
   }
 
   addCustomSceneObjects = () => {
-    this.model!.camera.position.z = 15;
+    this.model!.camera.position.z = 15 * 1.5e11;
   }
 
   starMesh = (star : StarObject) : THREE.Mesh => {
@@ -167,11 +167,11 @@ class Component extends React.Component<Props,State> {
 
   addObject = (obj : SystemObject, mesh : THREE.Mesh) => {
     let scale = obj.radius;    
-    if (obj.type === SystemObjectType.World) {
-      scale /= 10;
-    } else {
-      scale /= 2
-    }
+    // if (obj.type === SystemObjectType.World) {
+    //   scale /= 10;
+    // } else {
+    //   scale /= 2
+    // }
 
     mesh.scale.set(scale, scale, scale);
     mesh.name = obj.name;
@@ -194,9 +194,9 @@ class Component extends React.Component<Props,State> {
   }
 
   updateScene = (obj : SystemObject, origin : THREE.Vector3) => {
-    const x = origin.x + 5.0 * obj.orbit * Math.cos(obj.longitude);
+    const x = origin.x + obj.orbit * Math.cos(obj.longitude);
     const y = 0;
-    const z = origin.z + 5.0 * obj.orbit * Math.sin(obj.longitude);
+    const z = origin.z + obj.orbit * Math.sin(obj.longitude);
     let newObject = false;
 
     if (!this.model!.scene.getObjectByName(obj.name)) {
@@ -211,7 +211,8 @@ class Component extends React.Component<Props,State> {
           break;
 
         case SystemObjectType.Ship:
-          this.addObject(obj, new THREE.Mesh(new THREE.IcosahedronGeometry(0.1, 3), new THREE.MeshBasicMaterial()));
+          this.addObject(obj, new THREE.Mesh(new THREE.IcosahedronGeometry(1, 3), new THREE.MeshBasicMaterial()));
+          break;
       }  
   
     }
@@ -255,7 +256,7 @@ class Component extends React.Component<Props,State> {
     }
 
     return (
-      <div ref={ref => (this.mount = ref)} />
+      <div className="harriet-model3d" ref={ref => (this.mount = ref)} />
     )
   }
 }

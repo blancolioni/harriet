@@ -10,7 +10,6 @@ with WL.Images.Bitmaps;
 with Harriet.Calendar;
 with Harriet.Color;
 with Harriet.Orbits;
-with Harriet.Solar_System;
 
 with Harriet.Factions;
 with Harriet.Stars;
@@ -251,7 +250,7 @@ package body Harriet.UI.Models is
       Set ("title", Object.Name);
       Set ("name", Object.Name);
       Set ("orbit",
-           Object.Semimajor_Axis / Harriet.Solar_System.Earth_Orbit);
+           Object.Semimajor_Axis);
       Set ("longitude",
            (if Object.Primary_Massive = Null_Massive_Object_Reference
             then 0.0
@@ -299,9 +298,9 @@ package body Harriet.UI.Models is
          begin
             Set ("type", "STAR");
             if Detail > Low then
-               Set ("mass", Object.Mass / Harriet.Solar_System.Solar_Mass);
+               Set ("mass", Object.Mass);
                Set ("radius",
-                    Star.Radius / Harriet.Solar_System.Solar_Radius);
+                    Star.Radius);
                Set ("temperature", Star.Temperature);
                Set ("red", Color.Red);
                Set ("green", Color.Green);
@@ -316,9 +315,9 @@ package body Harriet.UI.Models is
          begin
             Set ("type", "WORLD");
             if Detail > Low then
-               Set ("mass", Object.Mass / Harriet.Solar_System.Earth_Mass);
+               Set ("mass", Object.Mass);
                Set ("radius",
-                    World.Radius / Harriet.Solar_System.Earth_Radius);
+                    World.Radius);
                Set ("temperature", World.Average_Temperature);
                Set ("composition",
                     Harriet.Db.World_Composition'Image
@@ -326,7 +325,7 @@ package body Harriet.UI.Models is
                Set ("climate",
                     Harriet.Db.World_Climate'Image
                       (World.Climate));
-               Set ("day", World.Rotation_Period / 3600.0);
+               Set ("day", World.Rotation_Period);
 
                if World.Gas_Giant or else Detail < High then
                   declare
@@ -464,6 +463,7 @@ package body Harriet.UI.Models is
               Harriet.Db.Ship.Get_Ship (Object.Get_Orbiting_Object_Reference);
          begin
             Set ("type", "SHIP");
+            Set ("radius", 100.0);
             Set ("mass", Ship.Mass);
          end;
       end if;
