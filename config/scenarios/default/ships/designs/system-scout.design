@@ -1,7 +1,43 @@
 default-manager = ship-explore
 components = {
-  basic-drive = 2
-  basic-tank
-  basic-scanner = 4
-  small-crew-quarters = 1
+  basic-drive = {
+    x = { 1 5 }
+	y = { -2 2 }
+	z = { -10 -4 }
+  }
+  basic-drive = {
+    x = { -5 -1 }
+	y = { -2 2 }
+	z = { -10 -4 }
+  }
+  basic-tank = {
+    x = { -1 1 }
+	y = { -1 1 }
+	z = { -4 6 }
+  }
+  basic-scanner = {
+    x = { -1 1 }
+	y = { 1 3 }
+	z = { -4 -2 }
+  }
+  basic-scanner = {
+    x = { -1 1 }
+	y = { 1 3 }
+	z = { -2 0 }
+  }
+  basic-scanner = {
+    x = { -1 1 }
+	y = { 1 3 }
+	z = { 0 2 }
+  }
+  basic-scanner = {
+    x = { -1 1 }
+	y = { 1 3 }
+	z = { 2 4 }
+  }
+  small-crew-quarters = {
+    x = { -1.5 1.5 }
+	y = { 1 4 }
+	z = { 4 7 }
+  }
 }
