@@ -1,4 +1,5 @@
 with Calendar;
+with Identifiers;
 with Knowledge;
 with Locations;
 with Massive_Objects;
@@ -15,7 +16,7 @@ package Star_Systems is
    
    record Serializable : Has_Name;
    
-   record Orbiting_Object : Massive_Object, Serializable is
+   record Orbiting_Object : Massive_Object, Serializable, Has_Identifier is
       key Primary_Massive : Massive_Object;
 	  Semimajor_Axis  : Long_Float;
 	  Epoch           : Time;

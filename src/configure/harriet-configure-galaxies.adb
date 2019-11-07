@@ -12,6 +12,7 @@ with WL.Images.Bitmaps;
 with WL.Processes;
 
 with Harriet.Elementary_Functions;
+with Harriet.Identifiers;
 with Harriet.Options;
 with Harriet.Random;
 with Harriet.Real_Images;
@@ -368,6 +369,8 @@ package body Harriet.Configure.Galaxies is
                            Primary               =>
                              Harriet.Db.Null_Star_System_Object_Reference,
                            Mass                  => Mass,
+                           Identifier            =>
+                             Harriet.Identifiers.Next_Identifier,
                            Radius                => Radius,
                            Density               => Mass / Volume,
                            Primary_Massive       =>

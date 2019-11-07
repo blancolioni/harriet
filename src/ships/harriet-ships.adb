@@ -1,6 +1,7 @@
 with Ada.Text_IO;
 
 with Harriet.Calendar;
+with Harriet.Identifiers;
 with Harriet.Orbits;
 with Harriet.Random;
 with Harriet.Solar_System;
@@ -193,6 +194,7 @@ package body Harriet.Ships is
            Updates_Started   => True,
            Next_Update       => Harriet.Calendar.Clock,
            Faction           => Owner,
+           Identifier        => Harriet.Identifiers.Next_Identifier,
            Location          => Location,
            Mass              => Harriet.Ships.Design_Mass (Design),
            Star_System       => World_Rec.Star_System,

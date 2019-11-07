@@ -7,6 +7,7 @@ with WL.Random;
 
 with Harriet.Calendar;
 with Harriet.Elementary_Functions;
+with Harriet.Identifiers;
 with Harriet.Random;
 with Harriet.Real_Images;
 
@@ -940,6 +941,7 @@ package body Harriet.Configure.Star_Systems is
               Eccentricity        => 0.0,
               Period              => Year * Earth_Sidereal_Year,
               Mass                => Mass * Earth_Mass,
+              Identifier          => Harriet.Identifiers.Next_Identifier,
               Composition         => Composition,
               Climate             => Climate,
               Gas_Giant           => Gas_Giant,
