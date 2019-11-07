@@ -1,3 +1,5 @@
+with Harriet.Db.Next_Identifier;
+
 package body Harriet.Identifiers is
 
    Template : constant Object_Identifier := "0AA00AA0";
@@ -7,10 +9,20 @@ package body Harriet.Identifiers is
       procedure Next_Identifier (Id : out Object_Identifier);
 
    private
-      Current : Object_Identifier := Template;
+      Current : Harriet.Db.Next_Identifier_Reference :=
+        Harriet.Db.Null_Next_Identifier_Reference;
+
    end Identifier_Source;
 
+   -----------------------
+   -- Identifier_Source --
+   -----------------------
+
    protected body Identifier_Source is
+
+      ---------------------
+      -- Next_Identifier --
+      ---------------------
 
       procedure Next_Identifier (Id : out Object_Identifier) is
 
@@ -35,14 +47,33 @@ package body Harriet.Identifiers is
             end if;
          end Inc;
 
+         use Harriet.Db;
+         Next_Id : Object_Identifier;
+
       begin
-         Id := Current;
-         for Ch of reverse Current loop
-            if not Inc (Ch) then
-               return;
-            end if;
+         if Current = Null_Next_Identifier_Reference then
+            Current :=
+              Harriet.Db.Next_Identifier.First_Reference_By_Top_Record
+                (Harriet.Db.R_Next_Identifier);
+         end if;
+
+         if Current = Null_Next_Identifier_Reference then
+            Current :=
+              Harriet.Db.Next_Identifier.Create
+                (Template);
+         end if;
+
+         Next_Id := Harriet.Db.Next_Identifier.Get (Current).Next;
+         Id := Next_Id;
+
+         for Ch of reverse Next_Id loop
+            exit when not Inc (Ch);
          end loop;
-         raise Program_Error with "out of identifiers";
+
+         Harriet.Db.Next_Identifier.Update_Next_Identifier (Current)
+           .Set_Next (Next_Id)
+           .Done;
+
       end Next_Identifier;
    end Identifier_Source;
 
