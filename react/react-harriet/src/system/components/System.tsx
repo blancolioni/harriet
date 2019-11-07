@@ -153,7 +153,7 @@ class Component extends React.Component<Props,State> {
     });
 
     const mesh = new THREE.Mesh(geometry, material);
-    mesh.name = star.name;
+    mesh.name = star.id;
     return mesh;
   }
 
@@ -174,7 +174,7 @@ class Component extends React.Component<Props,State> {
     // }
 
     mesh.scale.set(scale, scale, scale);
-    mesh.name = obj.name;
+    mesh.name = obj.id;
     this.model!.scene.add( mesh );
 
     var labelDiv = document.createElement( 'div' );
@@ -211,13 +211,13 @@ class Component extends React.Component<Props,State> {
           break;
 
         case SystemObjectType.Ship:
-          this.addObject(obj, new THREE.Mesh(new THREE.IcosahedronGeometry(1, 3), new THREE.MeshBasicMaterial()));
+          this.addObject(obj, new THREE.Mesh(new THREE.IcosahedronGeometry(1, 3), new THREE.MeshStandardMaterial()));
           break;
       }  
   
     }
 
-    const mesh = this.model!.scene.getObjectByName(obj.name)!;
+    const mesh = this.model!.scene.getObjectByName(obj.id)!;
     mesh.position.set(x, y, z);
 
     if (false) {

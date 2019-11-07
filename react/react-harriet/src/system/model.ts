@@ -8,6 +8,7 @@ export enum SystemObjectType {
 
 export interface SystemObject {
   type: SystemObjectType,
+  id: string,
   name: string,
   mass: number,
   orbit: number,

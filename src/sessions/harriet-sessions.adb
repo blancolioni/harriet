@@ -664,8 +664,9 @@ package body Harriet.Sessions is
          return Harriet.Outliner.Outliner_Item
       is
          Id : constant String :=
+           Harriet.Db.Ship.Get (Ship).Identifier;
+         Name : constant String :=
            Harriet.Db.Ship.Get (Ship).Name;
-         Name : constant String := Id;
       begin
          return Item : constant Harriet.Outliner.Outliner_Item :=
            Harriet.Outliner.New_Item
@@ -712,7 +713,7 @@ package body Harriet.Sessions is
       begin
          return Item : constant Harriet.Outliner.Outliner_Item :=
            Harriet.Outliner.New_Item
-             (Id    => Harriet.Worlds.Name (World),
+             (Id    => Harriet.Db.World.Get (World).Identifier,
               Label => Harriet.Worlds.Name (World))
          do
             for Ship of Harriet.Db.Ship.Select_By_World (World) loop

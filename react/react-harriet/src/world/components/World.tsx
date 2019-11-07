@@ -131,6 +131,8 @@ export function worldMesh(
 ) : THREE.Mesh
 {
 
+  let mesh : THREE.Mesh;
+
   if (world.surface.length === 0) {
       const vertexShader = standardVertexShader;
 
@@ -149,10 +151,10 @@ export function worldMesh(
         },
       });
 
-      return new THREE.Mesh(geometry, material);
+      mesh = new THREE.Mesh(geometry, material);
     } else {
       //let mats : THREE.Material[] = [];
-      const mesh = new THREE.Mesh();
+      mesh = new THREE.Mesh();
       for(const sector of world.surface) {
         let geometry = new THREE.Geometry();
         for (const vertex of sector.border) {
@@ -194,9 +196,10 @@ export function worldMesh(
             });
         } 
       }
-      return mesh;
     }
 
+    mesh!.name = world.id;
+    return mesh!;
 }
 
 class World extends React.Component<Props,WorldSceneState> {

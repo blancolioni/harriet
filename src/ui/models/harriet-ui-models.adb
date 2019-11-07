@@ -249,6 +249,7 @@ package body Harriet.UI.Models is
 
       Set ("title", Object.Name);
       Set ("name", Object.Name);
+      Set ("id", Object.Identifier);
       Set ("orbit",
            Object.Semimajor_Axis);
       Set ("longitude",

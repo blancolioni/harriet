@@ -23,7 +23,7 @@ class Outline extends React.Component<Props,State> {
                 <TreeMenu 
                    data={this.props.treeData}
                    hasSearch={false}
-                   onClickItem={(props) => { this.props.zoomObject(props.label) }}
+                   onClickItem={(props) => { this.props.zoomObject(props.key.substring(props.key.lastIndexOf('/') + 1)) }}
                 />
             </nav>
             );
