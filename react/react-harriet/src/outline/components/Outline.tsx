@@ -14,7 +14,22 @@ interface Props {
 
 class Outline extends React.Component<Props,State> {
 
+  treeNodes = (data : State[]) : string[] => {
+    let result : string[] = []
+    const go = (path : string, items: State[]) => {
+      for (const item of items) {
+        result.push (path + item.key);
+        go (path + item.key + '/', item.nodes);
+      }
+    }
+    go('', data);
+
+    return result;
+
+  }
+
     render() {
+      const initNodes = this.treeNodes(this.props.treeData);
         return (
             <nav id="outline" className="navbar-dark bg-dark">
                 <div className="sidebar-header">
@@ -23,6 +38,8 @@ class Outline extends React.Component<Props,State> {
                 <TreeMenu 
                    data={this.props.treeData}
                    hasSearch={false}
+                   initialOpenNodes={initNodes}
+                   resetOpenNodesOnDataUpdate={true}
                    onClickItem={(props) => { this.props.zoomObject(props.key.substring(props.key.lastIndexOf('/') + 1)) }}
                 />
             </nav>
