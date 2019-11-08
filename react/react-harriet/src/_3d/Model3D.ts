@@ -35,6 +35,7 @@ var cachedModels : CachedModelTable = {}
     readonly light : THREE.Light;
     readonly modelLoader : GLTFLoader;
 
+    timerId = 0;
     renderCount = 0;
 
     objects : ObjectTable = {};
@@ -98,7 +99,7 @@ var cachedModels : CachedModelTable = {}
         this.textureLoader = new THREE.TextureLoader();
         this.modelLoader = new GLTFLoader();
 
-        setInterval(() => { console.log("fps", this.renderCount / 10); this.renderCount = 0}, 10000);
+        this.timerId = setInterval(() => { console.log("fps", this.renderCount / 10); this.renderCount = 0}, 10000);
       }
 
   addObject = (obj : SystemObject, mesh : THREE.Mesh, label : CSS2DObject) : void => {          
@@ -181,6 +182,7 @@ var cachedModels : CachedModelTable = {}
 
    stopAnimationLoop() {
     window.cancelAnimationFrame(this.requestID);
+    clearInterval(this.timerId);
    }
 
    getModel = (name : string, callback : (model : GLTF) => void) : void => {
