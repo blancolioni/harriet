@@ -30,7 +30,7 @@ home-colony = {
 	  ship-fuel = 250
 	  basic-consumer-goods = 100
 	  }
-   ships = { system-scout } # jump-scout defender trader }
+   ships = { system-scout jump-scout } # defender trader }
 }
 
 init-script = {

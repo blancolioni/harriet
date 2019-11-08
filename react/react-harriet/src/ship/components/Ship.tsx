@@ -8,7 +8,7 @@ const componentGeometry = (shape : ComponentShape) : THREE.Geometry => {
     case ComponentShape.Cylinder:
       return new THREE.CylinderGeometry();
     case ComponentShape.Ellipsoid:
-      return new THREE.IcosahedronGeometry(1, 3);
+      return new THREE.IcosahedronGeometry(0.5, 3);
     case ComponentShape.Truncated_Cone:
       return new THREE.CylinderGeometry(0.5, 1);
     default:
