@@ -23,14 +23,17 @@ export function shipMesh(ship   : ShipObject) : THREE.Mesh {
       const geometry = componentGeometry(module.shape);
       const material = new THREE.MeshStandardMaterial({color: "#ccc", wireframe: false});
       const childMesh = new THREE.Mesh(geometry, material);
-      if (module.shape = ComponentShape.Truncated_Cone) {
+      if (module.shape == ComponentShape.Truncated_Cone || module.shape == ComponentShape.Cylinder) {
+        childMesh.scale.set(module.dx, module.dz, module.dy);
         childMesh.rotateX(Math.PI / 2.0);
+      } else {
+        childMesh.scale.set(module.dx, module.dy, module.dz);
       }
-      childMesh.scale.set(module.dx, module.dz, module.dy);
       childMesh.position.set (module.x, module.y, module.z);
       mesh.add(childMesh);
   }
   mesh.rotateY(Math.PI / 3.0);
   mesh.name = ship.id;
+  console.log(ship.id, ship.name, mesh);
   return mesh;
 }

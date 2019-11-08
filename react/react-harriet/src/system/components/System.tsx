@@ -16,10 +16,6 @@ interface Props {
     clientDispatch : Dispatch
 }
 
-interface ObjectTable {
-  [key : string] : SystemObject
-}
-
 class Component extends React.Component<Props,State> {
 
   mount: any;
@@ -123,7 +119,6 @@ class Component extends React.Component<Props,State> {
   currentLabel : CSS2DObject | null = null;
   zoomObject : SystemObject | null = null;
   localLight : THREE.Light | null = null;
-  objects : ObjectTable = {};
 
   constructor(props : Props) {
     super (props);
@@ -180,20 +175,32 @@ class Component extends React.Component<Props,State> {
     for (const mat of this.unTimeMaterial) {
       mat.uniforms.unTime.value = this.renderCount;
     }
-    if (this.currentLabel) {
-      const v1 = this.model!.camera.position;
-      const v2 = this.currentZoom!.position;
-      const d = v1.distanceTo(v2);
-      const img = this.showDistance(d);
 
-      this.currentLabel.element.textContent = this.zoomObject!.name + ' ' + img;
+    const updateLabel = (object : THREE.Object3D) : void => {
+      const obj = this.model!.objects[object.name];
+      if (obj) {
+        const label = object.getObjectByName(object.name + '-label') as CSS2DObject;
+        if (label) {
+          const v1 = this.model!.camera.position;
+          const v2 = object.position;
+          const d = v1.distanceTo(v2);
+          const img = this.showDistance(d);
+          label!.element.textContent = obj.name + img;
+        }
+        if (obj.type == SystemObjectType.Ship) {
+          object.rotateY(0.001);
+          object.rotateZ(0.01);
+        }
+      }
     }
-    
+
+    this.model!.scene.traverse(updateLabel);
+
     this.renderCount += 0.0002;
   }
 
   addObject = (obj : SystemObject, mesh : THREE.Mesh, scale : number = 1) => {
-    mesh.scale.set(scale, scale, scale);
+    if (scale != 1) mesh.scale.set(scale, scale, scale);
     mesh.name = obj.id;
     this.model!.scene.add( mesh );
 
@@ -211,9 +218,7 @@ class Component extends React.Component<Props,State> {
       this.unTimeMaterial.push(mat);
     }
 
-    this.objects[obj.id] = obj;
-
-
+    this.model!.addObject(obj, mesh, labelObject);
   }
 
   updateScene = (obj : SystemObject, origin : THREE.Vector3) => {
@@ -259,10 +264,10 @@ class Component extends React.Component<Props,State> {
       if (newZoom) {
         this.currentZoom = newZoom as THREE.Mesh;
         this.currentLabel = (newZoom.getObjectByName(newZoom.name + '-label') as CSS2DObject);
-        this.zoomObject = this.objects[this.props.clientState.zoom];
+        this.zoomObject = this.model!.objects[this.props.clientState.zoom];
         const mesh = this.currentZoom;
         const { x, y, z } = mesh.position;
-        const d = this.objects[this.props.clientState.zoom].radius;
+        const d = this.model!.objects[this.props.clientState.zoom].radius;
         const n = new THREE.Vector3(x, y, z).normalize().multiplyScalar(d * 5);
         const wp = new THREE.Vector3 (x, y, z).sub(n);
         const lt = mesh.position.clone().normalize();

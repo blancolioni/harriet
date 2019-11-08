@@ -4,6 +4,7 @@ import { GLTFLoader, GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
 
 import * as THREE from "three";
 import { Quaternion, ReinhardToneMapping, Vector3 } from "three";
+import { SystemObject } from "../system/model";
 
 interface Waypoint {
     position : THREE.Vector3,
@@ -18,7 +19,11 @@ interface CachedModelTable {
 
 var cachedModels : CachedModelTable = {}
 
-export default class Model3D {
+  interface ObjectTable {
+    [key : string] : SystemObject
+  }
+  
+  export default class Model3D {
 
     readonly scene: THREE.Scene;
     readonly camera: THREE.Camera;
@@ -29,6 +34,10 @@ export default class Model3D {
     readonly labelDiv : HTMLDivElement;
     readonly light : THREE.Light;
     readonly modelLoader : GLTFLoader;
+
+    renderCount = 0;
+
+    objects : ObjectTable = {};
 
     requestID : number = 0
   
@@ -81,13 +90,20 @@ export default class Model3D {
         this.light = new THREE.DirectionalLight();
 
         this.camera.position.z = (cameraFar - cameraNear) / 2;
+        
         this.travelStart = this.travelEnd = this.camera.position;
         this.travelStartQuat = this.travelEndQuat = new THREE.Quaternion(0, 0, 0, 0);
         this.travelLookEnd = new THREE.Vector3(0, 0, 0);
 
         this.textureLoader = new THREE.TextureLoader();
         this.modelLoader = new GLTFLoader();
+
+        setInterval(() => { console.log("fps", this.renderCount / 10); this.renderCount = 0}, 10000);
       }
+
+  addObject = (obj : SystemObject, mesh : THREE.Mesh, label : CSS2DObject) : void => {          
+    this.objects[obj.id] = obj;
+  }
 
    startTravel = () : void => {
         this.travelStart = this.camera.position.clone();
@@ -145,6 +161,7 @@ export default class Model3D {
             }
             this.renderer!.render(this.scene!, this.camera!);
             this.labelRenderer!.render(this.scene!, this.camera!);
+            ++this.renderCount;
         }
         animate();
     }
