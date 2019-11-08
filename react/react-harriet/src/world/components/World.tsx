@@ -198,6 +198,8 @@ export function worldMesh(
       }
     }
 
+    mesh.scale.set (world.radius, world.radius, world.radius);
+        
     mesh!.name = world.id;
     return mesh!;
 }
