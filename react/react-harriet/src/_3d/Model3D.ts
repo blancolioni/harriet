@@ -7,10 +7,10 @@ import { Quaternion, ReinhardToneMapping, Vector3 } from "three";
 import { SystemObject } from "../system/model";
 
 interface Waypoint {
-    position : THREE.Vector3 | null,
-    lookAt   : THREE.Vector3,
-    up       : THREE.Vector3,
-    duration : number,
+    targetPosition : THREE.Vector3,
+    targetDistance : number,
+    up             : THREE.Vector3,
+    duration       : number,
 }
 
 interface CachedModelTable {
@@ -23,6 +23,8 @@ var cachedModels : CachedModelTable = {}
     [key : string] : SystemObject
   }
   
+  type KeyCb = (key: string, pressed : boolean) => void
+
   export default class Model3D {
 
     readonly scene: THREE.Scene;
@@ -30,7 +32,6 @@ var cachedModels : CachedModelTable = {}
     readonly renderer: THREE.Renderer;
     readonly labelRenderer: CSS2DRenderer;
     readonly textureLoader: THREE.TextureLoader;
-    readonly controls : OrbitControls;
     readonly labelDiv : HTMLDivElement;
     readonly light : THREE.Light;
     readonly modelLoader : GLTFLoader;
@@ -39,9 +40,17 @@ var cachedModels : CachedModelTable = {}
     renderCount = 0;
 
     objects : ObjectTable = {};
+    keyCb : KeyCb;
 
     requestID : number = 0
   
+    currentFollow : THREE.Object3D | null = null
+
+    follow = (obj : SystemObject) : void => {
+        this.currentFollow = this.scene.getObjectByName(obj.id) || null;
+    }
+
+
     travel            : Waypoint[] = []
     travelIndex       : number = 0
     travelStart       : THREE.Vector3
@@ -53,7 +62,31 @@ var cachedModels : CachedModelTable = {}
     travelProgress    : number = 0
     traveling         : boolean = false
 
-    constructor(mount : any, cameraNear : number, cameraFar : number, orbitNear : number, orbitFar : number) {
+    currentKeyPress   : string = ''
+    currentRotateY    : number = 0
+
+    defaultKeyCb = (key : string, pressed : boolean) : void => { 
+        console.log('key', pressed ? 'press' : 'release', key)
+        if (pressed && key == this.currentKeyPress) {
+            return;
+        }
+        switch(key) {
+            case 'ArrowRight':
+                this.currentFollow = null;
+                this.currentRotateY = pressed ? -0.01 : 0;
+                break;
+
+            case 'ArrowLeft':
+                this.currentFollow = null;
+                this.currentRotateY = pressed ? 0.01 : 0;
+                break;
+
+            default:
+                
+        }
+    }
+
+    constructor(mount : any, cameraNear : number, cameraFar : number, orbitNear : number, orbitFar : number, onKey : KeyCb | null = null) {
         this.scene = new THREE.Scene();
         const itemElement = mount.closest(".concorde-dashboard-item");
   
@@ -78,19 +111,8 @@ var cachedModels : CachedModelTable = {}
         this.labelDiv.className = 'label';
         this.labelDiv.textContent = 'test label';
 
-        this.controls = new OrbitControls( this.camera, this.labelRenderer.domElement );
-        this.controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
-        this.controls.dampingFactor = 0.05;
-
-        this.controls.screenSpacePanning = false;
-
-        this.controls.minDistance = orbitNear;
-        this.controls.maxDistance = orbitFar;
-
-        this.controls.maxPolarAngle = Math.PI;
-
         this.light = new THREE.DirectionalLight();
-
+        this.light.position.set(0, 1, 0);
         this.camera.position.z = (cameraFar - cameraNear) / 2;
         
         this.travelStart = this.travelEnd = this.camera.position;
@@ -100,7 +122,11 @@ var cachedModels : CachedModelTable = {}
         this.textureLoader = new THREE.TextureLoader();
         this.modelLoader = new GLTFLoader();
 
-        this.timerId = setInterval(() => { console.log("fps", this.renderCount / 10); this.renderCount = 0}, 10000);
+        this.timerId = setInterval(() => { /* console.log("fps", this.renderCount / 10); */ this.renderCount = 0}, 10000);
+
+        this.keyCb = onKey || this.defaultKeyCb;
+        document.addEventListener("keyup", (ev : KeyboardEvent) => this.keyCb(ev.key, false), false);
+        document.addEventListener("keydown", (ev : KeyboardEvent) => this.keyCb(ev.key, true), false);
       }
 
   addObject = (obj : SystemObject, mesh : THREE.Mesh, label : CSS2DObject) : void => {          
@@ -111,28 +137,34 @@ var cachedModels : CachedModelTable = {}
         this.travelStart = this.camera.position.clone();
         this.travelStartQuat = this.camera.quaternion.clone();
 
-        const { position, duration, lookAt } = this.travel[this.travelIndex];
-        this.travelEnd = position || this.travelStart.clone();
+        const { targetPosition, targetDistance, duration } = this.travel[this.travelIndex];
+        const direction = targetPosition.clone().sub(this.travelStart).normalize();
+        this.travelEnd = targetPosition.clone().sub(direction.clone().multiplyScalar(targetDistance))
 
         const lookObject = new THREE.Object3D();
-        lookObject.position.copy(this.travelEnd);
+        lookObject.position.set(targetPosition.x, targetPosition.y, targetPosition.z);
         lookObject.up.set(0, 1, 0);
-        lookObject.lookAt(-lookAt.x, -lookAt.y, -lookAt.z);
-        console.log('startTravel', lookObject.position, lookObject.up, lookObject.quaternion);
-        this.travelLookEnd = lookAt.clone();
+        lookObject.lookAt(this.travelEnd.x, this.travelEnd.y, this.travelEnd.z);
+        console.log('startTravel', lookObject.position, targetPosition, lookObject.up, lookObject.quaternion);
+        this.travelLookEnd = targetPosition.clone();
         this.travelEndQuat = lookObject.quaternion.clone();
+        console.log('qs', this.travelStartQuat, this.travelEndQuat);
+        this.scene.remove(lookObject);
         this.travelDuration = duration * 60.0;
         this.travelProgress = 0;
         this.traveling = true;
-        console.log('travel', this.travelStart, this.travelEnd, this.travelDuration, this.travelLookEnd);
+        this.light.position.set(-direction.x, -direction.y, -direction.z);
+        console.log('travel', this.travelStart, this.travelEnd, this.travelDuration, direction);
     }
 
    updateTravel = () : void => {
     this.travelProgress += 1
     if (this.travelProgress >= this.travelDuration) {
         this.camera.position.set (this.travelEnd.x, this.travelEnd.y, this.travelEnd.z)   
-        this.camera.quaternion.copy(this.travelEndQuat);
-        console.log('endTravel', this.camera.position, this.camera.up, this.camera.quaternion);
+        this.camera.lookAt(this.travelLookEnd);
+        console.log('final qs', this.travelEndQuat, this.camera.quaternion);
+        // this.camera.quaternion.copy(this.travelEndQuat);
+        console.log('endTravel', this.camera.position, this.camera.up, this.light.position);
         this.travelIndex += 1
         if (this.travelIndex >= this.travel.length) {
             this.travel = [];
@@ -152,7 +184,7 @@ var cachedModels : CachedModelTable = {}
         v.multiplyScalar(f);
         v.add(v1);
         this.camera.position.set(v.x, v.y, v.z);
-        this.camera.quaternion.copy(this.travelStartQuat.clone().slerp(this.travelEndQuat, f));
+        //this.camera.quaternion.copy(this.travelStartQuat.clone().slerp(this.travelEndQuat, f));
     }
    }
 
@@ -163,6 +195,19 @@ var cachedModels : CachedModelTable = {}
             if (this.travel.length > 0) {
                 this.updateTravel();
             }
+            if (this.currentFollow && !this.traveling) {
+                const mesh = this.currentFollow;
+                const { x, y, z } = mesh.position;
+                const d = this.objects[mesh.name].radius;
+                const n = new THREE.Vector3(x, y, z).normalize().multiplyScalar(d * 5);
+                const cp = new THREE.Vector3 (x, y, z).sub(n);
+                this.camera.position.copy(cp);
+                this.camera.lookAt(x, y, z);
+            }
+            if (!this.currentFollow && !this.traveling) {
+                this.camera.rotateY(this.currentRotateY);
+            }
+                  
             this.renderer!.render(this.scene!, this.camera!);
             this.labelRenderer!.render(this.scene!, this.camera!);
             ++this.renderCount;
@@ -170,12 +215,12 @@ var cachedModels : CachedModelTable = {}
         animate();
     }
 
-   addWaypoint = (position : THREE.Vector3 | null, lookAt : THREE.Vector3, duration : number) : void => {
+   addWaypoint = (targetPosition : THREE.Vector3, targetDistance : number, duration : number) : void => {
        this.travel.push({
-        position,
-        lookAt,
-        up       : this.camera.up,
-        duration,
+           targetPosition,
+           targetDistance,
+           up : this.camera.up,
+           duration,
        });
        if (this.travel.length === 1) {
            this.travelIndex = 0;

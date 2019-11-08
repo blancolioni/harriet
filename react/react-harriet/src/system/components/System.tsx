@@ -17,6 +17,65 @@ interface Props {
     clientDispatch : Dispatch
 }
 
+function Corona(scale : number) : THREE.Mesh {
+  const geometry = new THREE.PlaneGeometry( 1, 1 );
+  const uniforms = {
+    cur_time: {type:"f", value:1.0},
+    beg_time:{type:"f", value:1.0},
+    scale:{type: "v3", value:new THREE.Vector3(scale,scale,scale)}
+  };
+
+  const vertexShader = `
+    varying vec2 vUv;
+    uniform vec3 scale;
+
+    void main() {
+        vUv = 2.0 * uv - vec2(1.0, 1.0);
+        float rotation = 0.0;
+
+        vec3 alignedPosition = vec3(position.x * scale.x, position.y * scale.y, position.z*scale.z);
+
+        vec2 pos = alignedPosition.xy;
+
+        vec2 rotatedPosition;
+        rotatedPosition.x = cos( rotation ) * alignedPosition.x - sin( rotation ) * alignedPosition.y;
+        rotatedPosition.y = sin( rotation ) * alignedPosition.x + cos( rotation ) * alignedPosition.y;
+
+        vec4 finalPosition;
+
+        finalPosition = modelViewMatrix * vec4( 0.0, 0.0, 0.0, 1.0 );
+        finalPosition.xy += rotatedPosition;
+        finalPosition = projectionMatrix * finalPosition;
+
+        gl_Position =  finalPosition;
+
+    }
+    `;
+
+  const fragmentShader = `
+      varying vec2 vUv;
+
+      void main() {
+        // Calculate brightness based on distance
+        float dist = length(vUv) * 3.0;
+        float brightness = (1.0 / (dist * dist) - 0.1) * 0.7;
+        gl_FragColor = vec4(brightness, brightness, brightness, brightness);
+    }
+  `;
+
+  const material = new THREE.ShaderMaterial( {
+      uniforms: uniforms,
+      vertexShader,
+      fragmentShader,
+      transparent: true,
+      blending:THREE.AdditiveBlending // It looks like real blast with Additive blending!!!
+    } );
+
+
+    const mesh = new THREE.Mesh( geometry, material );
+    return mesh;
+}
+
 class Component extends React.Component<Props,State> {
 
   mount: any;
@@ -141,10 +200,10 @@ class Component extends React.Component<Props,State> {
   }
 
   addCustomSceneObjects = () => {
-    this.model!.camera.position.set(0.0, 1e9, 15 * 1.5e11);
+    this.model!.camera.position.set(0.0, 1e11, 2e11);
     this.model!.camera.lookAt(0,0,0);
     this.localLight = new THREE.DirectionalLight("#fff", 1);
-    this.localLight.position.set(0, 0, 1);
+    this.localLight.position.set(0, 0, -1);
     this.model!.scene.add(this.localLight);
   }
 
@@ -154,13 +213,20 @@ class Component extends React.Component<Props,State> {
       vertexShader: this.vertexShader(),
       fragmentShader: this.fragmentShader(),
       uniforms: {
-//        textureSampler: { type: 't', value: cloudTexture },
         unTime: { type: 'f', value: 0 },
       },
     });
 
     const mesh = new THREE.Mesh(geometry, material);
     mesh.name = star.id;
+
+    mesh.scale.set(star.radius, star.radius, star.radius);
+    const coronaMesh = Corona(star.radius * 100);
+    //coronaMesh.scale.set(1e3, 1e3, 1);
+    mesh.add(coronaMesh);
+
+    console.log('star mesh', mesh, coronaMesh);
+
     return mesh;
   }
 
@@ -199,22 +265,10 @@ class Component extends React.Component<Props,State> {
 
     this.model!.scene.traverse(updateLabel);
 
-    if (this.currentZoom && !this.model!.traveling) {
-      this.zoomObject = this.model!.objects[this.props.clientState.zoom];
-      const mesh = this.currentZoom;
-      const { x, y, z } = mesh.position;
-      const d = this.model!.objects[this.props.clientState.zoom].radius;
-      const n = new THREE.Vector3(x, y, z).normalize().multiplyScalar(d * 5);
-      const cp = new THREE.Vector3 (x, y, z).sub(n);
-      this.model!.camera.position.copy(cp);
-      this.model!.camera.lookAt(x, y, z);
-    }
-
     this.renderCount += 0.0002;
   }
 
-  addObject = (obj : SystemObject, mesh : THREE.Mesh, scale : number = 1) => {
-    if (scale != 1) mesh.scale.set(scale, scale, scale);
+  addObject = (obj : SystemObject, mesh : THREE.Mesh) => {
     mesh.name = obj.id;
     this.model!.scene.add( mesh );
 
@@ -243,11 +297,11 @@ class Component extends React.Component<Props,State> {
     if (!this.model!.objects[obj.id]) {
       switch (obj.type) {
         case SystemObjectType.Star:
-          this.addObject(obj, this.starMesh(obj as StarObject), obj.radius)
+          this.addObject(obj, this.starMesh(obj as StarObject))
           break;
 
         case SystemObjectType.World:
-          this.addObject(obj, worldMesh(this.model!, obj as WorldObject, 3, new THREE.Vector3(-x, -y, -z)), obj.radius);
+          this.addObject(obj, worldMesh(this.model!, obj as WorldObject, 3, new THREE.Vector3(-x, -y, -z)));
           break;
 
         case SystemObjectType.Ship:
@@ -280,17 +334,23 @@ class Component extends React.Component<Props,State> {
         const mesh = this.currentZoom;
         const { x, y, z } = mesh.position;
         const d = this.model!.objects[this.props.clientState.zoom].radius;
-        const n1 = new THREE.Vector3(x, y, z).normalize().multiplyScalar(d * 50);
-        const n2 = new THREE.Vector3(x, y, z).normalize().multiplyScalar(d * 5);
-        const wp1 = new THREE.Vector3 (x, y, z).sub(n1);
-        const wp2 = new THREE.Vector3 (x, y, z).sub(n2);
-        const lt = mesh.position.clone().normalize();
-        this.localLight!.position.set(-lt.x, -lt.y, -lt.z);
+        this.model!.addWaypoint(mesh.position, d * 10, 4);
+       // this.model!.addWaypoint(mesh.position, d * 3, 1);
 
-        console.log('add waypoint', new THREE.Vector3(x, y, z), wp1, wp2)
-        this.model!.addWaypoint(null, new THREE.Vector3(x, y, z), 1.0);
-        this.model!.addWaypoint(wp1, new THREE.Vector3 (x, y, z), 3.0);
-        this.model!.addWaypoint(wp2, new THREE.Vector3 (x, y, z), 1.0);
+        // const n = new THREE.Vector3(0, 1, 1).normalize();
+        // const look = n.clone().multiplyScalar(-1);
+        // const n1 = n.clone().multiplyScalar(d * 50);
+        // const n2 = n.clone().multiplyScalar(d * 5);
+        // const wp1 = new THREE.Vector3 (x, y, z).sub(n1);
+        // const wp2 = new THREE.Vector3 (x, y, z).sub(n2);
+        // this.localLight!.position.copy(look);
+
+        // console.log('add waypoint', look, wp1, wp2, wp1.clone().sub(mesh.position), wp2.clone().sub(mesh.position))
+        // this.model!.addWaypoint(null, look, 1.0);
+        // this.model!.addWaypoint(wp1, look, 3.0);
+        // this.model!.addWaypoint(wp2, look, 1.0);
+
+        this.model!.follow(this.zoomObject);
       }
     }
 
