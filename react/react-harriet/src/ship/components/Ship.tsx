@@ -26,7 +26,7 @@ export function shipMesh(ship   : ShipObject) : THREE.Mesh {
       if (module.shape = ComponentShape.Truncated_Cone) {
         childMesh.rotateX(Math.PI / 2.0);
       }
-      childMesh.scale.set(module.dx, module.dy, module.dz);
+      childMesh.scale.set(module.dx, module.dz, module.dy);
       childMesh.position.set (module.x, module.y, module.z);
       mesh.add(childMesh);
   }
