@@ -188,7 +188,7 @@ class Component extends React.Component<Props,State> {
           const v2 = object.position;
           const d = v1.distanceTo(v2);
           const img = this.showDistance(d);
-          label!.element.innerHTML = obj.name + '<br>' + img;
+          label!.element.innerHTML = obj.name + '<br>' + img + '<br>' + '&#x2b1a;'
         }
         if (obj.type == SystemObjectType.Ship) {
           object.rotateY(0.001);
@@ -198,6 +198,17 @@ class Component extends React.Component<Props,State> {
     }
 
     this.model!.scene.traverse(updateLabel);
+
+    if (this.currentZoom && !this.model!.traveling) {
+      this.zoomObject = this.model!.objects[this.props.clientState.zoom];
+      const mesh = this.currentZoom;
+      const { x, y, z } = mesh.position;
+      const d = this.model!.objects[this.props.clientState.zoom].radius;
+      const n = new THREE.Vector3(x, y, z).normalize().multiplyScalar(d * 5);
+      const cp = new THREE.Vector3 (x, y, z).sub(n);
+      this.model!.camera.position.copy(cp);
+      this.model!.camera.lookAt(x, y, z);
+    }
 
     this.renderCount += 0.0002;
   }

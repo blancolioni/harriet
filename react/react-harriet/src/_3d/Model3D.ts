@@ -51,6 +51,7 @@ var cachedModels : CachedModelTable = {}
     travelEndQuat     : THREE.Quaternion
     travelDuration    : number = 0
     travelProgress    : number = 0
+    traveling         : boolean = false
 
     constructor(mount : any, cameraNear : number, cameraFar : number, orbitNear : number, orbitFar : number) {
         this.scene = new THREE.Scene();
@@ -122,6 +123,7 @@ var cachedModels : CachedModelTable = {}
         this.travelEndQuat = lookObject.quaternion.clone();
         this.travelDuration = duration * 60.0;
         this.travelProgress = 0;
+        this.traveling = true;
         console.log('travel', this.travelStart, this.travelEnd, this.travelDuration, this.travelLookEnd);
     }
 
@@ -134,6 +136,7 @@ var cachedModels : CachedModelTable = {}
         this.travelIndex += 1
         if (this.travelIndex >= this.travel.length) {
             this.travel = [];
+            this.traveling = false;
             return;
         } else {
             this.startTravel();
