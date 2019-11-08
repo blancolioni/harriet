@@ -7,6 +7,7 @@ import Model3D from '../../_3d/Model3D';
 import { worldMesh } from "../../world/components/World";
 import { shipMesh } from "../../ship/components/Ship";
 import { CSS2DObject } from "three/examples/jsm/renderers/CSS2DRenderer";
+import { Vector3 } from "three";
 
 interface Dispatch extends ClientDispatch {
 }
@@ -140,8 +141,10 @@ class Component extends React.Component<Props,State> {
   }
 
   addCustomSceneObjects = () => {
-    this.model!.camera.position.z = 15 * 1.5e11;
+    this.model!.camera.position.set(0.0, 1e9, 15 * 1.5e11);
+    this.model!.camera.lookAt(0,0,0);
     this.localLight = new THREE.DirectionalLight("#fff", 1);
+    this.localLight.position.set(0, 0, 1);
     this.model!.scene.add(this.localLight);
   }
 
@@ -225,10 +228,8 @@ class Component extends React.Component<Props,State> {
     const x = origin.x + obj.orbit * Math.cos(obj.longitude);
     const y = 0;
     const z = origin.z + obj.orbit * Math.sin(obj.longitude);
-    let newObject = false;
 
-    if (!this.model!.scene.getObjectByName(obj.name)) {
-      newObject = true;
+    if (!this.model!.objects[obj.id]) {
       switch (obj.type) {
         case SystemObjectType.Star:
           this.addObject(obj, this.starMesh(obj as StarObject), obj.radius)
@@ -268,13 +269,17 @@ class Component extends React.Component<Props,State> {
         const mesh = this.currentZoom;
         const { x, y, z } = mesh.position;
         const d = this.model!.objects[this.props.clientState.zoom].radius;
-        const n = new THREE.Vector3(x, y, z).normalize().multiplyScalar(d * 5);
-        const wp = new THREE.Vector3 (x, y, z).sub(n);
+        const n1 = new THREE.Vector3(x, y, z).normalize().multiplyScalar(d * 50);
+        const n2 = new THREE.Vector3(x, y, z).normalize().multiplyScalar(d * 5);
+        const wp1 = new THREE.Vector3 (x, y, z).sub(n1);
+        const wp2 = new THREE.Vector3 (x, y, z).sub(n2);
         const lt = mesh.position.clone().normalize();
         this.localLight!.position.set(-lt.x, -lt.y, -lt.z);
 
-        console.log('add waypoint', x, y, z, mesh.scale.z, wp)
-        this.model!.addWaypoint(wp, new THREE.Vector3 (x, y, z), 5.0);
+        console.log('add waypoint', new THREE.Vector3(x, y, z), wp1, wp2)
+        this.model!.addWaypoint(null, new THREE.Vector3(x, y, z), 1.0);
+        this.model!.addWaypoint(wp1, new THREE.Vector3 (x, y, z), 3.0);
+        this.model!.addWaypoint(wp2, new THREE.Vector3 (x, y, z), 1.0);
       }
     }
 
