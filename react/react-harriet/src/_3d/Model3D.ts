@@ -7,7 +7,7 @@ import { Quaternion, ReinhardToneMapping, Vector3 } from "three";
 import { SystemObject } from "../system/model";
 
 interface Waypoint {
-    position : THREE.Vector3,
+    position : THREE.Vector3 | null,
     lookAt   : THREE.Vector3,
     up       : THREE.Vector3,
     duration : number,
@@ -111,10 +111,10 @@ var cachedModels : CachedModelTable = {}
         this.travelStartQuat = this.camera.quaternion.clone();
 
         const { position, duration, lookAt } = this.travel[this.travelIndex];
-        this.travelEnd = position;
+        this.travelEnd = position || this.travelStart.clone();
 
         const lookObject = new THREE.Object3D();
-        lookObject.position.set(position.x, position.y, position.z);
+        lookObject.position.copy(this.travelEnd);
         lookObject.up.set(0, 1, 0);
         lookObject.lookAt(-lookAt.x, -lookAt.y, -lookAt.z);
         console.log('startTravel', lookObject.position, lookObject.up, lookObject.quaternion);
@@ -167,7 +167,7 @@ var cachedModels : CachedModelTable = {}
         animate();
     }
 
-   addWaypoint = (position : THREE.Vector3, lookAt : THREE.Vector3, duration : number) : void => {
+   addWaypoint = (position : THREE.Vector3 | null, lookAt : THREE.Vector3, duration : number) : void => {
        this.travel.push({
         position,
         lookAt,
