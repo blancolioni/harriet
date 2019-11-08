@@ -33,7 +33,7 @@ const setupSocket = (dispatch : Dispatch<AnyAction>, token : string) => {
         dispatch(updateClient(client.clientId, client.update));
       }
     }
-    console.log('onmessage', data)
+    //console.log('onmessage', data)
     switch (data.payload.type) {
       case 'update-state':
         dispatch(updateToolbar(data.payload.currentTimeImage));
