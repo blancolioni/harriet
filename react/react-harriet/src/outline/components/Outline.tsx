@@ -14,12 +14,17 @@ interface Props {
 
 class Outline extends React.Component<Props,State> {
 
-  treeNodes = (data : State[]) : string[] => {
+  treeNodes = (data : State[], maxLevel : number) : string[] => {
     let result : string[] = []
+    let level = 1;
     const go = (path : string, items: State[]) => {
       for (const item of items) {
         result.push (path + item.key);
-        go (path + item.key + '/', item.nodes);
+        if (level < maxLevel) {
+          ++level;
+          go (path + item.key + '/', item.nodes);
+          --level;
+        }
       }
     }
     go('', data);
@@ -29,7 +34,7 @@ class Outline extends React.Component<Props,State> {
   }
 
     render() {
-      const initNodes = this.treeNodes(this.props.treeData);
+      const initNodes = this.treeNodes(this.props.treeData, 1);
         return (
             <nav id="outline" className="navbar-dark bg-dark">
                 <div className="sidebar-header">

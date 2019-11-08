@@ -20,6 +20,7 @@ with Harriet.UI.Models.Loader;
 with Harriet.Star_Systems;
 with Harriet.Worlds;
 
+with Harriet.Db.Colony;
 with Harriet.Db.Faction;
 with Harriet.Db.Ship;
 with Harriet.Db.Star_System;
@@ -640,6 +641,13 @@ package body Harriet.Sessions is
       use type Harriet.Db.Faction_Reference;
 
       Outliner : Harriet.Outliner.Harriet_Outliner;
+
+      Systems  : constant Harriet.Outliner.Outliner_Item :=
+        Harriet.Outliner.New_Item ("systems", "Systems");
+      Colonies  : constant Harriet.Outliner.Outliner_Item :=
+        Harriet.Outliner.New_Item ("colonies", "Colonies");
+      Ships    : constant Harriet.Outliner.Outliner_Item :=
+        Harriet.Outliner.New_Item ("ships", "Ships");
       Faction  : constant Harriet.Db.Faction_Reference :=
         Harriet.Db.Faction.First_Reference_By_User (User);
 
@@ -735,8 +743,26 @@ package body Harriet.Sessions is
          for System_Knowledge of
            Harriet.Db.System_Knowledge.Select_By_Faction (Faction)
          loop
-            Outliner.Append (System_Item (System_Knowledge.Star_System));
+            Harriet.Outliner.Append
+              (Systems, System_Item (System_Knowledge.Star_System));
          end loop;
+
+         for Colony of
+           Harriet.Db.Colony.Select_By_Faction (Faction)
+         loop
+            Harriet.Outliner.Append
+              (Colonies, World_Item (Colony.World));
+         end loop;
+         for Ship of
+           Harriet.Db.Ship.Select_By_Faction (Faction)
+         loop
+            Harriet.Outliner.Append
+              (Ships, Ship_Item (Ship.Get_Ship_Reference));
+         end loop;
+
+         Outliner.Append (Systems);
+         Outliner.Append (Colonies);
+         Outliner.Append (Ships);
       end if;
       return Outliner.Serialize;
    end Initial_Outline;
