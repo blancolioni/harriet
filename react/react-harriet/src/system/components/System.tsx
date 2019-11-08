@@ -188,7 +188,7 @@ class Component extends React.Component<Props,State> {
           const v2 = object.position;
           const d = v1.distanceTo(v2);
           const img = this.showDistance(d);
-          label!.element.textContent = obj.name + img;
+          label!.element.innerHTML = obj.name + '<br>' + img;
         }
         if (obj.type == SystemObjectType.Ship) {
           object.rotateY(0.001);
